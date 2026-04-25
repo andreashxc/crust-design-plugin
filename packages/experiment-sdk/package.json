@@ -1,0 +1,16 @@
+{
+  "name": "@platform/experiment-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest"
+  }
+}
