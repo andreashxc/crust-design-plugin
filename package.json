@@ -18,10 +18,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
+    "@vitest/ui": "^4.1.5",
+    "glob": "^11.1.0",
     "lefthook": "^2.1.6",
     "tsx": "^4.20.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5",
-    "@vitest/ui": "^4.1.5"
+    "vitest": "^4.1.5"
   }
 }
