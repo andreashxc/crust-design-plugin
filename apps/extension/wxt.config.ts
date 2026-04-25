@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildExperiments } from '@platform/build-tools/build-experiments';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'wxt';
 
@@ -17,7 +18,11 @@ export default defineConfig({
     host_permissions: ['*://ya.ru/*', '*://*.ya.ru/*'],
   },
   vite: () => ({
-    plugins: [tailwindcss()],
+    // `buildExperiments` runs at build start: it scans `experiments/*/*/manifest.json`
+    // from the repo root, ULID-stamps any empty `id`, runs Zod validation, and enforces
+    // manifest.author === <folder name>. Passing `root: repoRoot` is required because
+    // Vite's cwd inside this WXT app is `apps/extension/`, not the repo root.
+    plugins: [tailwindcss(), buildExperiments({ root: repoRoot })],
     resolve: {
       alias: {
         // `@/*` resolves to apps/extension/src/* — WXT/Vite does NOT auto-honor

@@ -16,7 +16,8 @@
       "!**/.next",
       "!.claude",
       "!.planning",
-      "!tests/fixtures"
+      "!tests/fixtures",
+      "!experiments/**/manifest.json"
     ]
   },
   "formatter": {

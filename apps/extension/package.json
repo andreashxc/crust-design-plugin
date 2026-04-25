@@ -19,6 +19,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@platform/build-tools": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@types/chrome": "^0.1.40",
     "@types/react": "^19.0.0",
