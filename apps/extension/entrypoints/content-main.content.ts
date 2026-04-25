@@ -11,7 +11,6 @@ import type { ApplyFn, CleanupFn } from '@platform/experiment-sdk';
 import { ExperimentManifest } from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
 import { filterByWorld } from '@/content/engine';
-import { isExtensionMessage } from '@/shared/messages';
 import { getEnabledExperiments, recordLastError } from '@/shared/storage';
 import { matchesUrl } from '@/shared/url-match';
 
@@ -51,19 +50,20 @@ function bootstrap(world: 'isolated' | 'main'): void {
   ).map((m) => m.id);
   const myLoaders = loaded.filter((l) => myWorld.includes(l.manifest.id));
 
-  // Note: in MAIN world, chrome.* is NOT available — only chrome.runtime.onMessage,
-  // chrome.runtime.connect, chrome.runtime.sendMessage, and chrome.runtime.id are
-  // exposed by Chrome to MAIN-world content scripts. chrome.storage is NOT.
-  // Per Pitfall 3: this is intentional. Phase 1 has no MAIN experiments, so
-  // reconcile() never executes the storage path here. Phase 2/4 will add a
-  // postMessage bridge if MAIN experiments need state.
+  // MAIN-world content scripts have NO access to `chrome.*` — extension APIs are
+  // only exposed in the isolated world. That includes chrome.runtime.onMessage and
+  // chrome.storage. Touching `chrome.runtime.*` here throws
+  // "Cannot read properties of undefined (reading 'onMessage')" at page load.
+  //
+  // Phase 1 has zero MAIN-world experiments (smoke is `world: 'isolated'`), so this
+  // entry point only needs to bootstrap on initial load and exit. Re-evaluation on
+  // STATE_CHANGED requires a window.postMessage bridge from the isolated content
+  // script — that bridge is Phase 2 work (MAN-04) once the first MAIN experiment
+  // ships and exercises the requirement.
+  //
+  // The reconcile() call below is a no-op in Phase 1 (myLoaders is empty); leaving
+  // it here keeps the future Phase 2 wire-up to a one-liner.
   void reconcile(myLoaders, experimentLoaders);
-
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (!isExtensionMessage(msg)) return false;
-    if (msg.type === 'STATE_CHANGED') void reconcile(myLoaders, experimentLoaders);
-    return false;
-  });
 }
 
 async function reconcile(
