@@ -4,6 +4,43 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { ExperimentManifest } from './index';
 
+// ===== Phase 2 type-export compile assertion (MAN-04) =====
+// If any of these imports fails, the SDK is missing a Phase 2 export.
+import type {
+  AutoDisableRecord,
+  ErrorRecord,
+  ExperimentStatus,
+  Registry,
+  RegistryEntry,
+} from './index';
+
+// Type-level "is the type non-never" check — the assignments must compile.
+const _statusOk: ExperimentStatus = 'applied';
+const _errOk: ErrorRecord = { phase: 'apply', message: '', at: 0 };
+const _autoOk: AutoDisableRecord = { reason: '', count: 0, firstAt: 0, lastAt: 0 };
+// RegistryEntry literal MUST include `folder` (Warning 6 fix from checker
+// iteration 1) — content scripts use entry.folder for loader resolution
+// instead of regex-parsing chunkPath.
+const _entryOk: RegistryEntry = {
+  id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+  author: 'a',
+  folder: 'a',
+  name: 'a',
+  description: 'a',
+  scope: { match: ['*://ya.ru/*'] },
+  world: 'isolated',
+  chunkPath: '',
+  tweaks: [],
+};
+const _registryOk: Registry = [_entryOk];
+
+// Suppress unused-var warnings — these are compile checks, not runtime.
+void _statusOk;
+void _errOk;
+void _autoOk;
+void _entryOk;
+void _registryOk;
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // From packages/experiment-sdk/src/ → tests/fixtures/manifests/ at repo root
 const FIXTURES = resolve(__dirname, '../../../tests/fixtures/manifests');
