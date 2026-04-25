@@ -28,7 +28,7 @@
 
 ### Manifest — формат эксперимента
 
-- [ ] **MAN-01**: Манифест эксперимента — `manifest.json` с полями: `id`, `name`, `author`, `description`, `scope` (URL-паттерны), `world` (`isolated`|`main`), `tweaks[]` (декларативная схема)
+- [x] **MAN-01**: Манифест эксперимента — `manifest.json` с полями: `id`, `name`, `author`, `description`, `scope` (URL-паттерны), `world` (`isolated`|`main`), `tweaks[]` (декларативная схема) — *Phase 1 Plan 02 (schema + 14 tests)*
 - [ ] **MAN-02**: URL-scope поддерживает glob-паттерны Chrome match-patterns + regex fallback
 - [ ] **MAN-03**: Стабильный ID эксперимента — генерируется ULID при первой сборке, фиксируется в манифесте; не привязан к пути папки (rename не ломает state)
 - [ ] **MAN-04**: TypeScript-типы `ExperimentManifest`, `ApplyArgs`, `Helpers` экспортируются из общего пакета и импортируются авторами для автокомплита в Cursor
@@ -170,7 +170,7 @@
 | BLD-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
 | BLD-05 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
 | BLD-06 | Phase 6: Distribution & Acceptance | Pending |
-| MAN-01 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| MAN-01 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-02) |
 | MAN-02 | Phase 3: Tweak System | Pending |
 | MAN-03 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
 | MAN-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |

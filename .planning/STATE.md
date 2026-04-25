@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Plan 01-01 complete (Repo + test infrastructure)
-last_updated: "2026-04-25T17:05:07Z"
-last_activity: 2026-04-25 -- Plan 01-01 complete
+stopped_at: Plan 01-02 complete (@platform/experiment-sdk schema + types)
+last_updated: "2026-04-25T17:17:22Z"
+last_activity: 2026-04-25 -- Plan 01-02 complete
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 3
+  completed_plans: 2
+  percent: 7
 ---
 
 # Project State
@@ -21,35 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 01 — Foundation Spike & Engine Skeleton (Plan 02 next)
+**Current focus:** Phase 01 — Foundation Spike & Engine Skeleton (Plan 03 next)
 
 ## Current Position
 
 Phase: 01 (Foundation Spike & Engine Skeleton) — EXECUTING
-Plan: 2 of 5 (next)
-Status: Plan 01-01 complete; Plan 01-02 ready to start
-Last activity: 2026-04-25 -- Plan 01-01 complete
+Plan: 3 of 5 (next)
+Status: Plan 01-02 complete; Plan 01-03 ready to start
+Last activity: 2026-04-25 -- Plan 01-02 complete
 
-Progress: [▓░░░░░░░░░] 3%
+Progress: [▓░░░░░░░░░] 7%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1
-- Average duration: 8min15s
-- Total execution time: 0.14 hours
+- Total plans completed: 2
+- Average duration: 6min51s
+- Total execution time: 0.23 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1/5 | 8min15s | 8min15s |
+| 01 | 2/5 | 13min43s | 6min51s |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (8min15s)
-- Trend: -
+- Last 5 plans: 01-01 (8min15s), 01-02 (5min28s)
+- Trend: faster (Plan 02 was infra-leaner: schema + types only, no toolchain bring-up)
 
 *Updated after each plan completion*
 
@@ -68,6 +68,9 @@ Recent decisions affecting current work:
 - Plan 01-01: Root `tsconfig.json` uses `include: []` not `files: []` (TS 6 rejects empty files list with TS18002)
 - Plan 01-01: `tests/fixtures/**` excluded from Biome (preserves canonical `JSON.stringify(v, null, 2) + \n` shape required by Plan 04 idempotency tests)
 - Plan 01-01: `.claude/` and `.planning/` excluded from Biome (pre-existing tooling artifacts, out of scope)
+- Plan 01-02: Zod is a `dependencies` (not `peerDependencies`) of `@platform/experiment-sdk` — SDK tests run safeParse and Plan 04 build plugin imports the schema, so a hard dep prevents version drift
+- Plan 01-02: `*.tsbuildinfo` added to `.gitignore` — TS composite builds emit this artifact at the package root
+- Plan 01-02: Resolves Risk R2 / Assumption A2 — Zod 4.3.6 schema syntax (z.object, .regex, .min, .max, .array().min(1), .enum().default(), .optional, .default([]), z.infer) all work as specified for D-16
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-25T17:05:07Z
-Stopped at: Plan 01-01 complete
-Resume file: .planning/phases/01-foundation-spike-engine-skeleton/01-02-PLAN.md
+Last session: 2026-04-25T17:17:22Z
+Stopped at: Plan 01-02 complete
+Resume file: .planning/phases/01-foundation-spike-engine-skeleton/01-03-PLAN.md

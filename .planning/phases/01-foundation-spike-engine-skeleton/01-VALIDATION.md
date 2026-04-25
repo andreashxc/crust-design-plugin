@@ -41,8 +41,8 @@ created: 2026-04-25
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 1-01-01 | 01 | 1 | infra | T-1-PM | toolchain installs and Wave 0 sanity test passes | smoke | `pnpm install --frozen-lockfile && pnpm test --run` | ❌ W0 | ⬜ pending |
-| 1-02-01 | 02 | 2 | MAN-01 | T-1-01 | manifest schema rejects malformed input | unit | `pnpm vitest run packages/experiment-sdk/src/manifest.test.ts` | ❌ W0 | ⬜ pending |
+| 1-01-01 | 01 | 1 | infra | T-1-PM | toolchain installs and Wave 0 sanity test passes | smoke | `pnpm install --frozen-lockfile && pnpm test --run` | ✅ | ✅ green |
+| 1-02-01 | 02 | 2 | MAN-01 | T-1-01 | manifest schema rejects malformed input | unit | `pnpm vitest run packages/experiment-sdk/src/manifest.test.ts` | ✅ | ✅ green |
 | 1-03-01 | 03 | 3 | ENG-02 | T-1-02 | SW listeners registered top-level so wake-up works post-termination | unit | `pnpm vitest run apps/extension/src/shared/storage.test.ts` | ❌ W0 | ⬜ pending |
 | 1-03-02 | 03 | 3 | ENG-03 | T-1-03 | engine routes by `world` field (no cross-world leakage) | unit | `pnpm vitest run apps/extension/src/content/world-routing.test.ts` | ❌ W0 | ⬜ pending |
 | 1-03-03 | 03 | 3 | ENG-05 | T-1-04 | one experiment's `apply()` throw doesn't break others | unit | `pnpm vitest run apps/extension/src/content/error-isolation.test.ts` | ❌ W0 | ⬜ pending |
