@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ExperimentManifest } from './index';
-
 // ===== Phase 2 type-export compile assertion (MAN-04) =====
 // If any of these imports fails, the SDK is missing a Phase 2 export.
 import type {
@@ -13,6 +11,7 @@ import type {
   Registry,
   RegistryEntry,
 } from './index';
+import { ExperimentManifest } from './index';
 
 // Type-level "is the type non-never" check — the assignments must compile.
 const _statusOk: ExperimentStatus = 'applied';

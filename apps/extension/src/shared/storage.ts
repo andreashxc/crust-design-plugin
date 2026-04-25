@@ -163,7 +163,5 @@ export async function runStartupMigration(): Promise<void> {
 }
 
 // Re-export prefix for any callers needing the literal (Phase 1 compat).
-export { LAST_ERROR_PREFIX };
-
 // Phase 2 explicit alias — same semantics as `clearLastError` (which now operates on the map).
-export { clearLastError as clearLastErrorMap };
+export { clearLastError as clearLastErrorMap, LAST_ERROR_PREFIX };

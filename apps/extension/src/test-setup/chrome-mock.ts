@@ -28,6 +28,7 @@ export type ChromeMock = {
     onChanged: { addListener: Mock; removeListener: Mock; hasListener: Mock };
   };
   runtime: {
+    id: string;
     onMessage: { addListener: Mock; removeListener: Mock; hasListener: Mock };
     sendMessage: Mock;
     getURL: Mock;
@@ -112,6 +113,10 @@ export function makeChromeMock(): ChromeMock {
       },
     },
     runtime: {
+      // Phase 2: webextension-polyfill (loaded transitively by @webext-core/messaging)
+      // checks globalThis.chrome.runtime.id at module-eval time and throws
+      // "This script should only be loaded in a browser extension" when missing.
+      id: 'test-extension-id',
       onMessage: { addListener: vi.fn(), removeListener: vi.fn(), hasListener: vi.fn() },
       sendMessage: vi.fn(),
       getURL: vi.fn((p: string) => `chrome-extension://test/${p.replace(/^\//, '')}`),
@@ -125,6 +130,54 @@ export function makeChromeMock(): ChromeMock {
   };
 }
 
+// CRITICAL — module-load assignment of globalThis.chrome (and its `browser` alias).
+// webextension-polyfill (loaded transitively by @webext-core/messaging) checks
+// globalThis.chrome?.runtime?.id at MODULE EVAL TIME (before any beforeEach runs).
+// Without this assignment, importing @webext-core/messaging in any test file
+// throws "This script should only be loaded in a browser extension" at the import
+// statement itself, before tests can register. Per-test reset still happens
+// inside beforeEach so each test gets a fresh registry.
+const initial = makeChromeMock();
+(globalThis as unknown as { chrome: ChromeMock }).chrome = initial;
+(globalThis as unknown as { browser: ChromeMock }).browser = initial;
+
+// Route @webext-core/messaging through the live chrome mock so tests can assert
+// chrome.tabs.sendMessage / chrome.runtime.sendMessage directly. Without this
+// factory, the library calls webextension-polyfill which captures references at
+// module-load time and ignores per-test vi.stubGlobal swaps. The factory below
+// reads `globalThis.chrome` lazily on every call so reassignments in tests stick.
+vi.mock('@webext-core/messaging', () => {
+  const handlers = new Map<string, (msg: unknown) => unknown>();
+  return {
+    defineExtensionMessaging: <_TProtocol>() => ({
+      sendMessage: (name: string, data: unknown, tabId?: number): Promise<unknown> => {
+        const target = (globalThis as unknown as { chrome: typeof chrome }).chrome;
+        if (typeof tabId === 'number') {
+          return target.tabs.sendMessage(tabId, { name, data });
+        }
+        return target.runtime.sendMessage({ name, data });
+      },
+      onMessage: (name: string, handler: (msg: unknown) => unknown) => {
+        handlers.set(name, handler);
+        const target = (globalThis as unknown as { chrome: typeof chrome }).chrome;
+        target.runtime.onMessage.addListener((m: unknown) => {
+          const obj = m as { name?: string; data?: unknown };
+          if (obj?.name === name) return handler(obj.data);
+          return undefined;
+        });
+        return () => {
+          handlers.delete(name);
+        };
+      },
+      removeAllListeners: () => {
+        handlers.clear();
+      },
+    }),
+  };
+});
+
 beforeEach(() => {
-  vi.stubGlobal('chrome', makeChromeMock());
+  const fresh = makeChromeMock();
+  vi.stubGlobal('chrome', fresh);
+  vi.stubGlobal('browser', fresh);
 });
