@@ -7,11 +7,7 @@ export default defineWorkspace([
   {
     test: {
       name: 'root',
-      include: [
-        'tests/**/*.test.ts',
-        'scripts/**/*.test.ts',
-        'tools/**/*.test.ts',
-      ],
+      include: ['tests/**/*.test.ts', 'scripts/**/*.test.ts', 'tools/**/*.test.ts'],
       environment: 'node',
     },
   },

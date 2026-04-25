@@ -6,13 +6,17 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.output/**",
-      "**/.wxt/**",
-      "**/coverage/**",
-      "**/.next/**"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.output",
+      "!**/.wxt",
+      "!**/coverage",
+      "!**/.next",
+      "!.claude",
+      "!.planning",
+      "!tests/fixtures"
     ]
   },
   "formatter": {
