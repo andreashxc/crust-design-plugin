@@ -7,11 +7,11 @@
 
 ### Engine — ядро движка экспериментов
 
-- [ ] **ENG-01**: Расширение собирается под Chromium MV3 и устанавливается через "load unpacked" или sideload `.crx`
-- [ ] **ENG-02**: Service worker не хранит in-memory состояние — всё персистится в `chrome.storage.local` (выживает SW termination через ~30s idle)
-- [ ] **ENG-03**: Engine поддерживает routing экспериментов между isolated-world и MAIN-world по полю в манифесте эксперимента
+- [x] **ENG-01**: Расширение собирается под Chromium MV3 и устанавливается через "load unpacked" или sideload `.crx` — *Phase 1 Plan 03 (build produces apps/extension/.output/chrome-mv3/manifest.json; manual smoke gated on Plan 04 smoke experiment)*
+- [x] **ENG-02**: Service worker не хранит in-memory состояние — всё персистится в `chrome.storage.local` (выживает SW termination через ~30s idle) — *Phase 1 Plan 03 (top-level addListener at line 20 < defineBackground at line 53; verified in built background.js IIFE; storage.ts is sole persistence path with zero module-scope state)*
+- [x] **ENG-03**: Engine поддерживает routing экспериментов между isolated-world и MAIN-world по полю в манифесте эксперимента — *Phase 1 Plan 03 (built manifest.json has 2 content_scripts entries with worlds [ISOLATED, MAIN]; filterByWorld unit-tested)*
 - [ ] **ENG-04**: Engine реализует контракт `apply({tweaks, helpers, currentURL, log, signal}) → cleanup` для каждого эксперимента
-- [ ] **ENG-05**: Engine оборачивает каждый `apply()`/`cleanup()` в try/catch — ошибка одного эксперимента не ломает другие
+- [x] **ENG-05**: Engine оборачивает каждый `apply()`/`cleanup()` в try/catch — ошибка одного эксперимента не ломает другие — *Phase 1 Plan 03 (per-call try/catch in runEngine + content-script reconcile loops; error-isolation.test.ts proves throwing apply() doesn't prevent siblings; last_error:<id> recorded in chrome.storage.local)*
 - [ ] **ENG-06**: Engine авто-отключает эксперимент после N ошибок за T секунд и показывает причину в popup
 - [ ] **ENG-07**: Engine патчит `history.pushState`/`replaceState` для повторного применения экспериментов на SPA-навигации
 - [ ] **ENG-08**: Engine использует общий MutationObserver с debounce и тегирует свои инжекции `data-exp-id`, чтобы избежать infinite-loop
@@ -155,11 +155,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
-| ENG-02 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
-| ENG-03 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-01 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) — manual smoke gated on Plan 04 |
+| ENG-02 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) |
+| ENG-03 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) |
 | ENG-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
-| ENG-05 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-05 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) |
 | ENG-06 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
 | ENG-07 | Phase 5: DX, SPA Composition & Sharing | Pending |
 | ENG-08 | Phase 5: DX, SPA Composition & Sharing | Pending |
