@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Repo + test infrastructure (pnpm + TS + Biome + Vitest + lefthook + CI; Wave 0)
+- [x] 01-01-PLAN.md — Repo + test infrastructure (pnpm + TS + Biome + Vitest + lefthook + CI; Wave 0)
 - [ ] 01-02-PLAN.md — `@platform/experiment-sdk` (D-15 contract types + D-16 Zod manifest schema) with full test coverage
 - [ ] 01-03-PLAN.md — WXT scaffold + engine skeleton (stateless SW, two-world content scripts, bare popup, url-match + storage + engine units)
 - [ ] 01-04-PLAN.md — Build-experiments Vite plugin (D-17 ULID, D-18 author check, D-21 Zod) + smoke experiment (D-28)
@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Spike & Engine Skeleton | 0/5 | Not started | - |
+| 1. Foundation Spike & Engine Skeleton | 1/5 | In progress | - |
 | 2. State Foundation, Messaging & Popup Shell | 0/TBD | Not started | - |
 | 3. Tweak System | 0/TBD | Not started | - |
 | 4. Helpers & LLM Integration | 0/TBD | Not started | - |
