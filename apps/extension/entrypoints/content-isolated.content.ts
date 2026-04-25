@@ -10,7 +10,7 @@ import type { ApplyFn, CleanupFn } from '@platform/experiment-sdk';
 import { ExperimentManifest } from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
 import { filterByWorld } from '@/content/engine';
-import { isExtensionMessage } from '@/shared/messages';
+import { onMessage } from '@/shared/messages';
 import { getEnabledExperiments, recordLastError } from '@/shared/storage';
 import { matchesUrl } from '@/shared/url-match';
 
@@ -71,12 +71,11 @@ function bootstrap(world: 'isolated' | 'main'): void {
   void reconcile(myLoaders, experimentLoaders);
 
   // Subsequent reconciles on STATE_CHANGED.
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (!isExtensionMessage(msg)) return false;
-    if (msg.type === 'STATE_CHANGED') {
-      void reconcile(myLoaders, experimentLoaders);
-    }
-    return false;
+  // Plan 02-03 minimal shape: switch from the Phase 1 raw addListener+isExtensionMessage
+  // guard to @webext-core/messaging's onMessage. Plan 02-07 (Wave 4) rewrites the body
+  // to also use the {tabId} payload (RESEARCH R8) and wire setAppliedInTab.
+  onMessage('STATE_CHANGED', () => {
+    void reconcile(myLoaders, experimentLoaders);
   });
 }
 

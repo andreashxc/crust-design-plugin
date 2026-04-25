@@ -1,55 +1,67 @@
 /**
  * Service worker entry.
  *
- * CRITICAL — SP-7 / Pitfall 1 / R7 / A3:
- *   chrome.runtime.onMessage.addListener MUST run at module top-level so the
- *   listener exists in the SW's global scope BEFORE Chrome dispatches an event.
- *   If it lived inside defineBackground's main() callback, it could miss the
- *   wake-up event after a ~30s idle termination.
+ * Phase 2 evolution of Phase 1's SP-7 contract (per CONTEXT D-04, D-06, D-07):
+ *  - Replaces hand-rolled tag-union onMessage with @webext-core/messaging's
+ *    onMessage(name, handler), which registers the underlying chrome runtime
+ *    listener synchronously at module-import time (RESEARCH R1).
+ *  - Splits handler bodies into typed handlers under src/background/handlers/.
+ *  - Runs idempotent storage migration (D-29) BEFORE handler registration
+ *    (RESEARCH R7 — migration must precede any handler that reads/writes
+ *    last_error).
+ *  - Registers chrome.tabs.onRemoved at top level to clean up stale
+ *    applied:<tabId> session-storage keys (RESEARCH §11).
+ *  - Inside defineBackground main(), calls
+ *    chrome.storage.session.setAccessLevel({accessLevel:
+ *    'TRUSTED_AND_UNTRUSTED_CONTEXTS'}) (RESEARCH R6) so content scripts
+ *    can write applied:<tabId> in Plan 02-07.
+ *  - WHO_AM_I handler (Blocker 2 fix) lets content scripts fetch their own
+ *    tab id during bootstrap (BEFORE the first STATE_CHANGED) so
+ *    applied:<tabId> writes happen on initial page load.
  *
- * Per CONTEXT D-12 / SP-1: ZERO module-scope state. All persistence flows through
- * apps/extension/src/shared/storage.ts.
+ * SP-1 preserved: ZERO module-scope state; all persistence via storage.ts.
+ * SP-7 preserved: top-level listener registrations BEFORE defineBackground.
  */
-
 import { defineBackground } from 'wxt/utils/define-background';
-import { isExtensionMessage } from '@/shared/messages';
-import { setEnabledExperiment } from '@/shared/storage';
+import { handleExperimentError } from '@/background/handlers/experiment-error';
+import { handleExperimentToggle } from '@/background/handlers/experiment-toggle';
+import { handleWhoAmI } from '@/background/handlers/who-am-i';
+import { onMessage } from '@/shared/messages';
+import { runStartupMigration } from '@/shared/storage';
 
-// ===== TOP-LEVEL LISTENER (SP-7) =====
-// Registered immediately on SW startup, before any await, before defineBackground runs.
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!isExtensionMessage(msg)) return false;
-
-  if (msg.type === 'EXPERIMENT_TOGGLE') {
-    // Stateless handler: read+write storage, broadcast to tabs, reply.
-    handleToggle(msg.id, msg.enabled)
-      .then(() => sendResponse({ ok: true }))
-      .catch((err: unknown) => {
-        console.error('[bg] toggle failed', err);
-        sendResponse({ ok: false, error: String(err) });
-      });
-    return true; // keep channel open for async sendResponse
-  }
-  return false;
+// ===== STARTUP MIGRATION (RESEARCH R7) =====
+// MUST run BEFORE the onMessage registrations below — handlers may read/write
+// last_error, and the migration consolidates Phase 1's per-key shape into a
+// single map. The void+catch ensures the SW never throws at top level.
+void runStartupMigration().catch((err: unknown) => {
+  console.error('[bg] migration failed', err);
 });
 
-async function handleToggle(id: string, enabled: boolean): Promise<void> {
-  await setEnabledExperiment(id, enabled);
-  // Broadcast STATE_CHANGED to every tab; per-tab errors (no content script) are suppressed.
-  const tabs = await chrome.tabs.query({});
-  await Promise.all(
-    tabs.map(async (tab) => {
-      if (tab.id == null) return;
-      try {
-        await chrome.tabs.sendMessage(tab.id, { type: 'STATE_CHANGED' });
-      } catch {
-        // tab has no content script — expected
-      }
-    }),
-  );
-}
+// ===== TOP-LEVEL LISTENERS (SP-7) =====
+// Registered immediately on SW startup, before any await, before defineBackground.
+// @webext-core/messaging onMessage() registers the underlying chrome runtime
+// listener synchronously, preserving the Phase 1 invariant (RESEARCH R1).
+onMessage('EXPERIMENT_TOGGLE', ({ data }) => handleExperimentToggle(data));
+onMessage('EXPERIMENT_ERROR', ({ data }) => handleExperimentError(data));
+// WHO_AM_I (Blocker 2): handler reads sender.tab.id; throws when called
+// outside a tab context (popup / options). The envelope shape from
+// @webext-core/messaging exposes `sender` directly.
+onMessage('WHO_AM_I', (message) => handleWhoAmI({ sender: message.sender }));
+// Note: STATE_CHANGED is broadcast-only (SW → tabs); SW does not handle it.
+// Note: STATUS_QUERY is content-script-handled (popup → active content script).
+
+// Cleanup stale applied:<tabId> keys when tabs close (RESEARCH §11).
+// chrome.tabs.onRemoved is a top-level event registration (SP-7-compatible).
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void chrome.storage.session.remove(`applied:${tabId}`);
+});
 
 // ===== WXT-DEFINED MAIN (kept near-empty per SP-7) =====
 export default defineBackground(() => {
-  // Intentionally empty. State lives in chrome.storage.local; listeners live above.
+  // setAccessLevel grants chrome.storage.session access to content scripts
+  // (default = TRUSTED_CONTEXTS, content scripts denied). RESEARCH R6.
+  // Idempotent: Chrome treats repeat calls as no-ops if already set.
+  void chrome.storage.session
+    .setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' })
+    .catch((err: unknown) => console.error('[bg] setAccessLevel failed', err));
 });

@@ -1,25 +1,29 @@
 /**
- * Typed wrapper over chrome.storage.local.
- * Per CONTEXT D-12: ZERO module-scope state. Every read returns from storage.
+ * Typed wrapper over chrome.storage.{local,session}.
+ * Per CONTEXT D-12 / SP-1: ZERO module-scope state. Every read returns from storage.
  * The SW survives idle termination (~30s); any caching here would be wiped.
+ *
+ * Phase 2 additions (D-09, D-12, D-28, D-29; RESEARCH §7 verbatim):
+ *  - `last_error` map (promotes Phase 1's per-key shape — D-29 idempotent migration)
+ *  - `autodisabled` map (engine kill-switch in storage.local — persistent)
+ *  - `error_window:<id>` in storage.session (sliding window counter)
+ *  - `applied:<tabId>` in storage.session (per-tab applied set)
+ *  - `runStartupMigration()` for Phase 1 → Phase 2 last_error consolidation
  */
 
 import type { AutoDisableRecord, ErrorRecord } from '@platform/experiment-sdk';
 
+// ===== Storage key constants (no string literals scattered through helpers) =====
+
 const KEY_ENABLED = 'enabled';
-const LAST_ERROR_PREFIX = 'last_error:';
-
-// ===== Phase 2 storage-key constants (D-09, D-12, D-28, D-29) =====
-
 const KEY_AUTODISABLED = 'autodisabled';
 const KEY_LAST_ERROR = 'last_error';
 const ERR_WINDOW_PREFIX = 'error_window:';
 const APPLIED_PREFIX = 'applied:';
 const PHASE1_LAST_ERROR_PREFIX = 'last_error:';
-const KEY_MIGRATIONS = '_migrations';
-const MIGRATION_NAME = 'last_error_to_map_v1';
+const LAST_ERROR_PREFIX = 'last_error:'; // Phase 1 alias (kept for back-compat)
 
-// ===== Phase 1 helpers (preserved verbatim) =====
+// ===== Phase 1 helpers (unchanged) =====
 
 export async function getEnabledExperiments(): Promise<Record<string, boolean>> {
   const result = await chrome.storage.local.get(KEY_ENABLED);
@@ -37,25 +41,32 @@ export async function setEnabledExperiment(id: string, enabled: boolean): Promis
   });
 }
 
+/**
+ * Phase 1 helper retained as a deprecated forwarder onto the Phase 2 map shape.
+ * Writes a minimal ErrorRecord under `last_error[id]` so Phase 2 readers see it.
+ */
 export async function recordLastError(id: string, message: string): Promise<void> {
-  await chrome.storage.local.set({ [`${LAST_ERROR_PREFIX}${id}`]: message });
+  await setLastError(id, {
+    phase: 'apply',
+    message,
+    at: Date.now(),
+  });
 }
 
+/**
+ * Phase 1 helper retained for callers that only know "clear by id".
+ */
 export async function clearLastError(id: string): Promise<void> {
-  await chrome.storage.local.remove(`${LAST_ERROR_PREFIX}${id}`);
+  const map = await getLastErrors();
+  delete map[id];
+  await chrome.storage.local.set({ [KEY_LAST_ERROR]: map });
 }
 
-// ===== Phase 2 additions (D-09, D-12, D-28, D-29) =====
-
-// ----- last_error map (D-29 promotion of Phase 1 per-key shape) -----
+// ===== Phase 2 — last_error map =====
 
 export async function getLastErrors(): Promise<Record<string, ErrorRecord>> {
   const r = await chrome.storage.local.get(KEY_LAST_ERROR);
-  const v = r[KEY_LAST_ERROR];
-  if (v && typeof v === 'object' && !Array.isArray(v)) {
-    return v as Record<string, ErrorRecord>;
-  }
-  return {};
+  return (r[KEY_LAST_ERROR] as Record<string, ErrorRecord> | undefined) ?? {};
 }
 
 export async function setLastError(id: string, error: ErrorRecord): Promise<void> {
@@ -64,21 +75,11 @@ export async function setLastError(id: string, error: ErrorRecord): Promise<void
   await chrome.storage.local.set({ [KEY_LAST_ERROR]: map });
 }
 
-export async function clearLastErrorMap(id: string): Promise<void> {
-  const map = await getLastErrors();
-  delete map[id];
-  await chrome.storage.local.set({ [KEY_LAST_ERROR]: map });
-}
-
-// ----- autodisabled map (D-12 persistent kill-switch) -----
+// ===== Phase 2 — autodisabled map =====
 
 export async function getAutoDisabled(): Promise<Record<string, AutoDisableRecord>> {
   const r = await chrome.storage.local.get(KEY_AUTODISABLED);
-  const v = r[KEY_AUTODISABLED];
-  if (v && typeof v === 'object' && !Array.isArray(v)) {
-    return v as Record<string, AutoDisableRecord>;
-  }
-  return {};
+  return (r[KEY_AUTODISABLED] as Record<string, AutoDisableRecord> | undefined) ?? {};
 }
 
 export async function setAutoDisable(id: string, record: AutoDisableRecord): Promise<void> {
@@ -93,7 +94,7 @@ export async function clearAutoDisable(id: string): Promise<void> {
   await chrome.storage.local.set({ [KEY_AUTODISABLED]: map });
 }
 
-// ----- error_window:<id> in storage.session (D-09 sliding window) -----
+// ===== Phase 2 — error_window:<id> in storage.session (sliding window) =====
 
 export type ErrorWindow = { count: number; firstAt: number };
 
@@ -111,35 +112,38 @@ export async function clearErrorWindow(id: string): Promise<void> {
   await chrome.storage.session.remove(`${ERR_WINDOW_PREFIX}${id}`);
 }
 
-// ----- applied:<tabId> in storage.session (D-09 per-tab applied set) -----
+// ===== Phase 2 — applied:<tabId> in storage.session =====
 
 export async function getAppliedInTab(tabId: number): Promise<string[]> {
   const key = `${APPLIED_PREFIX}${tabId}`;
   const r = await chrome.storage.session.get(key);
-  const v = r[key];
-  return Array.isArray(v) ? (v as string[]) : [];
+  return (r[key] as string[] | undefined) ?? [];
 }
 
 export async function setAppliedInTab(tabId: number, ids: string[]): Promise<void> {
   await chrome.storage.session.set({ [`${APPLIED_PREFIX}${tabId}`]: ids });
 }
 
-// ----- D-29 idempotent migration -----
-// CRITICAL ORDERING (RESEARCH R7): MUST run BEFORE any handler reads/writes
-// last_error in Phase 2. background.ts (Plan 02-03) calls runStartupMigration()
-// before registering onMessage handlers.
+// ===== Phase 2 — D-29 idempotent startup migration =====
+//
+// Promotes Phase 1's `last_error:<id>` per-key shape into the consolidated
+// `last_error` map. Idempotency record lives in `_migrations` array under
+// `chrome.storage.local`. Multiple SW wake-ups are safe (R7).
+
+const MIGRATION_KEY = '_migrations';
+const MIGRATION_NAME = 'last_error_to_map_v1';
 
 export async function runStartupMigration(): Promise<void> {
-  const r = await chrome.storage.local.get(KEY_MIGRATIONS);
-  const done = (r[KEY_MIGRATIONS] as string[] | undefined) ?? [];
+  const r = await chrome.storage.local.get(MIGRATION_KEY);
+  const done = (r[MIGRATION_KEY] as string[] | undefined) ?? [];
   if (done.includes(MIGRATION_NAME)) return; // idempotent
 
+  // Find all `last_error:<ulid>` keys.
   const all = await chrome.storage.local.get(null);
-  const oldKeys = Object.keys(all).filter(
-    (k) => k.startsWith(PHASE1_LAST_ERROR_PREFIX) && k !== KEY_LAST_ERROR,
-  );
+  const oldKeys = Object.keys(all).filter((k) => k.startsWith(PHASE1_LAST_ERROR_PREFIX));
   if (oldKeys.length === 0) {
-    await chrome.storage.local.set({ [KEY_MIGRATIONS]: [...done, MIGRATION_NAME] });
+    // Nothing to migrate; still mark done so we don't scan again.
+    await chrome.storage.local.set({ [MIGRATION_KEY]: [...done, MIGRATION_NAME] });
     return;
   }
 
@@ -147,7 +151,6 @@ export async function runStartupMigration(): Promise<void> {
   for (const k of oldKeys) {
     const id = k.slice(PHASE1_LAST_ERROR_PREFIX.length);
     const value = all[k];
-    // Phase 1 stored String(err); promote to ErrorRecord shape.
     map[id] = {
       phase: 'apply',
       message: typeof value === 'string' ? value : String(value),
@@ -156,5 +159,11 @@ export async function runStartupMigration(): Promise<void> {
   }
   await chrome.storage.local.set({ [KEY_LAST_ERROR]: map });
   await chrome.storage.local.remove(oldKeys);
-  await chrome.storage.local.set({ [KEY_MIGRATIONS]: [...done, MIGRATION_NAME] });
+  await chrome.storage.local.set({ [MIGRATION_KEY]: [...done, MIGRATION_NAME] });
 }
+
+// Re-export prefix for any callers needing the literal (Phase 1 compat).
+export { LAST_ERROR_PREFIX };
+
+// Phase 2 explicit alias — same semantics as `clearLastError` (which now operates on the map).
+export { clearLastError as clearLastErrorMap };

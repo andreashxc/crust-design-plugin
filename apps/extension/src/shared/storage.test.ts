@@ -44,17 +44,18 @@ describe('storage adapter (D-12 stateless)', () => {
     await expect(getEnabledExperiments()).resolves.toEqual({ a: false });
   });
 
-  it('recordLastError writes under last_error:<id>', async () => {
+  it('recordLastError writes into the last_error map (Phase 2 D-29)', async () => {
     await recordLastError('a', 'boom');
     const all = await chrome.storage.local.get(null as unknown as string);
-    expect(all).toMatchObject({ 'last_error:a': 'boom' });
+    // Phase 2: recordLastError forwards into the consolidated last_error map.
+    expect(all.last_error).toMatchObject({ a: { phase: 'apply', message: 'boom' } });
   });
 
-  it('clearLastError removes the entry', async () => {
+  it('clearLastError removes the entry from the map', async () => {
     await recordLastError('a', 'boom');
     await clearLastError('a');
     const all = await chrome.storage.local.get(null as unknown as string);
-    expect(all).not.toHaveProperty('last_error:a');
+    expect((all.last_error as Record<string, unknown>)?.a).toBeUndefined();
   });
 
   it('returns {} when storage value is malformed (string instead of object)', async () => {
