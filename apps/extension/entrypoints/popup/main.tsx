@@ -1,12 +1,12 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './style.css';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import '@/styles/popup.css';
+import { App } from './App';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('popup: #root missing');
-ReactDOM.createRoot(container).render(
-  <React.StrictMode>
+createRoot(container).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
+  </StrictMode>,
 );

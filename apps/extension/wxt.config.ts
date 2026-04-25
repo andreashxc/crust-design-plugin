@@ -20,6 +20,10 @@ export default defineConfig({
     plugins: [tailwindcss()],
     resolve: {
       alias: {
+        // `@/*` resolves to apps/extension/src/* — WXT/Vite does NOT auto-honor
+        // tsconfig.json `paths`, so the alias is duplicated here for runtime.
+        // Order matters: more specific prefix `@/` MUST come before `@experiments`.
+        '@/': `${resolve(__dirname, 'src')}/`,
         '@experiments': resolve(repoRoot, 'experiments'),
       },
     },
