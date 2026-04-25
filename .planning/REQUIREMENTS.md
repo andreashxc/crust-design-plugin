@@ -151,26 +151,87 @@
 
 ## Traceability
 
-Какие фазы покрывают какие требования. Заполняется при создании ROADMAP.
+Каждое v1 требование смаппено ровно в одну фазу. Покрытие 100% (63/63), сирот нет.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 — ENG-09 | TBD | Pending |
-| BLD-01 — BLD-06 | TBD | Pending |
-| MAN-01 — MAN-04 | TBD | Pending |
-| TWK-01 — TWK-08 | TBD | Pending |
-| UI-01 — UI-08 | TBD | Pending |
-| HLP-01 — HLP-09 | TBD | Pending |
-| DX-01 — DX-05 | TBD | Pending |
-| SHR-01 — SHR-04 | TBD | Pending |
-| DIST-01 — DIST-03 | TBD | Pending |
-| ACC-01 — ACC-07 | TBD | Pending |
+| ENG-01 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-02 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-03 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| ENG-05 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| ENG-06 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| ENG-07 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| ENG-08 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| ENG-09 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| BLD-01 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| BLD-02 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| BLD-03 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| BLD-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| BLD-05 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| BLD-06 | Phase 6: Distribution & Acceptance | Pending |
+| MAN-01 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| MAN-02 | Phase 3: Tweak System | Pending |
+| MAN-03 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| MAN-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| TWK-01 | Phase 3: Tweak System | Pending |
+| TWK-02 | Phase 3: Tweak System | Pending |
+| TWK-03 | Phase 3: Tweak System | Pending |
+| TWK-04 | Phase 3: Tweak System | Pending |
+| TWK-05 | Phase 3: Tweak System | Pending |
+| TWK-06 | Phase 3: Tweak System | Pending |
+| TWK-07 | Phase 3: Tweak System | Pending |
+| TWK-08 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| UI-01 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| UI-02 | Phase 3: Tweak System | Pending |
+| UI-03 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| UI-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| UI-05 | Phase 3: Tweak System | Pending |
+| UI-06 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| UI-07 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| UI-08 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
+| HLP-01 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-02 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-03 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-04 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-05 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-06 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-07 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-08 | Phase 4: Helpers & LLM Integration | Pending |
+| HLP-09 | Phase 4: Helpers & LLM Integration | Pending |
+| DX-01 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DX-02 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DX-03 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DX-04 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DX-05 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| SHR-01 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| SHR-02 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| SHR-03 | Phase 6: Distribution & Acceptance | Pending |
+| SHR-04 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DIST-01 | Phase 6: Distribution & Acceptance | Pending |
+| DIST-02 | Phase 5: DX, SPA Composition & Sharing | Pending |
+| DIST-03 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-01 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-02 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-03 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-04 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-05 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-06 | Phase 6: Distribution & Acceptance | Pending |
+| ACC-07 | Phase 6: Distribution & Acceptance | Pending |
 
 **Coverage:**
-- v1 requirements: 53 total
-- Mapped to phases: 0 (will be filled by roadmapper)
-- Unmapped: 53 ⚠️ (expected at this stage)
+- v1 requirements: 63 total (corrected from previously stated 53; full enumeration above)
+- Mapped to phases: 63 (100%)
+- Unmapped: 0
+
+**Per-phase counts:**
+- Phase 1 (Foundation Spike & Engine Skeleton): 8 requirements — ENG-01, ENG-02, ENG-03, ENG-05, BLD-01, BLD-02, BLD-05, MAN-01
+- Phase 2 (State Foundation, Messaging & Popup Shell): 10 requirements — ENG-04, ENG-06, BLD-03, BLD-04, MAN-03, MAN-04, UI-01, UI-03, UI-04, UI-08
+- Phase 3 (Tweak System): 10 requirements — MAN-02, TWK-01, TWK-02, TWK-03, TWK-04, TWK-05, TWK-06, TWK-07, UI-02, UI-05
+- Phase 4 (Helpers & LLM Integration): 9 requirements — HLP-01, HLP-02, HLP-03, HLP-04, HLP-05, HLP-06, HLP-07, HLP-08, HLP-09
+- Phase 5 (DX, SPA Composition & Sharing): 15 requirements — ENG-07, ENG-08, ENG-09, TWK-08, UI-06, UI-07, DX-01, DX-02, DX-03, DX-04, DX-05, SHR-01, SHR-02, SHR-04, DIST-02
+- Phase 6 (Distribution & Acceptance): 11 requirements — BLD-06, SHR-03, DIST-01, DIST-03, ACC-01, ACC-02, ACC-03, ACC-04, ACC-05, ACC-06, ACC-07
 
 ---
 *Requirements defined: 2026-04-25*
-*Last updated: 2026-04-25 after initial definition*
+*Last updated: 2026-04-25 — traceability filled by roadmapper, full 63-requirement coverage validated*

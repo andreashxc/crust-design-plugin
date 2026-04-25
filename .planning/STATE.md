@@ -1,0 +1,72 @@
+# Project State
+
+## Project Reference
+
+See: .planning/PROJECT.md (updated 2026-04-25)
+
+**Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
+**Current focus:** Phase 1 — Foundation Spike & Engine Skeleton
+
+## Current Position
+
+Phase: 1 of 6 (Foundation Spike & Engine Skeleton)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-04-25 — Roadmap created from requirements + research
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0
+- Average duration: -
+- Total execution time: 0 hours
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| - | - | - | - |
+
+**Recent Trend:**
+- Last 5 plans: -
+- Trend: -
+
+*Updated after each plan completion*
+
+## Accumulated Context
+
+### Decisions
+
+Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- Init: Bundle-all + rebuild plugin (MV3 forbids runtime-fetch JS) — drives Phase 1 build pipeline
+- Init: Pure JS-module experiments with `apply({tweaks, helpers, ...}) → cleanup` contract — Phase 1 engine architecture
+- Init: WXT (Vite-based MV3 framework) recommended over CRXJS — must reconcile during Phase 1 spike
+- Init: Per-user LLM API keys, no central infrastructure — drives Phase 4 cost-guard requirements
+
+### Pending Todos
+
+None yet.
+
+### Blockers/Concerns
+
+- **Phase 1 spike unknowns** (research-flagged): WXT vs CRXJS HMR contract, dynamic import cache-busting, SW idle termination during in-flight fetch — must resolve before later phases build on assumptions
+- **Phase 4 spike unknowns**: OpenAI/Anthropic SDK in SW context (no `window`), SW port keep-alive for streaming, `chrome.runtime.sendMessage` size limit for `fetchPage` HTML payloads
+- **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
+
+## Deferred Items
+
+Items acknowledged and carried forward from previous milestone close:
+
+| Category | Item | Status | Deferred At |
+|----------|------|--------|-------------|
+| *(none)* | | | |
+
+## Session Continuity
+
+Last session: 2026-04-25
+Stopped at: Roadmap created (.planning/ROADMAP.md), STATE.md initialized, REQUIREMENTS.md traceability filled
+Resume file: None
