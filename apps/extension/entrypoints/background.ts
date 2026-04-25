@@ -12,25 +12,22 @@
  */
 
 import { defineBackground } from 'wxt/utils/define-background';
-import { isExtensionMessage } from '@/shared/messages';
+import { onMessage, sendMessage } from '@/shared/messages';
 import { setEnabledExperiment } from '@/shared/storage';
 
 // ===== TOP-LEVEL LISTENER (SP-7) =====
 // Registered immediately on SW startup, before any await, before defineBackground runs.
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (!isExtensionMessage(msg)) return false;
-
-  if (msg.type === 'EXPERIMENT_TOGGLE') {
-    // Stateless handler: read+write storage, broadcast to tabs, reply.
-    handleToggle(msg.id, msg.enabled)
-      .then(() => sendResponse({ ok: true }))
-      .catch((err: unknown) => {
-        console.error('[bg] toggle failed', err);
-        sendResponse({ ok: false, error: String(err) });
-      });
-    return true; // keep channel open for async sendResponse
+// Plan 02-03 Task 1 minimal shape: switch from raw addListener+isExtensionMessage to
+// @webext-core/messaging's onMessage. Task 5 of this same plan rewrites this file
+// entirely to split into typed handlers + add migration + tabs.onRemoved + setAccessLevel.
+onMessage('EXPERIMENT_TOGGLE', async ({ data }) => {
+  try {
+    await handleToggle(data.id, data.enabled);
+    return { ok: true } as const;
+  } catch (err) {
+    console.error('[bg] toggle failed', err);
+    return { ok: false, error: String(err) } as const;
   }
-  return false;
 });
 
 async function handleToggle(id: string, enabled: boolean): Promise<void> {
@@ -41,7 +38,7 @@ async function handleToggle(id: string, enabled: boolean): Promise<void> {
     tabs.map(async (tab) => {
       if (tab.id == null) return;
       try {
-        await chrome.tabs.sendMessage(tab.id, { type: 'STATE_CHANGED' });
+        await sendMessage('STATE_CHANGED', { tabId: tab.id }, tab.id);
       } catch {
         // tab has no content script — expected
       }
