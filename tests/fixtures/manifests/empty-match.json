@@ -1,0 +1,11 @@
+{
+  "id": "01J0ABCDEFGHJKMNPQRSTVWXYZ",
+  "name": "Smoke pink",
+  "author": "andrew",
+  "description": "Turns ya.ru pink to verify foundation",
+  "scope": {
+    "match": []
+  },
+  "world": "isolated",
+  "tweaks": []
+}
