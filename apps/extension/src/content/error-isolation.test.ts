@@ -46,7 +46,7 @@ describe('runEngine error isolation (D-14 / ENG-05 / SP-2)', () => {
     expect(okApply).toHaveBeenCalledTimes(1);
   });
 
-  it('records last_error:<id> in chrome.storage.local for failures', async () => {
+  it('records last_error[id] in chrome.storage.local for failures', async () => {
     const failingApply: ApplyFn = () => {
       throw new Error('explicit-error-message');
     };
@@ -57,8 +57,10 @@ describe('runEngine error isolation (D-14 / ENG-05 / SP-2)', () => {
       currentURL: 'https://ya.ru/',
     });
 
-    const stored = await chrome.storage.local.get('last_error:01J0AAAAAAAAAAAAAAAAAAAAAA');
-    expect(stored['last_error:01J0AAAAAAAAAAAAAAAAAAAAAA']).toContain('explicit-error-message');
+    // Phase 2 D-29: last_error is now a consolidated map under one key.
+    const stored = await chrome.storage.local.get('last_error');
+    const map = stored.last_error as Record<string, { message: string }> | undefined;
+    expect(map?.['01J0AAAAAAAAAAAAAAAAAAAAAA']?.message).toContain('explicit-error-message');
   });
 
   it('async apply() rejection is caught and other experiments still run', async () => {
