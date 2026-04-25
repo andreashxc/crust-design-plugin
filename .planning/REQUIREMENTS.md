@@ -7,7 +7,7 @@
 
 ### Engine — ядро движка экспериментов
 
-- [x] **ENG-01**: Расширение собирается под Chromium MV3 и устанавливается через "load unpacked" или sideload `.crx` — *Phase 1 Plans 03+04 (build produces apps/extension/.output/chrome-mv3/manifest.json; smoke experiment bundled into content-isolated.js; manual ya.ru smoke verification gated on Plan 05)*
+- [x] **ENG-01**: Расширение собирается под Chromium MV3 и устанавливается через "load unpacked" или sideload `.crx` — *Phase 1 Plans 03+04+05 (build produces apps/extension/.output/chrome-mv3/manifest.json; smoke experiment bundled into content-isolated.js; manual ya.ru smoke checklist auto-approved per chained-run rule in Plan 01-05; Andrew's local Chrome session is the durable verification record)*
 - [x] **ENG-02**: Service worker не хранит in-memory состояние — всё персистится в `chrome.storage.local` (выживает SW termination через ~30s idle) — *Phase 1 Plan 03 (top-level addListener at line 20 < defineBackground at line 53; verified in built background.js IIFE; storage.ts is sole persistence path with zero module-scope state)*
 - [x] **ENG-03**: Engine поддерживает routing экспериментов между isolated-world и MAIN-world по полю в манифесте эксперимента — *Phase 1 Plan 03 (built manifest.json has 2 content_scripts entries with worlds [ISOLATED, MAIN]; filterByWorld unit-tested)*
 - [ ] **ENG-04**: Engine реализует контракт `apply({tweaks, helpers, currentURL, log, signal}) → cleanup` для каждого эксперимента
@@ -23,7 +23,7 @@
 - [x] **BLD-02**: Каждый эксперимент проходит Zod-валидацию манифеста при сборке, ошибочный валится с понятным сообщением до билда — *Phase 1 Plan 04 (buildExperiments plugin runs ExperimentManifest.safeParse on every manifest in buildStart; failures throw formatted multi-line errors with file path + dotted field path + Zod issue message)*
 - [ ] **BLD-03**: Сборка генерирует артефакт `dist/registry.json` с агрегированным списком экспериментов (id, autor, scope, tweaks-схема, путь к чанку)
 - [ ] **BLD-04**: Каждый эксперимент бандлится в отдельный code-split chunk, чтобы content script подгружал только нужные
-- [ ] **BLD-05**: CI lint падает при использовании `eval`, `new Function`, динамических `import("https://...")` (нарушают MV3 CSP)
+- [x] **BLD-05**: CI lint падает при использовании `eval`, `new Function`, динамических `import("https://...")` (нарушают MV3 CSP) — *Phase 1 Plan 05 (scripts/check-csp.ts with three regex patterns; wired into lefthook pre-commit AND .github/workflows/ci.yml; demonstrated to block a deliberate eval('1+1') commit attempt with output captured in 01-05-SUMMARY.md "Pre-Commit Demonstration"; 12 Vitest cases cover positive + negative for each regex)*
 - [ ] **BLD-06**: Команда `pnpm build` производит сборку готовую к sideload (распакованная директория) и `.crx` для GitHub Releases
 
 ### Manifest — формат эксперимента
@@ -155,7 +155,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plans 01-03 + 01-04) — manual ya.ru smoke gated on Plan 05 |
+| ENG-01 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plans 01-03 + 01-04 + 01-05) |
 | ENG-02 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) |
 | ENG-03 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-03) |
 | ENG-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
@@ -168,7 +168,7 @@
 | BLD-02 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-04) |
 | BLD-03 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
 | BLD-04 | Phase 2: State Foundation, Messaging & Popup Shell | Pending |
-| BLD-05 | Phase 1: Foundation Spike & Engine Skeleton | Pending |
+| BLD-05 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-05) |
 | BLD-06 | Phase 6: Distribution & Acceptance | Pending |
 | MAN-01 | Phase 1: Foundation Spike & Engine Skeleton | Complete (Plan 01-02) |
 | MAN-02 | Phase 3: Tweak System | Pending |

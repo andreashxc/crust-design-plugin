@@ -38,7 +38,7 @@ Plans:
 - [x] 01-02-PLAN.md — `@platform/experiment-sdk` (D-15 contract types + D-16 Zod manifest schema) with full test coverage
 - [x] 01-03-PLAN.md — WXT scaffold + engine skeleton (stateless SW, two-world content scripts, bare popup, url-match + storage + engine units)
 - [x] 01-04-PLAN.md — Build-experiments Vite plugin (D-17 ULID, D-18 author check, D-21 Zod) + smoke experiment (D-28)
-- [ ] 01-05-PLAN.md — CSP guardrail (BLD-05) + spike report `docs/spike/MV3-FOUNDATION.md` (D-26) + manual smoke verify
+- [x] 01-05-PLAN.md — CSP guardrail (BLD-05) + spike report `docs/spike/MV3-FOUNDATION.md` (D-26) + manual smoke verify
 
 ### Phase 2: State Foundation, Messaging & Popup Shell
 **Goal**: The typed storage adapter, typed messaging bus, and SW orchestrator are in place; the popup lists experiments grouped by author with working enable/disable and per-experiment status; the apply → cleanup round-trip is validated end-to-end through the SW.
@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Spike & Engine Skeleton | 4/5 | In progress | - |
+| 1. Foundation Spike & Engine Skeleton | 5/5 | Verification pending | - |
 | 2. State Foundation, Messaging & Popup Shell | 0/TBD | Not started | - |
 | 3. Tweak System | 0/TBD | Not started | - |
 | 4. Helpers & LLM Integration | 0/TBD | Not started | - |

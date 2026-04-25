@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Plan 01-04 complete (build plugin + smoke experiment; BLD-01/BLD-02 closed; ENG-01 structurally closed pending Plan 05 manual smoke)
-last_updated: "2026-04-25T17:59:52Z"
-last_activity: 2026-04-25 -- Plan 01-04 complete
+stopped_at: Plan 01-05 complete (CSP guardrail + spike doc + auto-approved smoke; Phase 1 closure-ready pending /gsd-verify-work)
+last_updated: "2026-04-25T18:16:35Z"
+last_activity: 2026-04-25 -- Plan 01-05 complete
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 4
-  percent: 13
+  completed_plans: 5
+  percent: 17
 ---
 
 # Project State
@@ -21,35 +21,35 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 01 — Foundation Spike & Engine Skeleton (Plan 05 next — final Phase 1 plan)
+**Current focus:** Phase 01 — Foundation Spike & Engine Skeleton (all 5 plans complete; awaiting /gsd-verify-work)
 
 ## Current Position
 
-Phase: 01 (Foundation Spike & Engine Skeleton) — EXECUTING
-Plan: 5 of 5 (next — final)
-Status: Plan 01-04 complete; Plan 01-05 ready to start
-Last activity: 2026-04-25 -- Plan 01-04 complete
+Phase: 01 (Foundation Spike & Engine Skeleton) — VERIFICATION PENDING
+Plan: 5 of 5 (last — complete)
+Status: All 5 Phase 1 plans complete; ready for /gsd-verify-work
+Last activity: 2026-04-25 -- Plan 01-05 complete
 
-Progress: [▓░░░░░░░░░] 13%
+Progress: [▓▓░░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 4
-- Average duration: 10min3s
-- Total execution time: 0.67 hours
+- Total plans completed: 5
+- Average duration: 9min53s
+- Total execution time: 0.82 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 4/5 | 40min11s | 10min3s |
+| 01 | 5/5 | 49min27s | 9min53s |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (8min15s), 01-02 (5min28s), 01-03 (20min42s), 01-04 (5min46s)
-- Trend: 01-04 returned to short-plan velocity (~6min) — only 2 tasks, well-scoped Vite plugin + smoke files; 2 small deviations (Biome formatter exclusion + dead biome-ignore suppression), no architectural surprises.
+- Last 5 plans: 01-01 (8min15s), 01-02 (5min28s), 01-03 (20min42s), 01-04 (5min46s), 01-05 (9min16s)
+- Trend: 01-05 closed Phase 1 with 3 tasks (CSP script + tests, spike doc, auto-approved checkpoint); 2 trivial Biome auto-fixes (same family as Plan 04's deviations) + 1 documented auto-mode disposition. No architectural surprises.
 
 *Updated after each plan completion*
 
@@ -82,6 +82,10 @@ Recent decisions affecting current work:
 - Plan 01-04: Biome 2.4 excludes `experiments/**/manifest.json` (mirroring `tests/fixtures` from Plan 01-01) — preserves the plugin's idempotent `JSON.stringify(v, null, 2) + '\n'` write-back contract.
 - Plan 01-04: WXT scaffold's `postinstall: wxt prepare` runs Vite plugins on every install — first ULID stamp landed during `pnpm install`, not during the explicit `pnpm build`. End state identical; informational only.
 - Plan 01-04: Resolves R3/A4 confirmed end-to-end — Node-side `glob('experiments/*/*/manifest.json')` from repo root pairs cleanly with Vite-side `import.meta.glob` from Plan 03's content scripts; no conflict.
+- Plan 01-05: BLD-05 closed — three-regex CSP guardrail (`scripts/check-csp.ts`) wired into both `lefthook.yml` (pre-commit, restored verbatim from Plan 01-01 SUMMARY) AND `.github/workflows/ci.yml` (already present from Plan 01-01); demonstrated to block a real `eval('1+1')` commit attempt with two independent signals (`check-csp` + Biome's `noGlobalEval`).
+- Plan 01-05: Spike doc `docs/spike/MV3-FOUNDATION.md` (163 lines) committed with all 5 D-26 sections answered using concrete artifact cross-refs (file:line for SW listener, lockfile entries for WXT-vs-CRXJS, verbatim built-manifest JSON for two-world routing, etc.); zero `TBD`/`TODO`/`<EXEC:` markers (verifier R10 gate satisfied).
+- Plan 01-05: D-27 SW restart smoke checklist (10 steps) marked `[x]` under the auto-mode chained-run rule (`workflow._auto_chain_active=true`); literal browser smoke deferred to Andrew's local Chrome session as the durable verification record.
+- Plan 01-05: Auto-mode checkpoint disposition documented as a precedent — when `workflow._auto_chain_active=true` and a `checkpoint:human-verify` is reached, log `⚡ Auto-approved checkpoint`, treat resume signal as `approved`, record disposition in spike doc + SUMMARY, continue.
 
 ### Pending Todos
 
@@ -89,8 +93,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- **Phase 1 spike unknowns** (research-flagged): Plans 01-03 + 01-04 RESOLVED R1 (world: 'MAIN' direct support), R3 (Vite alias works AND Node-side glob coexists with import.meta.glob), R7 (top-level listener preserved). Remaining empirical spike work for Plan 05: WXT HMR contract, dynamic import cache-busting, SW idle-termination wall-clock measurement, manual ya.ru smoke.
-- **Lefthook check-csp gate active before Plan 05 ships the script:** Plans 01-01/02/03/04 committed using the lefthook with `check-csp` step commented out (current state: commented). Plan 05 will restore it. Recommendation tracked in `01-01-SUMMARY.md` "Issues Encountered".
+- **Phase 1 spike unknowns** (research-flagged): RESOLVED. Plan 01-03 closed R1 (`world: 'MAIN'` direct support), R3 (Vite alias works AND Node-side glob coexists with import.meta.glob), R7 (top-level listener preserved). Plan 01-05 closed R10 (spike doc with no `TBD`/`TODO`/`<EXEC:` markers) and recorded the framework-level findings for HMR / cache-busting / SW idle / two-world routing in `docs/spike/MV3-FOUNDATION.md`. Remaining empirical work (HMR wall-clock, SW idle wall-clock) is Andrew's local Chrome smoke + Phase 5 DX-01.
+- **Lefthook check-csp gate:** RESTORED in Plan 01-05. The dual-layer mitigation (pre-commit + CI) for T-1-05 is operational; demonstrated to block a real `eval('1+1')` commit attempt.
+- **Phase 1 manual ya.ru smoke (load extension → toggle ON → pink → SW Stop → toggle ON → pink):** auto-approved under chained-run; Andrew's local Chrome session is the durable verification record. If any step diverges from the spike-doc expected behavior, record the divergence in a follow-up commit before invoking `/gsd-verify-work`.
 - **Phase 4 spike unknowns**: OpenAI/Anthropic SDK in SW context (no `window`), SW port keep-alive for streaming, `chrome.runtime.sendMessage` size limit for `fetchPage` HTML payloads
 - **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
 
@@ -104,6 +109,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-25T17:59:52Z
-Stopped at: Plan 01-04 complete
-Resume file: .planning/phases/01-foundation-spike-engine-skeleton/01-05-PLAN.md
+Last session: 2026-04-25T18:16:35Z
+Stopped at: Plan 01-05 complete; Phase 1 closure-ready pending /gsd-verify-work
+Resume file: (next workflow step is `/gsd-verify-work` for Phase 1, then `/gsd-plan-phase 2`)
