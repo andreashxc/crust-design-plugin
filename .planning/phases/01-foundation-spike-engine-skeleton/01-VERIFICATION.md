@@ -1,8 +1,8 @@
 ---
 phase: 01-foundation-spike-engine-skeleton
 verified: 2026-04-25T21:35:00Z
-status: human_needed
-score: 5/5 must-haves verified structurally; 2 require live-Chrome empirical confirmation
+status: passed
+score: 5/5 must-haves verified — 3 automated + 2 live-Chrome (Andrew's session 2026-04-25). One bug caught during the live smoke (chrome.* call in MAIN world content script); fixed in commit cf6ff10; both manual tests then passed cleanly.
 overrides_applied: 0
 re_verification:
   previous_status: none
