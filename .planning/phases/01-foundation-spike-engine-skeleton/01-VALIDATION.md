@@ -2,7 +2,7 @@
 phase: 1
 slug: foundation-spike-engine-skeleton
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-04-25
 ---
@@ -41,16 +41,16 @@ created: 2026-04-25
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 1-01-01 | 01 | 0 | infra | — | N/A | smoke | `pnpm install --frozen-lockfile` | ❌ W0 | ⬜ pending |
-| 1-01-02 | 01 | 1 | MAN-01 | — | manifest schema rejects malformed input | unit | `pnpm vitest run packages/experiment-sdk/src/manifest.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-03 | 01 | 2 | ENG-02 | T-1-02 | SW listeners registered top-level so wake-up works post-termination | unit | `pnpm vitest run apps/extension/src/shared/storage.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-04 | 01 | 2 | ENG-03 | — | engine routes by `world` field (no cross-world leakage) | unit | `pnpm vitest run apps/extension/src/content/world-routing.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-05 | 01 | 2 | ENG-05 | T-1-05 | one experiment's `apply()` throw doesn't break others | unit | `pnpm vitest run apps/extension/src/content/error-isolation.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-06 | 01 | 3 | BLD-01 | — | build discovery via `import.meta.glob` (no runtime fetch under MV3 CSP) | unit | `pnpm vitest run tools/build-experiments.test.ts -t discovery` | ❌ W0 | ⬜ pending |
-| 1-01-07 | 01 | 3 | BLD-02 | — | invalid manifest fails build with readable error | unit | `pnpm vitest run tools/build-experiments.test.ts -t validation` | ❌ W0 | ⬜ pending |
-| 1-01-08 | 01 | 3 | ENG-01 | — | extension loads via "load unpacked" | build smoke | `pnpm build && test -f apps/extension/.output/chrome-mv3/manifest.json` | ❌ W0 | ⬜ pending |
-| 1-01-09 | 01 | 3 | ENG-01 | — | URL match-pattern matcher correct for ya.ru apex + subdomain | unit | `pnpm vitest run apps/extension/src/shared/url-match.test.ts` | ❌ W0 | ⬜ pending |
-| 1-01-10 | 01 | 4 | BLD-05 | T-1-05 | CSP regex blocks `eval`, `new Function`, remote `import("https://...")` | unit + integ | `pnpm vitest run scripts/check-csp.test.ts && pnpm check-csp` | ❌ W0 | ⬜ pending |
+| 1-01-01 | 01 | 1 | infra | T-1-PM | toolchain installs and Wave 0 sanity test passes | smoke | `pnpm install --frozen-lockfile && pnpm test --run` | ❌ W0 | ⬜ pending |
+| 1-02-01 | 02 | 2 | MAN-01 | T-1-01 | manifest schema rejects malformed input | unit | `pnpm vitest run packages/experiment-sdk/src/manifest.test.ts` | ❌ W0 | ⬜ pending |
+| 1-03-01 | 03 | 3 | ENG-02 | T-1-02 | SW listeners registered top-level so wake-up works post-termination | unit | `pnpm vitest run apps/extension/src/shared/storage.test.ts` | ❌ W0 | ⬜ pending |
+| 1-03-02 | 03 | 3 | ENG-03 | T-1-03 | engine routes by `world` field (no cross-world leakage) | unit | `pnpm vitest run apps/extension/src/content/world-routing.test.ts` | ❌ W0 | ⬜ pending |
+| 1-03-03 | 03 | 3 | ENG-05 | T-1-04 | one experiment's `apply()` throw doesn't break others | unit | `pnpm vitest run apps/extension/src/content/error-isolation.test.ts` | ❌ W0 | ⬜ pending |
+| 1-03-04 | 03 | 3 | ENG-01 | — | URL match-pattern matcher correct for ya.ru apex + subdomain | unit | `pnpm vitest run apps/extension/src/shared/url-match.test.ts` | ❌ W0 | ⬜ pending |
+| 1-04-01 | 04 | 4 | BLD-01 | — | build discovery via `import.meta.glob` (no runtime fetch under MV3 CSP) | unit | `pnpm vitest run tools/build-experiments.test.ts -t discovery` | ❌ W0 | ⬜ pending |
+| 1-04-02 | 04 | 4 | BLD-02 | T-1-01 | invalid manifest fails build with readable error | unit | `pnpm vitest run tools/build-experiments.test.ts -t validation` | ❌ W0 | ⬜ pending |
+| 1-04-03 | 04 | 4 | ENG-01 | — | extension loads via "load unpacked" | build smoke | `pnpm build && test -f apps/extension/.output/chrome-mv3/manifest.json` | ❌ W0 | ⬜ pending |
+| 1-05-01 | 05 | 5 | BLD-05 | T-1-05 | CSP regex blocks `eval`, `new Function`, remote `import("https://...")` | unit + integ | `pnpm vitest run scripts/check-csp.test.ts && pnpm check-csp` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

@@ -689,7 +689,7 @@ The Assumptions Log focuses the planner: A1, A3, A4 are early-wave verifications
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 These are decisions the **plan-checker / executor** may face but the planner cannot fully resolve from research alone. Surface them in the plan; defer or punt with explicit reasoning.
 
@@ -697,26 +697,31 @@ These are decisions the **plan-checker / executor** may face but the planner can
    - What we know: WXT's `defineBackground({ main() })` is the documented entry. Pitfall 1 demands top-level listeners.
    - What's unclear: whether WXT's wrapping preserves top-level semantics or moves listeners inside `main()`.
    - Recommendation: Wave 2 task T2.3 includes a sub-step "verify SW listener registration order via `chrome://serviceworker-internals` cold-start log; document in spike doc."
+   - **RESOLVED:** Wave 2 task verifies SW listener line ordering in `apps/extension/entrypoints/background.ts` (top-level addListener BEFORE `defineBackground`); spike doc Section 4 records cold-start behavior.
 
 2. **Should Phase 1 ship a `pnpm dev` watch mode at all?**
    - What we know: WXT's `wxt` command provides dev mode. Phase 5 owns hot-reload polish.
    - What's unclear: Whether enabling `pnpm dev` in Phase 1 risks introducing dev-only state that Phase 5 has to undo.
    - Recommendation: ship `pnpm dev` as it comes from WXT default — but document in spike doc that any HMR observed is "reference behavior for Phase 5 to formalize."
+   - **RESOLVED:** Ship `pnpm dev` as WXT defaults; spike doc labels any observed HMR as Phase-5 reference behavior, not Phase-1 contract.
 
 3. **Does the popup show experiments not matching the current tab?**
    - What we know: D-29 says "bare-bones list with one toggle". UI-05 (URL-filtered list) is Phase 3.
    - What's unclear: Whether bare = "show all manifests" or "show all manifests but disabled if no current-tab match."
    - Recommendation: Show ALL manifests, no URL filter (matches D-29 "bare"). Phase 3 adds filter.
+   - **RESOLVED:** Popup shows ALL manifests with no URL filter (D-29 bare); URL filtering deferred to Phase 3 (UI-05).
 
 4. **What error message does the user see in popup if smoke `apply()` throws?**
    - What we know: D-14 says console + `chrome.storage.local.last_errors[id]`. Phase 2 (UI-08) renders errors in popup.
    - What's unclear: Whether Phase 1 popup reads `last_errors` and renders any UI for it.
    - Recommendation: Phase 1 popup does NOT render errors. Storage is written by engine; Phase 2 popup consumes. Keeps Phase 1 truly minimal.
+   - **RESOLVED:** Phase 1 popup does NOT render errors; engine writes `last_error:<id>` to `chrome.storage.local`; Phase 2 (UI-08) consumes.
 
 5. **Is the smoke experiment expected to revert if user navigates away from ya.ru?**
    - What we know: ENG-07 (SPA pushState handling) is Phase 5. Phase 1 has no SPA handling.
    - What's unclear: If user enables smoke on ya.ru, then navigates to google.com via address bar, does smoke "leak"?
    - Recommendation: Hard navigation (address bar) reloads the content script — natural reset. Same-tab SPA nav (pushState) wouldn't trigger reset, but ya.ru is mostly server-rendered SERPs and Phase 1 success criterion is just "pink on enable, revert on disable" — not "pink only on ya.ru."  Document in spike doc that SPA-leak is a Phase 5 concern.
+   - **RESOLVED:** Hard nav reloads content script (natural reset); SPA-pushState leak documented as Phase-5 (ENG-07) concern in spike doc.
 
 ---
 
