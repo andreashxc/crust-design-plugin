@@ -59,3 +59,67 @@ export type ApplyArgs = {
 export type CleanupFn = () => void | Promise<void>;
 
 export type ApplyFn = (args: ApplyArgs) => CleanupFn | Promise<CleanupFn>;
+
+// ============================================================================
+// Phase 2 additions (D-30, D-31)
+// ============================================================================
+
+/**
+ * Phase 2: registry entry shape emitted by the build plugin into
+ * `dist/registry.json`. Consumed by popup, SW, and content scripts.
+ *
+ * Per CONTEXT D-16 + Warning 6 fix (checker iter 1): includes `folder` so
+ * content scripts resolve loaders directly from manifest, not via fragile
+ * chunkPath regex.
+ */
+export type RegistryEntry = {
+  id: string; // ULID Crockford base32 (26 chars)
+  author: string; // matches folder name under experiments/
+  folder: string; // directory name under experiments/<author>/ (Warning 6 fix)
+  name: string;
+  description: string;
+  scope: { match: string[]; regex?: string[] };
+  world: 'isolated' | 'main';
+  chunkPath: string; // relative to extension root, e.g. "experiments/andrew-01HXX....js"
+  tweaks: unknown[]; // opaque in Phase 2; Phase 3 narrows via discriminated union
+};
+
+export type Registry = RegistryEntry[];
+
+/**
+ * Phase 2: 5-state status model per popup row (D-08).
+ */
+export type ExperimentStatus =
+  | 'disabled'
+  | 'pending'
+  | 'applied'
+  | 'error'
+  | 'auto-disabled';
+
+/**
+ * Phase 2: per-experiment last-error record stored in `last_error` map (D-09).
+ */
+export type ErrorRecord = {
+  phase: 'apply' | 'cleanup';
+  message: string;
+  stack?: string;
+  at: number;
+};
+
+/**
+ * Phase 2: auto-disable trip record stored in `autodisabled` map (D-09 / D-12).
+ */
+export type AutoDisableRecord = {
+  reason: string;
+  count: number;
+  firstAt: number;
+  lastAt: number;
+};
+
+/**
+ * Phase 2: pure O(1) registry lookup helper.
+ * Zero-runtime stays the rule — `byId` is ~5 lines, no deps.
+ */
+export function byId(registry: Registry, id: string): RegistryEntry | undefined {
+  return registry.find((e) => e.id === id);
+}
