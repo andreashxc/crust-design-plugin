@@ -50,10 +50,17 @@ Plans:
   3. Each experiment has a stable ULID-backed ID (renaming the folder does not lose tweak state) and TypeScript types (`ExperimentManifest`, `ApplyArgs`, `Helpers`) are importable from `@platform/experiment-sdk` for Cursor autocomplete
   4. An experiment that throws ≥3 errors in 10 seconds is auto-disabled by the engine with a visible reason in the popup; other experiments on the page keep running
   5. The build emits one code-split chunk per experiment plus a single aggregated `dist/registry.json` with id/author/scope/tweak-schema/chunk-path
-**Plans**: TBD
+**Plans**: 8 plans
 
 Plans:
-- [ ] 02-01: TBD (planned during `/gsd-plan-phase 2`)
+- [ ] 02-01-PLAN.md — SDK type extensions (RegistryEntry, Registry, ExperimentStatus, ErrorRecord, AutoDisableRecord, byId) + tests (Wave 0)
+- [ ] 02-02-PLAN.md — Storage helpers + idempotent migration (D-29) + chrome-mock extensions + jsdom/RTL/messaging deps install (Wave 0)
+- [ ] 02-03-PLAN.md — @webext-core/messaging ProtocolMap + SW handler split (toggle + error sliding-window auto-disable) + tabs.onRemoved + setAccessLevel (Wave 1)
+- [ ] 02-04-PLAN.md — build-experiments generateBundle emits dist/registry.json + wxt.config manualChunks for per-experiment chunks (Wave 2)
+- [ ] 02-05-PLAN.md — shadcn init + 6 components + Zustand store + computeStatus + groupByAuthor pure helpers + tests (Wave 3)
+- [ ] 02-06-PLAN.md — Popup React shell (App + AuthorGroup + ExperimentRow + EmptyState) + main.tsx bootstrap + storage.onChanged + RTL tests (Wave 4)
+- [ ] 02-07-PLAN.md — Content-script reconcile (registry.json + filterAutoDisabled + EXPERIMENT_ERROR + applied:tabId) + ENG-04 contract test + abort-signal test (Wave 4)
+- [ ] 02-08-PLAN.md — Full automated suite + build-artifact capture + 5-check manual MV3 smoke checklist (Wave 5)
 
 **UI hint**: yes
 
@@ -133,7 +140,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation Spike & Engine Skeleton | 5/5 | Complete    | 2026-04-25 |
-| 2. State Foundation, Messaging & Popup Shell | 0/TBD | Not started | - |
+| 2. State Foundation, Messaging & Popup Shell | 0/8 | Not started | - |
 | 3. Tweak System | 0/TBD | Not started | - |
 | 4. Helpers & LLM Integration | 0/TBD | Not started | - |
 | 5. DX, SPA Composition & Sharing | 0/TBD | Not started | - |
