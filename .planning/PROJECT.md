@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 after initialization*
+*Last updated: 2026-04-25 after Phase 1 completion (Foundation Spike & Engine Skeleton — pnpm/TS monorepo, WXT 0.20 extension scaffold, two-world content scripts, build-time experiment discovery, smoke experiment, CSP guardrail, MV3 spike report; live-Chrome smoke pending in `01-HUMAN-UAT.md`).*

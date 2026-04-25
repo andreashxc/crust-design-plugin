@@ -12,7 +12,7 @@ A Chromium MV3 extension that lets a closed team of designers ship DOM-mutation 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation Spike & Engine Skeleton** - De-risk MV3 unknowns and ship a loadable extension that runs one smoke experiment end-to-end
+- [x] **Phase 1: Foundation Spike & Engine Skeleton** - De-risk MV3 unknowns and ship a loadable extension that runs one smoke experiment end-to-end (completed 2026-04-25)
 - [ ] **Phase 2: State Foundation, Messaging & Popup Shell** - Typed storage/messaging backbone and an experiment list with working enable/disable
 - [ ] **Phase 3: Tweak System** - All 6 tweak types auto-render from manifest, validate, and round-trip through apply/cleanup
 - [ ] **Phase 4: Helpers & LLM Integration** - `llm()` and `fetchPage()` ship with cost guards, caching, and SPA-shell detection
@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Spike & Engine Skeleton | 5/5 | Verification pending | - |
+| 1. Foundation Spike & Engine Skeleton | 5/5 | Complete    | 2026-04-25 |
 | 2. State Foundation, Messaging & Popup Shell | 0/TBD | Not started | - |
 | 3. Tweak System | 0/TBD | Not started | - |
 | 4. Helpers & LLM Integration | 0/TBD | Not started | - |
