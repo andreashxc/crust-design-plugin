@@ -4,6 +4,7 @@ apps/extension/.wxt/
 dist/
 coverage/
 *.log
+*.tsbuildinfo
 .DS_Store
 .env
 .env.local
