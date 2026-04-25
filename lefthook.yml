@@ -7,5 +7,7 @@ pre-commit:
       run: pnpm typecheck
     test:
       run: pnpm test --run
-    check-csp:
-      run: pnpm check-csp
+    # check-csp: temporarily disabled — scripts/check-csp.ts is shipped in Plan 01-05.
+    # Plan 01-05 MUST restore the original entry verbatim:
+    #   check-csp:
+    #     run: pnpm check-csp
