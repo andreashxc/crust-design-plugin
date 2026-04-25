@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: state-foundation-messaging-popup-shell
-status: draft
+status: approved
 shadcn_initialized: false
 preset: slate (shadcn default, baseColor in components.json)
 created: 2026-04-25
+reviewed_at: 2026-04-25
 ---
 
 # Phase 2 — UI Design Contract
