@@ -1,10 +1,6 @@
-import type { ProtocolMap } from '@/shared/messages';
 import { broadcastStateChanged } from '@/background/broadcast';
-import {
-  clearAutoDisable,
-  clearErrorWindow,
-  setEnabledExperiment,
-} from '@/shared/storage';
+import type { ProtocolMap } from '@/shared/messages';
+import { clearAutoDisable, clearErrorWindow, setEnabledExperiment } from '@/shared/storage';
 
 type Args = Parameters<ProtocolMap['EXPERIMENT_TOGGLE']>[0];
 type Result = ReturnType<ProtocolMap['EXPERIMENT_TOGGLE']>;

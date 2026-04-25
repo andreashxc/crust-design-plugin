@@ -1,5 +1,5 @@
-import type { ErrorReport } from '@/shared/messages';
 import { broadcastStateChanged } from '@/background/broadcast';
+import type { ErrorReport } from '@/shared/messages';
 import {
   clearErrorWindow,
   getErrorWindow,

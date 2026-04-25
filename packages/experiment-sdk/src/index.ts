@@ -89,12 +89,7 @@ export type Registry = RegistryEntry[];
 /**
  * Phase 2: 5-state status model per popup row (D-08).
  */
-export type ExperimentStatus =
-  | 'disabled'
-  | 'pending'
-  | 'applied'
-  | 'error'
-  | 'auto-disabled';
+export type ExperimentStatus = 'disabled' | 'pending' | 'applied' | 'error' | 'auto-disabled';
 
 /**
  * Phase 2: per-experiment last-error record stored in `last_error` map (D-09).
