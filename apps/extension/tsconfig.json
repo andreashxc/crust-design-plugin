@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "types": ["chrome"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "entrypoints/**/*", ".wxt/wxt.d.ts", ".wxt/types/**/*"],
+  "exclude": ["src/**/*.test.ts", ".output", "node_modules"]
+}
