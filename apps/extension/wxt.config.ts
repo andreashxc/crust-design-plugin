@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildExperiments } from '@platform/build-tools/build-experiments';
@@ -7,6 +8,14 @@ import { defineConfig } from 'wxt';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
 const chromeOutDir = resolve(__dirname, '.output/chrome-mv3');
+
+function currentCommit(): string {
+  try {
+    return execSync('git rev-parse HEAD', { cwd: repoRoot, encoding: 'utf8' }).trim();
+  } catch {
+    return 'local';
+  }
+}
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -24,7 +33,11 @@ export default defineConfig({
       },
     },
     permissions: ['storage', 'tabs', 'offscreen'],
-    host_permissions: ['*://ya.ru/*', '*://*.ya.ru/*'],
+    host_permissions: [
+      '*://ya.ru/*',
+      '*://*.ya.ru/*',
+      'https://api.github.com/repos/andreashxc/overlay-plugin/compare/*',
+    ],
     web_accessible_resources: [
       {
         resources: ['registry.json', 'chunks/experiments-*.js'],
@@ -38,6 +51,9 @@ export default defineConfig({
     // manifest.author === <folder name>. Passing `root: repoRoot` is required because
     // Vite's cwd inside this WXT app is `apps/extension/`, not the repo root.
     plugins: [tailwindcss(), buildExperiments({ root: repoRoot, devOutDir: chromeOutDir })],
+    define: {
+      'import.meta.env.CRUST_CURRENT_COMMIT': JSON.stringify(currentCommit()),
+    },
     resolve: {
       alias: {
         // `@/*` resolves to apps/extension/src/* — WXT/Vite does NOT auto-honor

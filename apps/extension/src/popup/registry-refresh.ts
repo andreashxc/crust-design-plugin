@@ -11,6 +11,7 @@ import {
   getPublicLlmConfig,
   getTweakErrors,
   getTweakValues,
+  getUpdateState,
 } from '@/shared/storage';
 
 export async function hydratePopupStore(): Promise<void> {
@@ -25,6 +26,7 @@ export async function hydratePopupStore(): Promise<void> {
     lastLlmError,
     llmSession,
     experimentOrder,
+    updateState,
     tabs,
     tweakValuesEntries,
     tweakErrorEntries,
@@ -36,6 +38,7 @@ export async function hydratePopupStore(): Promise<void> {
     getLastLlmError(),
     getLlmSessionStats(),
     getExperimentOrder(),
+    getUpdateState(),
     chrome.tabs.query({ active: true, currentWindow: true }),
     Promise.all(
       registry.map(
@@ -58,6 +61,7 @@ export async function hydratePopupStore(): Promise<void> {
     lastLlmError,
     llmSession,
     experimentOrder,
+    updateState,
     tweakValues: Object.fromEntries(tweakValuesEntries),
     tweakErrors: Object.fromEntries(tweakErrorEntries),
     activeTabId,

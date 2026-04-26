@@ -39,6 +39,7 @@ function resetStore(entryOrRegistry: RegistryEntry | RegistryEntry[] = makeEntry
     publicLlmConfig: null,
     lastLlmError: undefined,
     experimentOrder: [],
+    updateState: null,
     activeTabId: 7,
     activeTabUrl: 'https://ya.ru/',
     appliedInActiveTab: [],
@@ -203,7 +204,57 @@ describe('popup App', () => {
 
     render(<App />);
     expect(screen.queryByText('Smoke pink')).toBeNull();
-    expect(screen.getByText('No experiments match this page')).toBeTruthy();
+    expect(screen.getByText('No experiments match this page.')).toBeTruthy();
+  });
+
+  it('renders distinct empty, scope, and search guidance', () => {
+    useStore.setState({ registry: [], bootstrapped: true });
+    const { rerender } = render(<App />);
+    expect(screen.getByText(/corepack pnpm dev/)).toBeTruthy();
+
+    resetStore(makeEntry());
+    useStore.setState({ activeTabUrl: 'https://example.com/' });
+    rerender(<App />);
+    expect(screen.getByText('No experiments match this page.')).toBeTruthy();
+
+    resetStore(makeEntry({ name: 'Smoke pink' }));
+    rerender(<App />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search experiments' }), {
+      target: { value: 'nothing' },
+    });
+    expect(screen.getByText('No experiments match this search.')).toBeTruthy();
+  });
+
+  it('shows actionable update banner only for available updates', () => {
+    useStore.setState({
+      updateState: {
+        currentVersion: '0.0.0',
+        currentCommit: 'abc',
+        remoteCommit: 'def',
+        available: true,
+        checkedAt: 1,
+        url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+      },
+    });
+
+    const { rerender } = render(<App />);
+    expect(screen.getByText('Update available')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    expect(chromeMock().tabs.create).toHaveBeenCalledWith({
+      url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+    });
+
+    useStore.setState({
+      updateState: {
+        currentVersion: '0.0.0',
+        currentCommit: 'abc',
+        available: false,
+        checkedAt: 2,
+        error: 'offline',
+      },
+    });
+    rerender(<App />);
+    expect(screen.queryByText('Update available')).toBeNull();
   });
 
   it('renders auto-disabled banner and expandable stack trace', () => {

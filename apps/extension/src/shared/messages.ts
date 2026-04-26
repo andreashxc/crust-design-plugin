@@ -30,6 +30,7 @@ import type {
   LlmResult,
 } from '@platform/experiment-sdk';
 import { defineExtensionMessaging } from '@webext-core/messaging';
+import type { UpdateState } from './storage';
 
 export type ToggleResult = { ok: true } | { ok: false; error: string };
 
@@ -50,6 +51,9 @@ export type LlmCompleteRequest = {
 
 export type ProviderTestResult = { ok: true } | { ok: false; error: string };
 export type IconTheme = 'light' | 'dark';
+export type UpdateCheckResult =
+  | { ok: true; state: UpdateState }
+  | { ok: false; error: string; state?: UpdateState | null };
 
 export interface ProtocolMap {
   EXPERIMENT_TOGGLE(data: { id: string; enabled: boolean }): ToggleResult;
@@ -65,6 +69,7 @@ export interface ProtocolMap {
   LLM_RESET_SESSION(): { ok: true };
   FETCH_PAGE(data: { url: string; selector?: string }): FetchPageResult;
   ICON_THEME_CHANGED(data: { theme: IconTheme }): { ok: true };
+  UPDATE_CHECK(): UpdateCheckResult;
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

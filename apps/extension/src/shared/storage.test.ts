@@ -30,6 +30,7 @@ import {
   getPublicLlmConfig,
   getTweakErrors,
   getTweakValues,
+  getUpdateState,
   incrementLlmSessionStats,
   llmCacheStorageKey,
   recordLastError,
@@ -47,6 +48,7 @@ import {
   setProviderKey,
   setTweakErrors,
   setTweakValues,
+  setUpdateState,
   sortRegistryByOrder,
 } from './storage';
 
@@ -212,6 +214,34 @@ describe('storage adapter (Phase 5 experiment order)', () => {
       { id: 'A' },
       { id: 'B' },
     ]);
+  });
+});
+
+describe('storage adapter (Phase 5 update state)', () => {
+  it('returns null when update state is missing or malformed', async () => {
+    await expect(getUpdateState()).resolves.toBeNull();
+
+    await chrome.storage.local.set({ 'update:state': 'bad' });
+    await expect(getUpdateState()).resolves.toBeNull();
+  });
+
+  it('round-trips update state', async () => {
+    await setUpdateState({
+      currentVersion: '0.0.0',
+      currentCommit: 'abc',
+      remoteCommit: 'def',
+      available: true,
+      checkedAt: 123,
+      url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+    });
+
+    await expect(getUpdateState()).resolves.toMatchObject({
+      currentVersion: '0.0.0',
+      currentCommit: 'abc',
+      remoteCommit: 'def',
+      available: true,
+      checkedAt: 123,
+    });
   });
 });
 

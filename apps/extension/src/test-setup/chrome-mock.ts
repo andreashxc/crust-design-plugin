@@ -35,6 +35,7 @@ export type ChromeMock = {
     sendMessage: Mock;
     openOptionsPage: Mock;
     getURL: Mock;
+    getManifest: Mock;
     lastError: chrome.runtime.LastError | undefined;
   };
   tabs: {
@@ -131,6 +132,7 @@ export function makeChromeMock(): ChromeMock {
       sendMessage: vi.fn(),
       openOptionsPage: vi.fn(),
       getURL: vi.fn((p: string) => `chrome-extension://test/${p.replace(/^\//, '')}`),
+      getManifest: vi.fn(() => ({ version: '0.0.0' })),
       lastError: undefined,
     },
     tabs: {

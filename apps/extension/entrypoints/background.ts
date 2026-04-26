@@ -34,6 +34,7 @@ import {
   handleLlmResetSession,
   handleProviderTest,
 } from '@/background/handlers/provider-test';
+import { handleUpdateCheck } from '@/background/handlers/update-check';
 import { handleWhoAmI } from '@/background/handlers/who-am-i';
 import { registerLlmStreamHandler } from '@/background/llm/stream';
 import { onMessage } from '@/shared/messages';
@@ -64,6 +65,7 @@ onMessage('LLM_RESET_SESSION', () => handleLlmResetSession());
 onMessage('FETCH_PAGE', ({ data }) => handleFetchPage(data));
 onMessage('ICON_THEME_CHANGED', ({ data }) => setActionIconTheme(data.theme));
 onMessage('APPLIED_COUNT_CHANGED', ({ data }) => setAppliedCountBadge(data.tabId, data.count));
+onMessage('UPDATE_CHECK', () => handleUpdateCheck());
 registerLlmStreamHandler();
 // WHO_AM_I (Blocker 2): handler reads sender.tab.id; throws when called
 // outside a tab context (popup / options). The envelope shape from

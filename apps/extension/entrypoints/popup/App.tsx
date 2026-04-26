@@ -1,11 +1,12 @@
 import { RefreshCw, Search, Settings, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { filterRegistryBySearch, groupByAuthor } from '@/popup/grouping';
 import { hydratePopupStore } from '@/popup/registry-refresh';
 import { useStore } from '@/popup/store';
+import { sendMessage } from '@/shared/messages';
 import { sortRegistryByOrder } from '@/shared/storage';
 import { matchesScope } from '@/shared/url-match';
 import { AuthorGroup } from './components/AuthorGroup';
@@ -17,6 +18,8 @@ export function App() {
   const bootstrapped = useStore((state) => state.bootstrapped);
   const llmSession = useStore((state) => state.llmSession);
   const experimentOrder = useStore((state) => state.experimentOrder);
+  const updateState = useStore((state) => state.updateState);
+  const setUpdateState = useStore((state) => state.setUpdateState);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const orderedRegistry = sortRegistryByOrder(registry, experimentOrder);
@@ -32,6 +35,14 @@ export function App() {
           llmSession.totalTokens > 0 ? ` · ${llmSession.totalTokens} tok` : ''
         }`
       : null;
+  const updateUrl = updateState?.available ? updateState.url : null;
+
+  useEffect(() => {
+    if (!bootstrapped) return;
+    void Promise.resolve(sendMessage('UPDATE_CHECK', undefined)).then((result) => {
+      if (result?.state) setUpdateState(result.state);
+    });
+  }, [bootstrapped, setUpdateState]);
 
   return (
     <div className="flex min-h-0 flex-col">
@@ -76,6 +87,20 @@ export function App() {
           </Button>
         </div>
       </header>
+      {updateUrl ? (
+        <div className="border-border/80 bg-muted/35 mt-2 flex items-center justify-between gap-2 rounded-md border px-2 py-1 text-xs">
+          <span className="text-muted-foreground">Update available</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-1.5 text-xs"
+            onClick={() => void chrome.tabs.create?.({ url: updateUrl })}
+          >
+            View
+          </Button>
+        </div>
+      ) : null}
       {bootstrapped && registry.length > 0 ? (
         <div className="relative mt-2">
           <Search
@@ -108,10 +133,14 @@ export function App() {
           {!bootstrapped && registry.length === 0 ? <div>Reading state…</div> : null}
           {bootstrapped && registry.length === 0 ? <EmptyState /> : null}
           {bootstrapped && registry.length > 0 && scopedRegistry.length === 0 ? (
-            <div className="text-muted-foreground mt-2 text-xs">No experiments match this page</div>
+            <div className="mt-2">
+              <EmptyState variant="scope" />
+            </div>
           ) : null}
           {bootstrapped && scopedRegistry.length > 0 && groups.length === 0 ? (
-            <div className="text-muted-foreground mt-2 text-xs">No matches</div>
+            <div className="mt-2">
+              <EmptyState variant="search" />
+            </div>
           ) : null}
           {groups.map((group) => (
             <AuthorGroup key={group.author} group={group} visibleIds={visibleIds} />

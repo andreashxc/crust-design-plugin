@@ -28,6 +28,7 @@ const KEY_LLM_SETTINGS = 'llm:settings';
 const KEY_LLM_LAST_ERROR = 'llm:last_error';
 const KEY_LLM_SESSION = 'llm:session';
 const KEY_EXPERIMENT_ORDER = 'experiment_order';
+const KEY_UPDATE_STATE = 'update:state';
 const TWEAKS_PREFIX = 'tweaks:';
 const TWEAK_ERRORS_PREFIX = 'tweak_errors:';
 const ERR_WINDOW_PREFIX = 'error_window:';
@@ -73,6 +74,17 @@ export type LlmSessionStats = {
   totalTokens: number;
   startedAt: number;
   updatedAt: number;
+};
+
+export type UpdateState = {
+  currentVersion: string;
+  currentCommit?: string;
+  remoteVersion?: string;
+  remoteCommit?: string;
+  available: boolean;
+  checkedAt: number;
+  url?: string;
+  error?: string;
 };
 
 export type LastLlmError = {
@@ -205,6 +217,27 @@ function sanitizeSessionStats(value: unknown): LlmSessionStats {
   };
 }
 
+function sanitizeUpdateState(value: unknown): UpdateState | null {
+  if (!isRecord(value)) return null;
+  if (
+    typeof value.currentVersion !== 'string' ||
+    typeof value.available !== 'boolean' ||
+    typeof value.checkedAt !== 'number'
+  ) {
+    return null;
+  }
+  return {
+    currentVersion: value.currentVersion,
+    currentCommit: typeof value.currentCommit === 'string' ? value.currentCommit : undefined,
+    remoteVersion: typeof value.remoteVersion === 'string' ? value.remoteVersion : undefined,
+    remoteCommit: typeof value.remoteCommit === 'string' ? value.remoteCommit : undefined,
+    available: value.available,
+    checkedAt: value.checkedAt,
+    url: typeof value.url === 'string' ? value.url : undefined,
+    error: typeof value.error === 'string' ? value.error : undefined,
+  };
+}
+
 // ===== Phase 1 helpers (unchanged) =====
 
 export async function getEnabledExperiments(): Promise<Record<string, boolean>> {
@@ -240,6 +273,17 @@ export async function appendExperimentOrder(id: string): Promise<void> {
   const current = await getExperimentOrder();
   if (current.includes(id)) return;
   await setExperimentOrder([...current, id]);
+}
+
+// ===== Phase 5 — sideload update check cache =====
+
+export async function getUpdateState(): Promise<UpdateState | null> {
+  const result = await chrome.storage.local.get(KEY_UPDATE_STATE);
+  return sanitizeUpdateState(result[KEY_UPDATE_STATE]);
+}
+
+export async function setUpdateState(state: UpdateState): Promise<void> {
+  await chrome.storage.local.set({ [KEY_UPDATE_STATE]: state });
 }
 
 export function sortRegistryByOrder<TEntry extends { id: string }>(

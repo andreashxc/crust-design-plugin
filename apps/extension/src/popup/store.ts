@@ -6,7 +6,7 @@ import type {
   TweakValueMap,
 } from '@platform/experiment-sdk';
 import { create, type StateCreator } from 'zustand';
-import type { LastLlmError, LlmSessionStats, PublicLlmConfig } from '@/shared/storage';
+import type { LastLlmError, LlmSessionStats, PublicLlmConfig, UpdateState } from '@/shared/storage';
 
 type RegistrySlice = {
   registry: Registry;
@@ -23,6 +23,7 @@ type StorageSlice = {
   publicLlmConfig: PublicLlmConfig | null;
   lastLlmError?: LastLlmError;
   experimentOrder: string[];
+  updateState: UpdateState | null;
   setEnabled: (enabled: Record<string, boolean>) => void;
   setAutoDisabled: (autodisabled: Record<string, AutoDisableRecord>) => void;
   setLastError: (lastError: Record<string, ErrorRecord>) => void;
@@ -32,6 +33,7 @@ type StorageSlice = {
   setPublicLlmConfig: (publicLlmConfig: PublicLlmConfig | null) => void;
   setLastLlmError: (lastLlmError?: LastLlmError) => void;
   setExperimentOrder: (experimentOrder: string[]) => void;
+  setUpdateState: (updateState: UpdateState | null) => void;
 };
 
 type TabSlice = {
@@ -62,6 +64,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   publicLlmConfig: null,
   lastLlmError: undefined,
   experimentOrder: [],
+  updateState: null,
   setEnabled: (enabled) => set({ enabled }),
   setAutoDisabled: (autodisabled) => set({ autodisabled }),
   setLastError: (lastError) => set({ lastError }),
@@ -71,6 +74,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   setPublicLlmConfig: (publicLlmConfig) => set({ publicLlmConfig }),
   setLastLlmError: (lastLlmError) => set({ lastLlmError }),
   setExperimentOrder: (experimentOrder) => set({ experimentOrder }),
+  setUpdateState: (updateState) => set({ updateState }),
 });
 
 const tabSlice: StateCreator<RootState, [], [], TabSlice> = (set) => ({
