@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 05-06 complete; ready to execute 05-07
+stopped_at: Phase 5 complete; Phase 6 planning is next after optional Phase 5 manual smoke
 last_updated: "2026-04-26T23:59:00+02:00"
-last_activity: 2026-04-26 -- Phase 5 Plan 05-06 completed onboarding docs and update banner
+last_activity: 2026-04-26 -- Phase 5 Plan 05-07 completed automated validation and smoke checklist
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 34
-  completed_plans: 33
-  percent: 97
+  completed_plans: 34
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 5 — DX, SPA Composition & Sharing
+**Current focus:** Phase 6 — Distribution & Acceptance planning
 
 ## Current Position
 
-Phase: 5 (DX, SPA Composition & Sharing) — READY TO EXECUTE
-Plan: 05-07 — Full validation, build artifact capture, manual smoke checklist, and state update
-Status: Phase 5 Plan 05-06 complete; execute 05-07 next
-Last activity: 2026-04-26 -- Phase 5 Plan 05-06 completed onboarding docs and update banner
+Phase: 6 (Distribution & Acceptance) — READY TO PLAN
+Plan: 06-01 — TBD via Phase 6 planning
+Status: Phase 5 complete with automated validation passed; Phase 5 manual smoke checklist recorded and pending Andrew/browser verification
+Last activity: 2026-04-26 -- Phase 5 Plan 05-07 completed automated validation and smoke checklist
 
-Progress: [▓▓▓▓▓▓▓▓▓░] 97%
+Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
 ## Performance Metrics
 
@@ -99,6 +99,7 @@ Recent decisions affecting current work:
 - Plan 05-04 execution: popup search filters name/author/description after scope; experiment order is visible and reorderable via drag/drop plus move buttons; dev source folders can open through Cursor links when registry includes `sourceDir`.
 - Plan 05-05 execution: popup can load validated tweak presets, copy a truthful `corepack pnpm save-preset` command for repo writes, and warn on missing/stale generated descriptions; CLI scripts now save presets and generate deterministic `description.md` files without overwriting manual docs.
 - Plan 05-06 execution: `docs/ONBOARDING.md` and `docs/EXPERIMENT_AUTHORING.md` now cover self-service setup, authoring, helpers, presets, and troubleshooting; popup empty states distinguish no registry, scope mismatch, and search mismatch; background update check caches GitHub compare results and the popup shows a quiet banner only when the sideload commit is behind `main`.
+- Plan 05-07 execution: full automated Phase 5 gates passed (`test -- --run`, typecheck, lint, check-csp, build); production manifest keeps GitHub update permission scoped to `https://api.github.com/repos/andreashxc/overlay-plugin/compare/*`; built registry includes `sourceSignature`, `presets`, and `descriptionStatus`; `05-MANUAL-SMOKE.md` records the 10 browser checks for Andrew.
 
 ### Pending Todos
 
@@ -112,6 +113,7 @@ None yet.
 - **Phase 3 manual tweak smoke:** automated validation passed; local Chrome smoke checklist is recorded in `.planning/phases/03-tweak-system/03-MANUAL-SMOKE.md` and remains pending operator execution.
 - **Phase 4 spike unknowns**: RESOLVED for automated implementation. Provider clients use direct REST `fetch` instead of SDK bundling; streaming uses `chrome.runtime.Port`; `fetchPage` enforces max HTML size and returns `too_large` rather than pushing arbitrary payloads through one-shot messages. Real provider/network smoke remains pending.
 - **Phase 4 manual helper smoke:** PASSED by Andrew on 2026-04-26 with a real OpenAI key. The only deferred item is a real >30s provider streaming smoke; automated port protocol tests pass.
+- **Phase 5 manual smoke:** automated validation passed; local Chrome checklist is recorded in `.planning/phases/05-dx-spa-composition-sharing/05-MANUAL-SMOKE.md` and remains pending operator execution.
 - **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
 
 ## Deferred Items
@@ -125,5 +127,5 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-04-26T23:59:00+02:00
-Stopped at: Phase 5 Plan 05-06 complete; ready to execute 05-07
+Stopped at: Phase 5 complete; Phase 6 planning is next
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

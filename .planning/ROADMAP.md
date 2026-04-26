@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: State Foundation, Messaging & Popup Shell** - Typed storage/messaging backbone and an experiment list with working enable/disable (completed 2026-04-26)
 - [x] **Phase 3: Tweak System** - All 6 tweak types auto-render from manifest, validate, and round-trip through apply/cleanup (completed 2026-04-26)
 - [x] **Phase 4: Helpers & LLM Integration** - `llm()` and `fetchPage()` ship with cost guards, caching, and SPA-shell detection (completed 2026-04-26; manual smoke passed)
-- [ ] **Phase 5: DX, SPA Composition & Sharing** - Hot-reload, SPA navigation, multi-experiment ordering, presets, and self-service onboarding
+- [x] **Phase 5: DX, SPA Composition & Sharing** - Hot-reload, SPA navigation, multi-experiment ordering, presets, and self-service onboarding (completed 2026-04-26; manual smoke pending)
 - [ ] **Phase 6: Distribution & Acceptance** - `.crx` packaging, fork-from-UI, Yandex Browser smoke test, and full three-designer acceptance scenario
 
 ## Phase Details
@@ -129,7 +129,7 @@ Plans:
 - [x] 05-04: Popup search, drag reorder, keyboard fallback, and Open in Cursor (Wave 2)
 - [x] 05-05: Presets, preset save workflow, and generated description status (Wave 2)
 - [x] 05-06: Onboarding docs, empty states, and update-available banner (Wave 3)
-- [ ] 05-07: Full validation, build artifact capture, manual smoke checklist, and state update (Wave 4)
+- [x] 05-07: Full validation, build artifact capture, manual smoke checklist, and state update (Wave 4)
 
 **UI hint**: yes
 
@@ -161,5 +161,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. State Foundation, Messaging & Popup Shell | 8/8 | Complete    | 2026-04-26 |
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
-| 5. DX, SPA Composition & Sharing | 6/7 | In progress | - |
+| 5. DX, SPA Composition & Sharing | 7/7 | Complete + manual smoke pending | 2026-04-26 |
 | 6. Distribution & Acceptance | 0/TBD | Not started | - |
