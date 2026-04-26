@@ -41,10 +41,11 @@ describe('handleExperimentToggle (ENG-06 / D-13)', () => {
   });
 
   describe('recovery (D-13: toggle ON clears autodisabled + error_window)', () => {
-    it('clears autodisabled[id] and error_window:<id>', async () => {
+    it('clears autodisabled[id], error_window:<id>, and stale last_error[id]', async () => {
       // Seed pre-existing kill-switch + window.
       await chrome.storage.local.set({
         autodisabled: { X: { reason: 'r', count: 3, firstAt: 0, lastAt: 0 } },
+        last_error: { X: { phase: 'apply', message: 'old failure', at: 1 } },
       });
       await chrome.storage.session.set({
         'error_window:X': { count: 2, firstAt: Date.now() },
@@ -55,6 +56,8 @@ describe('handleExperimentToggle (ENG-06 / D-13)', () => {
       expect(result).toEqual({ ok: true });
       // @ts-expect-error — autodisabled.X gone
       expect(chrome.storage.local._data.autodisabled).toEqual({});
+      // @ts-expect-error — stale last error gone
+      expect(chrome.storage.local._data.last_error).toEqual({});
       // @ts-expect-error — window key gone
       expect('error_window:X' in chrome.storage.session._data).toBe(false);
     });

@@ -44,4 +44,28 @@ describe('ProtocolMap (D-05)', () => {
     expectTypeOf<Parameters<ProtocolMap['WHO_AM_I']>>().toEqualTypeOf<[]>();
     expectTypeOf<ReturnType<ProtocolMap['WHO_AM_I']>>().toEqualTypeOf<{ tabId: number }>();
   });
+
+  it('Phase 4 helper messages are typed', () => {
+    expectTypeOf<Parameters<ProtocolMap['LLM_COMPLETE']>[0]>().toMatchTypeOf<{
+      experimentId: string;
+      prompt: string;
+    }>();
+    expectTypeOf<ReturnType<ProtocolMap['LLM_COMPLETE']>>().toMatchTypeOf<{
+      text: string;
+      provider: 'openai' | 'anthropic';
+      model: string;
+      cached: boolean;
+    }>();
+    expectTypeOf<Parameters<ProtocolMap['FETCH_PAGE']>[0]>().toEqualTypeOf<{
+      url: string;
+      selector?: string;
+    }>();
+  });
+
+  it('ICON_THEME_CHANGED carries a light/dark theme', () => {
+    expectTypeOf<Parameters<ProtocolMap['ICON_THEME_CHANGED']>[0]>().toEqualTypeOf<{
+      theme: 'light' | 'dark';
+    }>();
+    expectTypeOf<ReturnType<ProtocolMap['ICON_THEME_CHANGED']>>().toEqualTypeOf<{ ok: true }>();
+  });
 });

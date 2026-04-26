@@ -1,6 +1,6 @@
 import type { ApplyFn, ExperimentManifest } from '@platform/experiment-sdk';
 import { describe, expect, it, vi } from 'vitest';
-import { type LoadedExperiment, runEngine } from './engine';
+import { filterAutoDisabled, type LoadedExperiment, runEngine } from './engine';
 
 function makeManifest(id: string, world: 'isolated' | 'main' = 'isolated'): ExperimentManifest {
   return {
@@ -112,5 +112,16 @@ describe('runEngine error isolation (D-14 / ENG-05 / SP-2)', () => {
     expect(typeof captured[0]?.helpers.log).toBe('function');
     expect(typeof captured[0]?.log).toBe('function');
     expect(captured[0]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('filters auto-disabled experiments before reconcile applies them', () => {
+    const enabled = makeManifest('01J0AAAAAAAAAAAAAAAAAAAAAA');
+    const disabled = makeManifest('01J0BBBBBBBBBBBBBBBBBBBBBB');
+
+    expect(
+      filterAutoDisabled([enabled, disabled], {
+        '01J0BBBBBBBBBBBBBBBBBBBBBB': { reason: 'test' },
+      }),
+    ).toEqual([enabled]);
   });
 });

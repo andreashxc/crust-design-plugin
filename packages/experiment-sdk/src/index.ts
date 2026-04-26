@@ -9,9 +9,130 @@ import { z } from 'zod';
  * Per CONTEXT D-16 + RESEARCH "Zod 4 Schema":
  *   - id is ULID Crockford base32 (26 chars; no I/L/O/U; uppercase only)
  *   - description is short (max 280); long-form description.md is Phase 5 (DX-03)
- *   - tweaks is opaque in Phase 1 — Phase 3 replaces with a discriminated union (RESEARCH R8)
+ *   - tweaks uses the Phase 3 typed discriminated union (RESEARCH R8)
  *   - scope.regex stays optional in Phase 1; Phase 3 wires the matcher (MAN-02)
  */
+const tweakKey = z
+  .string()
+  .min(1)
+  .regex(/^[a-z][a-z0-9_]*$/);
+const tweakOption = z.string().min(1);
+const colorValue = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+const tweakBase = z.object({
+  key: tweakKey,
+  label: z.string().min(1),
+  description: z.string().min(1).optional(),
+});
+
+const ToggleTweakDefinition = tweakBase.extend({
+  type: z.literal('toggle'),
+  default: z.boolean(),
+});
+
+const SelectTweakDefinition = tweakBase
+  .extend({
+    type: z.literal('select'),
+    options: z.array(tweakOption).min(1),
+    default: tweakOption,
+  })
+  .superRefine((tweak, ctx) => {
+    if (!tweak.options.includes(tweak.default)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['default'],
+        message: 'Select default must be one of options',
+      });
+    }
+  });
+
+const TextTweakDefinition = tweakBase.extend({
+  type: z.literal('text'),
+  default: z.string(),
+  placeholder: z.string().optional(),
+});
+
+const NumberSliderTweakDefinition = tweakBase
+  .extend({
+    type: z.literal('number-slider'),
+    min: z.number(),
+    max: z.number(),
+    step: z.number().positive().optional(),
+    default: z.number(),
+  })
+  .superRefine((tweak, ctx) => {
+    if (tweak.min >= tweak.max) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['max'],
+        message: 'Slider max must be greater than min',
+      });
+    }
+    if (tweak.default < tweak.min || tweak.default > tweak.max) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['default'],
+        message: 'Slider default must be within min and max',
+      });
+    }
+  });
+
+const ColorTweakDefinition = tweakBase.extend({
+  type: z.literal('color'),
+  default: colorValue,
+});
+
+const MultiSelectTweakDefinition = tweakBase
+  .extend({
+    type: z.literal('multi-select'),
+    options: z.array(tweakOption).min(1),
+    default: z.array(tweakOption),
+  })
+  .superRefine((tweak, ctx) => {
+    const unknown = tweak.default.filter((value) => !tweak.options.includes(value));
+    if (unknown.length > 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['default'],
+        message: 'Multi-select default values must be included in options',
+      });
+    }
+  });
+
+export const TweakDefinition = z.discriminatedUnion('type', [
+  ToggleTweakDefinition,
+  SelectTweakDefinition,
+  TextTweakDefinition,
+  NumberSliderTweakDefinition,
+  ColorTweakDefinition,
+  MultiSelectTweakDefinition,
+]);
+
+export type TweakDefinition = z.infer<typeof TweakDefinition>;
+
+export type TweakValue = boolean | string | number | string[];
+export type TweakValueMap = Record<string, TweakValue>;
+
+export type TweakValidationError = {
+  path?: Array<string | number>;
+  message: string;
+  code?: string;
+};
+
+export class TweakValueValidationError extends Error {
+  readonly issues: TweakValidationError[];
+
+  constructor(issues: z.core.$ZodIssue[]) {
+    super('Invalid tweak values');
+    this.name = 'TweakValueValidationError';
+    this.issues = issues.map((issue) => ({
+      path: issue.path.filter((part): part is string | number => typeof part !== 'symbol'),
+      message: issue.message,
+      code: issue.code,
+    }));
+  }
+}
+
 export const ExperimentManifest = z.object({
   id: z.string().regex(/^[0-9A-HJKMNP-TV-Z]{26}$/),
   name: z.string().min(1),
@@ -22,25 +143,106 @@ export const ExperimentManifest = z.object({
     regex: z.array(z.string()).optional(),
   }),
   world: z.enum(['isolated', 'main']).default('isolated'),
-  tweaks: z.array(z.unknown()).default([]),
+  tweaks: z.array(TweakDefinition).default([]),
 });
 
 export type ExperimentManifest = z.infer<typeof ExperimentManifest>;
 
+export type LlmProvider = 'openai' | 'anthropic';
+
+export type LlmUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+};
+
+export type LlmOptions = {
+  provider?: LlmProvider;
+  model?: string;
+  maxOutputTokens?: number;
+  cacheKey?: string;
+  cacheTtlMs?: number;
+  stream?: false;
+};
+
+export type LlmStreamOptions = Omit<LlmOptions, 'stream'> & {
+  stream: true;
+  onDelta?: (delta: string) => void;
+};
+
+export type LlmResult = {
+  text: string;
+  provider: LlmProvider;
+  model: string;
+  cached: boolean;
+  usage?: LlmUsage;
+};
+
+export type FetchPageResult =
+  | {
+      ok: true;
+      url: string;
+      html: string;
+      text: string;
+      title?: string;
+      selector?: string;
+    }
+  | {
+      ok: false;
+      url: string;
+      reason:
+        | 'network_error'
+        | 'not_html'
+        | 'likely_spa_shell'
+        | 'selector_not_found'
+        | 'too_large';
+      message: string;
+    };
+
+export type InjectStyleOptions = {
+  id?: string;
+  target?: 'head' | 'body';
+};
+
+export type InjectNodeOptions = {
+  position?: InsertPosition;
+};
+
+export type WaitForOptions = {
+  timeoutMs?: number;
+  root?: ParentNode;
+};
+
+export type UrlChangeCleanup = () => void;
+
 /**
- * Phase 1 minimal helpers: just structured logging.
- * Phase 4 (HLP-01..HLP-09) extends with `injectStyle`, `injectNode`, `waitFor`,
- * `onUrlChange`, `llm`, `fetchPage`.
+ * Experiment helper contract. `log` is the original Phase 1 minimum; Phase 4
+ * adds privileged helpers and auto-tracked side effects.
  */
 export type Helpers = {
   log: (msg: string, ...args: unknown[]) => void;
+  llm: {
+    (prompt: string, options?: LlmOptions): Promise<string>;
+    (prompt: string, options: LlmStreamOptions): Promise<LlmResult>;
+  };
+  fetchPage: (url: string, selector?: string) => Promise<FetchPageResult>;
+  injectStyle: (css: string, options?: InjectStyleOptions) => HTMLStyleElement;
+  injectNode: <TNode extends Node>(
+    node: TNode,
+    target?: ParentNode,
+    options?: InjectNodeOptions,
+  ) => TNode;
+  waitFor: <TElement extends Element = Element>(
+    selector: string,
+    options?: WaitForOptions,
+  ) => Promise<TElement>;
+  onUrlChange: (callback: (url: string) => void) => UrlChangeCleanup;
 };
 
 /**
- * Phase 1 placeholder.
- * Phase 3 (TWK-01) replaces this with a discriminated union covering 6 tweak types.
+ * Back-compat alias for callers that imported the Phase 1 placeholder.
  */
-export type Tweak = unknown;
+export type Tweak = TweakDefinition;
 
 /**
  * Per CONTEXT D-15 verbatim.
@@ -77,7 +279,7 @@ export type RegistryEntry = {
   scope: { match: string[]; regex?: string[] };
   world: 'isolated' | 'main';
   chunkPath: string; // relative to extension root, e.g. "chunks/experiments-andrew__smoke-DkJ7g.js" or '' if inlined
-  tweaks: unknown[]; // opaque in Phase 2; Phase 3 narrows via discriminated union
+  tweaks: TweakDefinition[];
 };
 
 export type Registry = RegistryEntry[];
@@ -122,4 +324,52 @@ export type AutoDisableRecord = {
  */
 export function byId(registry: Registry, id: string): RegistryEntry | undefined {
   return registry.find((e) => e.id === id);
+}
+
+function valueSchemaFor(tweak: TweakDefinition): z.ZodType<TweakValue> {
+  switch (tweak.type) {
+    case 'toggle':
+      return z.boolean();
+    case 'select':
+      return z.enum(tweak.options as [string, ...string[]]);
+    case 'text':
+      return z.string();
+    case 'number-slider':
+      return z.number().min(tweak.min).max(tweak.max);
+    case 'color':
+      return colorValue;
+    case 'multi-select':
+      return z.array(z.enum(tweak.options as [string, ...string[]]));
+  }
+}
+
+export function defaultTweakValues(tweaks: TweakDefinition[]): TweakValueMap {
+  return Object.fromEntries(tweaks.map((tweak) => [tweak.key, tweak.default]));
+}
+
+export function validateTweakValues(
+  tweaks: TweakDefinition[],
+  values: Record<string, unknown>,
+): TweakValueMap {
+  const shape = Object.fromEntries(
+    tweaks.map((tweak) => [tweak.key, valueSchemaFor(tweak).default(tweak.default)]),
+  );
+  const result = z.object(shape).strict().safeParse(values);
+  if (!result.success) {
+    throw new TweakValueValidationError(result.error.issues);
+  }
+  return result.data;
+}
+
+export function mergeTweakValues(
+  tweaks: TweakDefinition[],
+  stored: Record<string, unknown>,
+): TweakValueMap {
+  const values = defaultTweakValues(tweaks);
+  for (const tweak of tweaks) {
+    if (!(tweak.key in stored)) continue;
+    const result = valueSchemaFor(tweak).safeParse(stored[tweak.key]);
+    if (result.success) values[tweak.key] = result.data;
+  }
+  return values;
 }

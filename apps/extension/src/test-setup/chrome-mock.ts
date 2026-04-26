@@ -30,7 +30,10 @@ export type ChromeMock = {
   runtime: {
     id: string;
     onMessage: { addListener: Mock; removeListener: Mock; hasListener: Mock };
+    onConnect: { addListener: Mock; removeListener: Mock; hasListener: Mock };
+    connect: Mock;
     sendMessage: Mock;
+    openOptionsPage: Mock;
     getURL: Mock;
     lastError: chrome.runtime.LastError | undefined;
   };
@@ -118,7 +121,10 @@ export function makeChromeMock(): ChromeMock {
       // "This script should only be loaded in a browser extension" when missing.
       id: 'test-extension-id',
       onMessage: { addListener: vi.fn(), removeListener: vi.fn(), hasListener: vi.fn() },
+      onConnect: { addListener: vi.fn(), removeListener: vi.fn(), hasListener: vi.fn() },
+      connect: vi.fn(),
       sendMessage: vi.fn(),
+      openOptionsPage: vi.fn(),
       getURL: vi.fn((p: string) => `chrome-extension://test/${p.replace(/^\//, '')}`),
       lastError: undefined,
     },

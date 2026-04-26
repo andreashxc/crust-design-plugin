@@ -1,0 +1,14 @@
+{
+  "id": "01KQ2X4M5N6P7Q8R9S0T1V2W3X",
+  "name": "Shadow panel",
+  "author": "andrew",
+  "description": "Reference experiment demonstrating an isolated Shadow DOM panel on ya.ru",
+  "scope": {
+    "match": [
+      "*://*.ya.ru/*",
+      "*://ya.ru/*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": []
+}

@@ -1,0 +1,61 @@
+{
+  "id": "01KQ2X3A4B5C6D7E8F9G0H1J2K",
+  "name": "Tweak demo",
+  "author": "andrew",
+  "description": "Reference experiment demonstrating Phase 3 tweak controls on ya.ru",
+  "scope": {
+    "match": [
+      "*://*.ya.ru/*",
+      "*://ya.ru/*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": [
+    {
+      "type": "select",
+      "key": "position",
+      "label": "Position",
+      "options": [
+        "top",
+        "bottom"
+      ],
+      "default": "top"
+    },
+    {
+      "type": "text",
+      "key": "headline",
+      "label": "Headline",
+      "default": "Tweak demo is active",
+      "placeholder": "Banner headline"
+    },
+    {
+      "type": "number-slider",
+      "key": "scale",
+      "label": "Scale",
+      "min": 80,
+      "max": 140,
+      "step": 5,
+      "default": 100
+    },
+    {
+      "type": "color",
+      "key": "accent",
+      "label": "Accent",
+      "default": "#ff3366"
+    },
+    {
+      "type": "multi-select",
+      "key": "details",
+      "label": "Details",
+      "options": [
+        "url",
+        "time",
+        "badge"
+      ],
+      "default": [
+        "url",
+        "badge"
+      ]
+    }
+  ]
+}

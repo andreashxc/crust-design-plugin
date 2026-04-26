@@ -1,6 +1,11 @@
 import { broadcastStateChanged } from '@/background/broadcast';
 import type { ProtocolMap } from '@/shared/messages';
-import { clearAutoDisable, clearErrorWindow, setEnabledExperiment } from '@/shared/storage';
+import {
+  clearAutoDisable,
+  clearErrorWindow,
+  clearLastError,
+  setEnabledExperiment,
+} from '@/shared/storage';
 
 type Args = Parameters<ProtocolMap['EXPERIMENT_TOGGLE']>[0];
 type Result = ReturnType<ProtocolMap['EXPERIMENT_TOGGLE']>;
@@ -19,6 +24,7 @@ export async function handleExperimentToggle({ id, enabled }: Args): Promise<Res
       // D-13 recovery: ON re-arms. Order: clear, clear, broadcast.
       await clearAutoDisable(id);
       await clearErrorWindow(id);
+      await clearLastError(id);
     }
     await broadcastStateChanged();
     return { ok: true };

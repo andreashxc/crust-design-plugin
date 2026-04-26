@@ -6,10 +6,14 @@
  * Per BLD-01 + BLD-02 + MAN-01.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve, sep } from 'node:path';
+import type { RegistryEntry } from '@platform/experiment-sdk';
 import { ExperimentManifest } from '@platform/experiment-sdk';
+import { buildSync } from 'esbuild';
 import { globSync } from 'glob';
+import type { OutputBundle, OutputChunk } from 'rollup';
 import { ulid } from 'ulid';
 import type { Plugin } from 'vite';
 
@@ -20,16 +24,91 @@ export type BuildExperimentsOptions = {
 
 export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin {
   const root = options.root ?? process.cwd();
+  let scan: ReturnType<typeof scanAndValidate> | null = null;
   return {
     name: 'platform:build-experiments',
     buildStart() {
-      const result = scanAndValidate(root);
-      if (result.errors.length > 0) {
-        throw new Error(formatErrors(result.errors));
+      scan = scanAndValidate(root);
+      if (scan.errors.length > 0) {
+        throw new Error(formatErrors(scan.errors));
       }
       // result.warnings are informational (e.g., ULID written) — already logged.
     },
+    generateBundle(_options, bundle: OutputBundle) {
+      if (!scan) return;
+
+      const chunkByExperimentPath = new Map<string, string>();
+      for (const [fileName, asset] of Object.entries(bundle)) {
+        if (asset.type !== 'chunk') continue;
+        const chunk = asset as OutputChunk;
+        const facade = chunk.facadeModuleId;
+        if (!facade) continue;
+        if (/[/\\]experiments[/\\][^/\\]+[/\\][^/\\]+[/\\]experiment\.ts$/.test(facade)) {
+          chunkByExperimentPath.set(resolve(facade), fileName);
+        }
+      }
+
+      const registry: RegistryEntry[] = scan.manifests.map(({ path, data }) => {
+        const manifestAbsPath = resolve(root, path);
+        const experimentDir = dirname(manifestAbsPath);
+        const folder = experimentDir.split(/[/\\]/).pop() ?? '';
+        const absExperimentTs = resolve(experimentDir, 'experiment.ts');
+        const chunkPath =
+          chunkByExperimentPath.get(absExperimentTs) ??
+          emitExperimentChunk({
+            emitFile: this.emitFile.bind(this),
+            absExperimentTs,
+            author: data.author,
+            folder,
+          });
+
+        return {
+          id: data.id,
+          author: data.author,
+          folder,
+          name: data.name,
+          description: data.description,
+          scope: data.scope,
+          world: data.world,
+          chunkPath,
+          tweaks: data.tweaks,
+        };
+      });
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'registry.json',
+        source: `${JSON.stringify(registry, null, 2)}\n`,
+      });
+    },
   };
+}
+
+function emitExperimentChunk(args: {
+  emitFile: (asset: { type: 'asset'; fileName: string; source: string }) => string;
+  absExperimentTs: string;
+  author: string;
+  folder: string;
+}): string {
+  if (!existsSync(args.absExperimentTs)) return '';
+
+  const output = buildSync({
+    entryPoints: [args.absExperimentTs],
+    bundle: true,
+    format: 'esm',
+    platform: 'browser',
+    target: 'es2020',
+    write: false,
+    sourcemap: false,
+    legalComments: 'none',
+  }).outputFiles[0]?.text;
+
+  if (!output) return '';
+
+  const hash = createHash('sha256').update(output).digest('hex').slice(0, 8);
+  const fileName = `chunks/experiments-${args.author}__${args.folder}-${hash}.js`;
+  args.emitFile({ type: 'asset', fileName, source: output });
+  return fileName;
 }
 
 // ---- Pure helpers (exported for tests) ----
@@ -47,7 +126,7 @@ export type ScanResult = {
 
 export type BuildExperimentError = {
   file: string;
-  kind: 'parse' | 'schema' | 'author-mismatch';
+  kind: 'parse' | 'schema' | 'author-mismatch' | 'duplicate-tweak-key';
   issues: Array<{ path: string; message: string }>;
 };
 
@@ -119,10 +198,37 @@ export function scanAndValidate(root: string): ScanResult {
       continue;
     }
 
+    const duplicateTweakKey = findDuplicateTweakKey(parsed.data.tweaks);
+    if (duplicateTweakKey) {
+      errors.push({
+        file: fileRel,
+        kind: 'duplicate-tweak-key',
+        issues: [
+          {
+            path: 'tweaks',
+            message: `duplicate tweak key "${duplicateTweakKey}"`,
+          },
+        ],
+      });
+      continue;
+    }
+
     manifests.push({ path: fileRel, data: parsed.data });
   }
 
   return { manifests, errors, warnings };
+}
+
+function findDuplicateTweakKey(tweaks: unknown[]): string | null {
+  const seen = new Set<string>();
+  for (const tweak of tweaks) {
+    if (!tweak || typeof tweak !== 'object' || !('key' in tweak)) continue;
+    const key = (tweak as { key?: unknown }).key;
+    if (typeof key !== 'string') continue;
+    if (seen.has(key)) return key;
+    seen.add(key);
+  }
+  return null;
 }
 
 /**

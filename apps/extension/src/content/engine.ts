@@ -1,4 +1,5 @@
 import type { ApplyFn, ExperimentManifest } from '@platform/experiment-sdk';
+import { createHelpers } from '@/content/helpers';
 import { recordLastError } from '@/shared/storage';
 
 export type EngineWorld = 'isolated' | 'main';
@@ -15,11 +16,43 @@ export type LoadedExperiment = {
  * world to 'isolated' (CONTEXT D-16), so by the time a manifest reaches this
  * function it always has a non-null world.
  */
-export function filterByWorld(
-  manifests: ExperimentManifest[],
+export function filterByWorld<T extends ExperimentManifest>(
+  manifests: T[],
   world: EngineWorld,
-): ExperimentManifest[] {
+): T[] {
   return manifests.filter((m) => m.world === world);
+}
+
+export function filterAutoDisabled<T extends { id: string }>(
+  entries: T[],
+  autodisabled: Record<string, unknown>,
+): T[] {
+  return entries.filter((entry) => !autodisabled[entry.id]);
+}
+
+export function isAbortError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === 'AbortError';
+}
+
+export function stableTweakValuesKey(values: Record<string, unknown>): string {
+  return JSON.stringify(sortRecord(values));
+}
+
+export function shouldReapplyForTweakValues(
+  appliedValuesKey: string | undefined,
+  nextValues: Record<string, unknown>,
+): boolean {
+  return appliedValuesKey !== stableTweakValuesKey(nextValues);
+}
+
+function sortRecord(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortRecord);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, nested]) => [key, sortRecord(nested)]),
+  );
 }
 
 /**
@@ -59,9 +92,7 @@ export async function runEngine(args: {
       const controller = new AbortController();
       await mod.apply({
         tweaks: {},
-        helpers: {
-          log: (msg, ...rest) => console.debug('[exp]', id, msg, ...rest),
-        },
+        helpers: createHelpers({ experimentId: id }),
         currentURL: args.currentURL,
         log: (msg, ...rest) => console.debug('[exp]', id, msg, ...rest),
         signal: controller.signal,

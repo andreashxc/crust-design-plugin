@@ -21,7 +21,14 @@
  * src/background/handlers/who-am-i.ts reads sender.tab?.id and throws when
  * called outside a tab context.
  */
-import type { ErrorRecord, ExperimentStatus } from '@platform/experiment-sdk';
+import type {
+  ErrorRecord,
+  ExperimentStatus,
+  FetchPageResult,
+  LlmOptions,
+  LlmProvider,
+  LlmResult,
+} from '@platform/experiment-sdk';
 import { defineExtensionMessaging } from '@webext-core/messaging';
 
 export type ToggleResult = { ok: true } | { ok: false; error: string };
@@ -35,12 +42,28 @@ export type ErrorReport = {
 
 export type WhoAmIResult = { tabId: number };
 
+export type LlmCompleteRequest = {
+  experimentId: string;
+  prompt: string;
+  options?: LlmOptions;
+};
+
+export type ProviderTestResult = { ok: true } | { ok: false; error: string };
+export type IconTheme = 'light' | 'dark';
+
 export interface ProtocolMap {
   EXPERIMENT_TOGGLE(data: { id: string; enabled: boolean }): ToggleResult;
+  TWEAKS_CHANGED(data: { id: string }): ToggleResult;
   STATE_CHANGED(data: { tabId: number }): void;
   EXPERIMENT_ERROR(data: ErrorReport): { ok: true };
   STATUS_QUERY(): Record<string, ExperimentStatus>;
   WHO_AM_I(): WhoAmIResult;
+  LLM_COMPLETE(data: LlmCompleteRequest): LlmResult;
+  PROVIDER_TEST(data: { provider: LlmProvider }): ProviderTestResult;
+  LLM_CLEAR_CACHE(): { ok: true };
+  LLM_RESET_SESSION(): { ok: true };
+  FETCH_PAGE(data: { url: string; selector?: string }): FetchPageResult;
+  ICON_THEME_CHANGED(data: { theme: IconTheme }): { ok: true };
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

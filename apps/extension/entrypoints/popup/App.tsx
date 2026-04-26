@@ -1,70 +1,59 @@
-import type { ExperimentManifest as Manifest } from '@platform/experiment-sdk';
-import { ExperimentManifest } from '@platform/experiment-sdk';
-import { useEffect, useState } from 'react';
-import { getEnabledExperiments } from '@/shared/storage';
-
-type Row = { manifest: Manifest; path: string };
-
-function loadManifests(): Row[] {
-  const modules = import.meta.glob<{ default: unknown }>('@experiments/*/*/manifest.json', {
-    eager: true,
-    import: 'default',
-  });
-  const rows: Row[] = [];
-  for (const [path, raw] of Object.entries(modules)) {
-    const parsed = ExperimentManifest.safeParse(raw);
-    if (parsed.success) rows.push({ manifest: parsed.data, path });
-  }
-  return rows;
-}
+import { Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { groupByAuthor } from '@/popup/grouping';
+import { useStore } from '@/popup/store';
+import { matchesScope } from '@/shared/url-match';
+import { AuthorGroup } from './components/AuthorGroup';
+import { EmptyState } from './components/EmptyState';
 
 export function App() {
-  const [rows] = useState<Row[]>(() => loadManifests());
-  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    void getEnabledExperiments().then(setEnabled);
-  }, []);
-
-  const handleToggle = (id: string, next: boolean) => {
-    setEnabled((prev) => ({ ...prev, [id]: next }));
-    chrome.runtime.sendMessage({ type: 'EXPERIMENT_TOGGLE', id, enabled: next });
-  };
-
-  if (rows.length === 0) {
-    return (
-      <div>
-        No experiments yet. Add one under <code>experiments/&lt;you&gt;/&lt;id&gt;/</code> and
-        rebuild.
-      </div>
-    );
-  }
+  const registry = useStore((state) => state.registry);
+  const activeTabUrl = useStore((state) => state.activeTabUrl);
+  const bootstrapped = useStore((state) => state.bootstrapped);
+  const llmSession = useStore((state) => state.llmSession);
+  const groups = groupByAuthor(registry, { activeTabUrl, matchesScope });
+  const llmLabel =
+    llmSession && llmSession.calls > 0
+      ? `LLM ${llmSession.calls} ${llmSession.calls === 1 ? 'call' : 'calls'}${
+          llmSession.totalTokens > 0 ? ` · ${llmSession.totalTokens} tok` : ''
+        }`
+      : null;
 
   return (
-    <div>
-      <h1 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>Experiments</h1>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {rows.map((row) => (
-          <li
-            key={row.manifest.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.25rem 0',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={enabled[row.manifest.id] ?? false}
-              onChange={(e) => handleToggle(row.manifest.id, e.target.checked)}
-            />
-            <span>
-              {row.manifest.name} <small style={{ color: '#888' }}>by {row.manifest.author}</small>
+    <div className="flex min-h-0 flex-col">
+      <header className="flex items-center justify-between gap-2 px-0.5 py-0.5">
+        <h1 className="text-sm font-semibold">Crust</h1>
+        <div className="flex items-center gap-1.5">
+          {llmLabel ? (
+            <span className="text-muted-foreground px-1 text-xs font-medium tabular-nums">
+              {llmLabel}
             </span>
-          </li>
-        ))}
-      </ul>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label="Open Crust options"
+            onClick={() => chrome.runtime.openOptionsPage?.()}
+          >
+            <Settings className="size-3.5" aria-hidden="true" />
+          </Button>
+        </div>
+      </header>
+      <ScrollArea className="mt-2 max-h-[calc(100vh-4rem)] min-h-0 pr-2">
+        <div className="pb-3">
+          {!bootstrapped && registry.length === 0 ? <div>Reading state…</div> : null}
+          {bootstrapped && registry.length === 0 ? <EmptyState /> : null}
+          {bootstrapped && registry.length > 0 && groups.length === 0 ? (
+            <div className="text-muted-foreground mt-2 text-xs">No experiments match this page</div>
+          ) : null}
+          {groups.map((group) => (
+            <AuthorGroup key={group.author} group={group} />
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

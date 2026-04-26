@@ -1,22 +1,49 @@
-import type { AutoDisableRecord, ErrorRecord } from '@platform/experiment-sdk';
+import type {
+  AutoDisableRecord,
+  ErrorRecord,
+  TweakValidationError,
+} from '@platform/experiment-sdk';
 import { describe, expect, it } from 'vitest';
 import {
+  buildLlmCacheKey,
   clearAutoDisable,
   clearErrorWindow,
   clearLastError,
   clearLastErrorMap,
+  clearLastLlmError,
+  clearLlmCache,
+  clearProviderKey,
+  clearTweakErrors,
+  clearTweakValues,
+  defaultLlmSettings,
   getAppliedInTab,
   getAutoDisabled,
   getEnabledExperiments,
   getErrorWindow,
   getLastErrors,
+  getLastLlmError,
+  getLlmCache,
+  getLlmSessionStats,
+  getLlmSettings,
+  getPublicLlmConfig,
+  getTweakErrors,
+  getTweakValues,
+  incrementLlmSessionStats,
+  llmCacheStorageKey,
   recordLastError,
+  resetLlmSessionStats,
   runStartupMigration,
   setAppliedInTab,
   setAutoDisable,
   setEnabledExperiment,
   setErrorWindow,
   setLastError,
+  setLastLlmError,
+  setLlmCache,
+  setLlmDefaults,
+  setProviderKey,
+  setTweakErrors,
+  setTweakValues,
 } from './storage';
 
 describe('storage adapter (D-12 stateless)', () => {
@@ -150,6 +177,222 @@ describe('storage adapter (Phase 2 helpers — D-09 / D-12 / D-28)', () => {
       await setAppliedInTab(7, ['X']);
       await expect(getAppliedInTab(7)).resolves.toEqual(['X']);
     });
+  });
+});
+
+describe('storage adapter (Phase 3 tweak helpers)', () => {
+  describe('tweaks:<id> values', () => {
+    it('round-trips tweak values', async () => {
+      await setTweakValues('A', {
+        enabled: true,
+        label: 'compact',
+        limit: 3,
+      });
+
+      await expect(getTweakValues('A')).resolves.toEqual({
+        enabled: true,
+        label: 'compact',
+        limit: 3,
+      });
+    });
+
+    it('returns {} when tweak values are missing or malformed', async () => {
+      await expect(getTweakValues('A')).resolves.toEqual({});
+
+      await chrome.storage.local.set({ 'tweaks:A': 'not-an-object' });
+      await expect(getTweakValues('A')).resolves.toEqual({});
+
+      await chrome.storage.local.set({ 'tweaks:A': ['not', 'an', 'object'] });
+      await expect(getTweakValues('A')).resolves.toEqual({});
+    });
+
+    it('clearTweakValues removes the per-experiment key', async () => {
+      await setTweakValues('A', { enabled: true });
+      await clearTweakValues('A');
+
+      await expect(getTweakValues('A')).resolves.toEqual({});
+      // @ts-expect-error — _data is a test-only introspection field on the mock
+      expect('tweaks:A' in chrome.storage.local._data).toBe(false);
+    });
+  });
+
+  describe('tweak_errors:<id> validation errors', () => {
+    it('setTweakErrors + getTweakErrors round-trip', async () => {
+      const errors: TweakValidationError[] = [
+        { path: ['color'], message: 'Expected color', code: 'invalid_type' },
+        { path: ['count'], message: 'Too small' },
+      ];
+
+      await setTweakErrors('A', errors);
+
+      await expect(getTweakErrors('A')).resolves.toEqual(errors);
+    });
+
+    it('returns [] when tweak errors are missing or malformed', async () => {
+      await expect(getTweakErrors('A')).resolves.toEqual([]);
+
+      await chrome.storage.local.set({ 'tweak_errors:A': { message: 'not-an-array' } });
+      await expect(getTweakErrors('A')).resolves.toEqual([]);
+    });
+
+    it('clearTweakErrors removes the per-experiment key', async () => {
+      await setTweakErrors('A', [{ message: 'Expected boolean' }]);
+      await clearTweakErrors('A');
+
+      await expect(getTweakErrors('A')).resolves.toEqual([]);
+      // @ts-expect-error — _data is a test-only introspection field on the mock
+      expect('tweak_errors:A' in chrome.storage.local._data).toBe(false);
+    });
+  });
+});
+
+describe('storage adapter (Phase 4 LLM helpers)', () => {
+  it('returns safe default LLM settings when storage is empty or malformed', async () => {
+    await expect(getLlmSettings()).resolves.toEqual(defaultLlmSettings());
+
+    await chrome.storage.local.set({ 'llm:settings': 'bad' });
+    await expect(getLlmSettings()).resolves.toEqual(defaultLlmSettings());
+  });
+
+  it('stores provider keys but excludes them from public config', async () => {
+    await setProviderKey('openai', ' sk-test ');
+    await setProviderKey('anthropic', 'sk-ant-test');
+
+    await expect(getLlmSettings()).resolves.toMatchObject({
+      providerKeys: { openai: 'sk-test', anthropic: 'sk-ant-test' },
+    });
+
+    await expect(getPublicLlmConfig()).resolves.toEqual({
+      defaultProvider: 'openai',
+      models: defaultLlmSettings().models,
+      costGuard: defaultLlmSettings().costGuard,
+      providers: {
+        openai: { configured: true },
+        anthropic: { configured: true },
+      },
+    });
+  });
+
+  it('clears provider keys without removing sibling providers', async () => {
+    await setProviderKey('openai', 'sk-openai');
+    await setProviderKey('anthropic', 'sk-anthropic');
+    await clearProviderKey('openai');
+
+    await expect(getLlmSettings()).resolves.toMatchObject({
+      providerKeys: { anthropic: 'sk-anthropic' },
+    });
+  });
+
+  it('updates provider defaults and cost guard settings', async () => {
+    await setLlmDefaults({
+      defaultProvider: 'anthropic',
+      models: { openai: 'gpt-custom', anthropic: 'claude-custom' },
+      costGuard: { cacheTtlMs: 5_000, maxAttempts: 2, maxOutputTokens: 128 },
+    });
+
+    await expect(getLlmSettings()).resolves.toMatchObject({
+      defaultProvider: 'anthropic',
+      models: { openai: 'gpt-custom', anthropic: 'claude-custom' },
+      costGuard: { cacheTtlMs: 5_000, maxAttempts: 2, maxOutputTokens: 128 },
+    });
+  });
+
+  it('builds deterministic cache keys from provider, model, prompt, max tokens and caller key', () => {
+    const base = {
+      provider: 'openai' as const,
+      model: 'gpt-test',
+      prompt: 'hello',
+      maxOutputTokens: 128,
+    };
+
+    expect(buildLlmCacheKey(base)).toBe(buildLlmCacheKey({ ...base }));
+    expect(buildLlmCacheKey(base)).not.toBe(buildLlmCacheKey({ ...base, provider: 'anthropic' }));
+    expect(buildLlmCacheKey(base)).not.toBe(buildLlmCacheKey({ ...base, model: 'other' }));
+    expect(buildLlmCacheKey(base)).not.toBe(buildLlmCacheKey({ ...base, prompt: 'bye' }));
+    expect(buildLlmCacheKey(base)).not.toBe(buildLlmCacheKey({ ...base, maxOutputTokens: 256 }));
+    expect(buildLlmCacheKey(base)).not.toBe(buildLlmCacheKey({ ...base, cacheKey: 'custom' }));
+  });
+
+  it('round-trips valid cache entries and ignores expired cache', async () => {
+    const hash = 'abc123';
+    await setLlmCache(hash, {
+      text: 'hello',
+      provider: 'openai',
+      model: 'gpt-test',
+      cachedAt: 1000,
+      expiresAt: Date.now() + 60_000,
+      usage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 },
+    });
+
+    await expect(getLlmCache(hash)).resolves.toMatchObject({ text: 'hello' });
+
+    await setLlmCache('expired', {
+      text: 'old',
+      provider: 'openai',
+      model: 'gpt-test',
+      cachedAt: 1000,
+      expiresAt: Date.now() - 1,
+    });
+    await expect(getLlmCache('expired')).resolves.toBeUndefined();
+    // @ts-expect-error — _data is a test-only introspection field on the mock
+    expect(llmCacheStorageKey('expired') in chrome.storage.local._data).toBe(false);
+  });
+
+  it('clearLlmCache removes only cache entries', async () => {
+    await setProviderKey('openai', 'sk-test');
+    await setLlmCache('one', {
+      text: 'one',
+      provider: 'openai',
+      model: 'gpt-test',
+      cachedAt: 1,
+      expiresAt: Date.now() + 1000,
+    });
+
+    await clearLlmCache();
+
+    await expect(getLlmCache('one')).resolves.toBeUndefined();
+    await expect(getPublicLlmConfig()).resolves.toMatchObject({
+      providers: { openai: { configured: true } },
+    });
+  });
+
+  it('stores LLM session counters in storage.session', async () => {
+    const initial = await getLlmSessionStats();
+    expect(initial.calls).toBe(0);
+
+    await incrementLlmSessionStats({
+      calls: 1,
+      cacheHits: 1,
+      inputTokens: 2,
+      outputTokens: 3,
+      totalTokens: 5,
+    });
+
+    await expect(getLlmSessionStats()).resolves.toMatchObject({
+      calls: 1,
+      cacheHits: 1,
+      inputTokens: 2,
+      outputTokens: 3,
+      totalTokens: 5,
+    });
+    // @ts-expect-error — _data is a test-only introspection field on the mock
+    expect(chrome.storage.session._data['llm:session']).toMatchObject({ calls: 1 });
+
+    await resetLlmSessionStats();
+    await expect(getLlmSessionStats()).resolves.toMatchObject({ calls: 0, totalTokens: 0 });
+  });
+
+  it('round-trips and clears last LLM error', async () => {
+    await setLastLlmError({ provider: 'anthropic', message: 'failed', code: 'rate_limit', at: 1 });
+    await expect(getLastLlmError()).resolves.toEqual({
+      provider: 'anthropic',
+      message: 'failed',
+      code: 'rate_limit',
+      at: 1,
+    });
+
+    await clearLastLlmError();
+    await expect(getLastLlmError()).resolves.toBeUndefined();
   });
 });
 

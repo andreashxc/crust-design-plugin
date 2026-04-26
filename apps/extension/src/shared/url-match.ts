@@ -10,8 +10,26 @@
  * Per RESEARCH R6: '*://*.ya.ru/*' does NOT match the apex 'ya.ru' — both
  * '*://ya.ru/*' and '*://*.ya.ru/*' are required to scope to apex + subdomains.
  *
- * Regex fallback (`scope.regex`) is Phase 3 (MAN-02) — NOT implemented here.
  */
+
+export type UrlScope = {
+  match: string[];
+  regex?: string[];
+};
+
+export function matchesScope(url: string, scope: UrlScope): boolean {
+  if (matchesUrl(url, scope.match)) return true;
+
+  for (const pattern of scope.regex ?? []) {
+    try {
+      if (new RegExp(pattern).test(url)) return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
 
 export function matchesUrl(url: string, patterns: string[]): boolean {
   let parsed: URL;

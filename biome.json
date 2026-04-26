@@ -15,6 +15,7 @@
       "!**/coverage",
       "!**/.next",
       "!.claude",
+      "!.codex",
       "!.planning",
       "!tests/fixtures",
       "!experiments/**/manifest.json"
@@ -49,6 +50,11 @@
   "json": {
     "formatter": {
       "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

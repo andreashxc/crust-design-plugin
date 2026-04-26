@@ -1,0 +1,6 @@
+# GSD Agent Configuration - Codex Desktop compatibility shim
+# The GSD installer generated [[agents]] entries here, but this Codex build
+# expects `agents` to be a single AgentsToml struct and rejects TOML arrays.
+
+[features]
+codex_hooks = true

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchesUrl } from './url-match';
+import { matchesScope, matchesUrl } from './url-match';
 
 describe('matchesUrl (Chrome match-patterns + R6 apex/subdomain)', () => {
   it('https://ya.ru/ matches *://ya.ru/*', () => {
@@ -43,5 +43,43 @@ describe('matchesUrl (Chrome match-patterns + R6 apex/subdomain)', () => {
   it('exact path glob can be more specific', () => {
     expect(matchesUrl('https://ya.ru/yandsearch', ['*://ya.ru/yandsearch*'])).toBe(true);
     expect(matchesUrl('https://ya.ru/maps', ['*://ya.ru/yandsearch*'])).toBe(false);
+  });
+});
+
+describe('matchesScope (Chrome match-patterns with regex fallback)', () => {
+  it('uses regex fallback against the full URL when match patterns miss', () => {
+    expect(
+      matchesScope('https://example.com/search?q=phase-3', {
+        match: ['*://ya.ru/*'],
+        regex: ['^https://example\\.com/search\\?q=phase-3$'],
+      }),
+    ).toBe(true);
+  });
+
+  it('gives match patterns precedence over invalid regex fallback', () => {
+    expect(
+      matchesScope('https://ya.ru/', {
+        match: ['*://ya.ru/*'],
+        regex: ['[invalid'],
+      }),
+    ).toBe(true);
+  });
+
+  it('returns false instead of throwing for invalid regex fallback', () => {
+    expect(
+      matchesScope('https://example.com/', {
+        match: ['*://ya.ru/*'],
+        regex: ['[invalid'],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false when neither match patterns nor regex match', () => {
+    expect(
+      matchesScope('https://example.com/', {
+        match: ['*://ya.ru/*'],
+        regex: ['^https://mail\\.ya\\.ru/'],
+      }),
+    ).toBe(false);
   });
 });

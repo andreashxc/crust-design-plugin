@@ -1,133 +1,199 @@
-/**
- * Isolated-world content script entry.
- *
- * Per CONTEXT D-13: this file owns experiments where manifest.world === 'isolated'.
- * Per SP-3 / BLD-01: experiments are discovered via import.meta.glob from the
- *   @experiments alias (resolves to repo-root experiments/). NO runtime fetch.
- */
-
-import type { ApplyFn, CleanupFn } from '@platform/experiment-sdk';
-import { ExperimentManifest } from '@platform/experiment-sdk';
+import {
+  type ApplyFn,
+  type CleanupFn,
+  type Registry,
+  type RegistryEntry,
+  TweakValueValidationError,
+  validateTweakValues,
+} from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
-import { filterByWorld } from '@/content/engine';
-import { onMessage } from '@/shared/messages';
-import { getEnabledExperiments, recordLastError } from '@/shared/storage';
-import { matchesUrl } from '@/shared/url-match';
+import {
+  filterAutoDisabled,
+  filterByWorld,
+  isAbortError,
+  shouldReapplyForTweakValues,
+  stableTweakValuesKey,
+} from '@/content/engine';
+import { createHelperContext } from '@/content/helpers';
+import { syncActionIconWithColorScheme } from '@/shared/icon-theme';
+import { onMessage, sendMessage } from '@/shared/messages';
+import {
+  clearLastError,
+  clearTweakErrors,
+  getAutoDisabled,
+  getEnabledExperiments,
+  getPublicLlmConfig,
+  getTweakValues,
+  setAppliedInTab,
+  setTweakErrors,
+} from '@/shared/storage';
+import { matchesScope } from '@/shared/url-match';
+
+type AppliedExperiment = {
+  cleanup: CleanupFn;
+  controller: AbortController;
+  valuesKey: string;
+};
+
+const cleanups = new Map<string, AppliedExperiment>();
+const lastApplyAt = new Map<string, number>();
+
+function omitUnknownTweakValues(
+  entry: RegistryEntry,
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  const allowedKeys = new Set(entry.tweaks.map((tweak) => tweak.key));
+  return Object.fromEntries(Object.entries(values).filter(([key]) => allowedKeys.has(key)));
+}
 
 export default defineContentScript({
   matches: ['*://*.ya.ru/*', '*://ya.ru/*'],
   runAt: 'document_idle',
-  // WXT 0.20.x defaults `world` to 'ISOLATED' on IsolatedWorldContentScriptDefinition.
-  // Verified in node_modules/wxt/dist/types.d.mts:710 — the default emits no `world`
-  // field in the built manifest, which Chrome treats as ISOLATED.
   main: () => {
-    bootstrap('isolated');
+    syncActionIconWithColorScheme();
+    void bootstrap();
   },
 });
 
-type LoadedManifest = {
-  manifest: ReturnType<typeof ExperimentManifest.parse>;
-  modulePath: string;
-};
+async function bootstrap(): Promise<void> {
+  const [{ tabId }, registry] = await Promise.all([
+    sendMessage('WHO_AM_I', undefined),
+    fetch(chrome.runtime.getURL('registry.json')).then((r) => r.json() as Promise<Registry>),
+  ]);
 
-/**
- * Cleanup retention is local to this content-script context (NOT the SW).
- * Per SP-1: SW forbids module-scope state. Content scripts are page-scoped and
- * may safely keep a Map<id, CleanupFn> here — they're recreated on every navigation.
- */
-const cleanups = new Map<string, CleanupFn>();
+  const isolatedEntries = filterByWorld(registry, 'isolated');
 
-function bootstrap(world: 'isolated' | 'main'): void {
-  // Static, build-time resolved registry (BLD-01 / SP-3).
-  const manifestModules = import.meta.glob<{ default: unknown }>('@experiments/*/*/manifest.json', {
-    eager: true,
-    import: 'default',
+  await reconcile(tabId, isolatedEntries);
+
+  onMessage('STATE_CHANGED', ({ data }) => {
+    if (data.tabId !== tabId) return;
+    void reconcile(tabId, isolatedEntries);
   });
-  const experimentLoaders = import.meta.glob<{ apply: ApplyFn }>(
-    '@experiments/*/*/experiment.ts',
-    // NOT eager — chunk-per-experiment, lazy load (BLD-04 deferred to Phase 2 fully,
-    // but Vite's default already produces one chunk per dynamic import target — A6).
-  );
 
-  const loaded: LoadedManifest[] = [];
-  for (const [path, raw] of Object.entries(manifestModules)) {
-    const parsed = ExperimentManifest.safeParse(raw);
-    if (!parsed.success) {
-      console.error('[content] invalid manifest at runtime', path, parsed.error.issues);
-      continue;
-    }
-    const dir = path.replace(/\/manifest\.json$/, '');
-    const modulePath = `${dir}/experiment.ts`;
-    loaded.push({ manifest: parsed.data, modulePath });
-  }
-
-  const myWorld = filterByWorld(
-    loaded.map((l) => l.manifest),
-    world,
-  ).map((m) => m.id);
-  const myLoaders = loaded.filter((l) => myWorld.includes(l.manifest.id));
-
-  // Initial reconcile (covers tabs opened after a previous toggle — RESEARCH R9).
-  void reconcile(myLoaders, experimentLoaders);
-
-  // Subsequent reconciles on STATE_CHANGED.
-  // Plan 02-03 minimal shape: switch from the Phase 1 raw addListener+isExtensionMessage
-  // guard to @webext-core/messaging's onMessage. Plan 02-07 (Wave 4) rewrites the body
-  // to also use the {tabId} payload (RESEARCH R8) and wire setAppliedInTab.
-  onMessage('STATE_CHANGED', () => {
-    void reconcile(myLoaders, experimentLoaders);
+  onMessage('TWEAKS_CHANGED', ({ data }) => {
+    if (data.id && !isolatedEntries.some((entry) => entry.id === data.id)) return { ok: true };
+    void reconcile(tabId, isolatedEntries);
+    return { ok: true };
   });
 }
 
-async function reconcile(
-  myLoaders: LoadedManifest[],
-  experimentLoaders: Record<string, () => Promise<{ apply: ApplyFn }>>,
-): Promise<void> {
-  const enabled = await getEnabledExperiments();
-  const wantOn = myLoaders.filter(
-    (l) => enabled[l.manifest.id] && matchesUrl(location.href, l.manifest.scope.match),
+async function reconcile(tabId: number, entries: RegistryEntry[]): Promise<void> {
+  const [enabled, autodisabled] = await Promise.all([getEnabledExperiments(), getAutoDisabled()]);
+  const eligibleEntries = filterAutoDisabled(entries, autodisabled);
+  const wantOn = eligibleEntries.filter(
+    (entry) => enabled[entry.id] && matchesScope(location.href, entry.scope),
   );
-  const wantOnIds = new Set(wantOn.map((l) => l.manifest.id));
+  const wantOnIds = new Set(wantOn.map((entry) => entry.id));
 
-  // Cleanup any currently-applied experiment that should no longer be on.
-  for (const [id, cleanup] of Array.from(cleanups.entries())) {
+  for (const [id, applied] of Array.from(cleanups.entries())) {
     if (!wantOnIds.has(id)) {
-      try {
-        await cleanup();
-      } catch (err) {
-        console.error('[engine] cleanup failed', id, err);
-        await recordLastError(id, String(err)).catch(() => {});
-      }
+      await cleanupApplied(id, applied);
       cleanups.delete(id);
     }
   }
 
-  // Apply any wanted experiment that isn't yet applied.
-  for (const l of wantOn) {
-    if (cleanups.has(l.manifest.id)) continue;
-    const id = l.manifest.id;
+  for (const entry of wantOn) {
+    const storedValues = await getTweakValues(entry.id);
+    let tweakValues: Record<string, unknown>;
     try {
-      const loader = experimentLoaders[l.modulePath];
-      if (!loader) {
-        console.warn('[engine] no loader for', l.modulePath);
+      tweakValues = validateTweakValues(entry.tweaks, omitUnknownTweakValues(entry, storedValues));
+      await clearTweakErrors(entry.id);
+    } catch (err) {
+      if (err instanceof TweakValueValidationError) {
+        const applied = cleanups.get(entry.id);
+        if (applied) {
+          await cleanupApplied(entry.id, applied);
+          cleanups.delete(entry.id);
+        }
+        await setTweakErrors(entry.id, err.issues);
         continue;
       }
-      const mod = await loader();
-      const controller = new AbortController();
-      const cleanup = await mod.apply({
-        tweaks: {},
-        helpers: {
-          log: (msg, ...rest) => console.debug('[exp]', id, msg, ...rest),
-        },
-        currentURL: location.href,
-        log: (msg, ...rest) => console.debug('[exp]', id, msg, ...rest),
-        signal: controller.signal,
-      });
-      cleanups.set(id, cleanup);
-    } catch (err) {
-      // SP-2 per-call isolation
-      console.error('[engine] apply failed', id, err);
-      await recordLastError(id, String(err)).catch(() => {});
+      throw err;
     }
+    const valuesKey = stableTweakValuesKey(tweakValues);
+    const applied = cleanups.get(entry.id);
+    if (!shouldReapplyForTweakValues(applied?.valuesKey, tweakValues)) continue;
+    if (!(await canApplyNow(entry.id))) continue;
+    if (applied) {
+      await cleanupApplied(entry.id, applied);
+      cleanups.delete(entry.id);
+    }
+    await applyEntry(entry, tweakValues, valuesKey);
   }
+
+  await setAppliedInTab(tabId, Array.from(cleanups.keys()));
+}
+
+async function canApplyNow(id: string): Promise<boolean> {
+  const interval =
+    (await getPublicLlmConfig().catch(() => null))?.costGuard.applyRateLimitMs ?? 1000;
+  const now = Date.now();
+  const last = lastApplyAt.get(id) ?? 0;
+  if (now - last < interval) {
+    console.debug('[engine] apply rate-limited', id);
+    return false;
+  }
+  lastApplyAt.set(id, now);
+  return true;
+}
+
+async function cleanupApplied(id: string, applied: AppliedExperiment): Promise<void> {
+  try {
+    applied.controller.abort();
+    await applied.cleanup();
+  } catch (err) {
+    if (isAbortError(err)) return;
+    console.error('[engine] cleanup failed', id, err);
+    await reportExperimentError(id, 'cleanup', err);
+  }
+}
+
+async function applyEntry(
+  entry: RegistryEntry,
+  tweakValues: Record<string, unknown>,
+  valuesKey: string,
+): Promise<void> {
+  try {
+    const mod = (await import(/* @vite-ignore */ chrome.runtime.getURL(entry.chunkPath))) as {
+      apply: ApplyFn;
+    };
+    const controller = new AbortController();
+    const helperContext = createHelperContext({
+      experimentId: entry.id,
+      signal: controller.signal,
+    });
+    const cleanup = await mod.apply({
+      tweaks: tweakValues,
+      helpers: helperContext.helpers,
+      currentURL: location.href,
+      log: (msg, ...rest) => console.debug('[exp]', entry.id, msg, ...rest),
+      signal: controller.signal,
+    });
+    cleanups.set(entry.id, {
+      cleanup: async () => {
+        await cleanup();
+        await helperContext.cleanup();
+      },
+      controller,
+      valuesKey,
+    });
+    await clearLastError(entry.id);
+  } catch (err) {
+    console.error('[engine] apply failed', entry.id, err);
+    await reportExperimentError(entry.id, 'apply', err);
+  }
+}
+
+async function reportExperimentError(
+  id: string,
+  phase: 'apply' | 'cleanup',
+  err: unknown,
+): Promise<void> {
+  const error = err instanceof Error ? err : new Error(String(err));
+  await sendMessage('EXPERIMENT_ERROR', {
+    id,
+    phase,
+    message: error.message,
+    stack: error.stack,
+  }).catch(() => {});
 }

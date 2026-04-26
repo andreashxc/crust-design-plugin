@@ -13,9 +13,9 @@ A Chromium MV3 extension that lets a closed team of designers ship DOM-mutation 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation Spike & Engine Skeleton** - De-risk MV3 unknowns and ship a loadable extension that runs one smoke experiment end-to-end (completed 2026-04-25)
-- [ ] **Phase 2: State Foundation, Messaging & Popup Shell** - Typed storage/messaging backbone and an experiment list with working enable/disable
-- [ ] **Phase 3: Tweak System** - All 6 tweak types auto-render from manifest, validate, and round-trip through apply/cleanup
-- [ ] **Phase 4: Helpers & LLM Integration** - `llm()` and `fetchPage()` ship with cost guards, caching, and SPA-shell detection
+- [x] **Phase 2: State Foundation, Messaging & Popup Shell** - Typed storage/messaging backbone and an experiment list with working enable/disable (completed 2026-04-26)
+- [x] **Phase 3: Tweak System** - All 6 tweak types auto-render from manifest, validate, and round-trip through apply/cleanup (completed 2026-04-26)
+- [x] **Phase 4: Helpers & LLM Integration** - `llm()` and `fetchPage()` ship with cost guards, caching, and SPA-shell detection (completed 2026-04-26; manual smoke passed)
 - [ ] **Phase 5: DX, SPA Composition & Sharing** - Hot-reload, SPA navigation, multi-experiment ordering, presets, and self-service onboarding
 - [ ] **Phase 6: Distribution & Acceptance** - `.crx` packaging, fork-from-UI, Yandex Browser smoke test, and full three-designer acceptance scenario
 
@@ -53,14 +53,14 @@ Plans:
 **Plans**: 8 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — SDK type extensions (RegistryEntry, Registry, ExperimentStatus, ErrorRecord, AutoDisableRecord, byId) + tests (Wave 0)
-- [ ] 02-02-PLAN.md — Storage helpers + idempotent migration (D-29) + chrome-mock extensions + jsdom/RTL/messaging deps install (Wave 0)
-- [ ] 02-03-PLAN.md — @webext-core/messaging ProtocolMap + SW handler split (toggle + error sliding-window auto-disable) + tabs.onRemoved + setAccessLevel (Wave 1)
-- [ ] 02-04-PLAN.md — build-experiments generateBundle emits dist/registry.json + wxt.config manualChunks for per-experiment chunks (Wave 2)
-- [ ] 02-05-PLAN.md — shadcn init + 6 components + Zustand store + computeStatus + groupByAuthor pure helpers + tests (Wave 3)
-- [ ] 02-06-PLAN.md — Popup React shell (App + AuthorGroup + ExperimentRow + EmptyState) + main.tsx bootstrap + storage.onChanged + RTL tests (Wave 4)
-- [ ] 02-07-PLAN.md — Content-script reconcile (registry.json + filterAutoDisabled + EXPERIMENT_ERROR + applied:tabId) + ENG-04 contract test + abort-signal test (Wave 4)
-- [ ] 02-08-PLAN.md — Full automated suite + build-artifact capture + 5-check manual MV3 smoke checklist (Wave 5)
+- [x] 02-01-PLAN.md — SDK type extensions (RegistryEntry, Registry, ExperimentStatus, ErrorRecord, AutoDisableRecord, byId) + tests (Wave 0)
+- [x] 02-02-PLAN.md — Storage helpers + idempotent migration (D-29) + chrome-mock extensions + jsdom/RTL/messaging deps install (Wave 0)
+- [x] 02-03-PLAN.md — @webext-core/messaging ProtocolMap + SW handler split (toggle + error sliding-window auto-disable) + tabs.onRemoved + setAccessLevel (Wave 1)
+- [x] 02-04-PLAN.md — build-experiments generateBundle emits dist/registry.json + web-accessible per-experiment chunks (Wave 2)
+- [x] 02-05-PLAN.md — shadcn init + 6 components + Zustand store + computeStatus + groupByAuthor pure helpers + tests (Wave 3)
+- [x] 02-06-PLAN.md — Popup React shell (App + AuthorGroup + ExperimentRow + EmptyState) + main.tsx bootstrap + storage.onChanged + RTL tests (Wave 4)
+- [x] 02-07-PLAN.md — Content-script reconcile (registry.json + filterAutoDisabled + EXPERIMENT_ERROR + applied:tabId) + ENG-04 contract test + abort-signal test (Wave 4)
+- [x] 02-08-PLAN.md — Full automated suite + build-artifact capture + 5-check manual MV3 smoke checklist (Wave 5)
 
 **UI hint**: yes
 
@@ -74,10 +74,15 @@ Plans:
   3. Invalid tweak values (Zod fails) skip the apply call and show a structured error in the popup; the experiment never sees malformed input
   4. The popup is filtered to the current tab's URL — only experiments whose `scope` (Chrome match-patterns + regex fallback) match are shown
   5. An experiment that injects an in-page panel renders inside a Shadow DOM via WXT's `createShadowRootUi`; a snapshot of the host page (ya.ru `<h1>` size, `<img>` display, body `box-sizing`) is unchanged before and after extension load
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 03-01: TBD (planned during `/gsd-plan-phase 3`)
+- [x] 03-01-PLAN.md — SDK tweak schema + build validation + storage helpers + regex fallback scope matching (Wave 0)
+- [x] 03-02-PLAN.md — shadcn-compatible tweak UI primitives + reusable `TweakControls` renderer (Wave 1)
+- [x] 03-03-PLAN.md — Popup integration: active-URL filtering, tweak bootstrap/sync, persistence, reset (Wave 2)
+- [x] 03-04-PLAN.md — Content-script tweak-aware reconcile: validated values + cleanup → apply on value change (Wave 3)
+- [x] 03-05-PLAN.md — Reference tweak demo + Shadow DOM panel experiments (Wave 4)
+- [x] 03-06-PLAN.md — Full validation + build artifact capture + manual smoke checklist (Wave 5)
 
 **UI hint**: yes
 
@@ -92,10 +97,17 @@ Plans:
   4. Engine-enforced per-experiment rate limit caps `apply()` invocations at N/T seconds — a stress test calling `llm()` from a MutationObserver callback fires the circuit breaker, not 100 LLM requests
   5. An experiment using only `helpers.injectStyle/injectNode/waitFor/onUrlChange` (no manual cleanup code) produces zero leaked listeners or detached DOM nodes after disable, verified via devtools event listener count
   6. A long streaming LLM response (>30s) completes via long-lived `chrome.runtime` port without SW termination dropping chunks; partial results surface explicitly if the port closes
-**Plans**: TBD
+**Plans**: 8 plans
 
 Plans:
-- [ ] 04-01: TBD (planned during `/gsd-plan-phase 4`)
+- [x] 04-01-PLAN.md — SDK helper contracts + LLM settings/cache/counter storage primitives (Wave 0)
+- [x] 04-02-PLAN.md — Options page UI for providers/defaults/cost guard/diagnostics + popup counter plumbing (Wave 1)
+- [x] 04-03-PLAN.md — Non-streaming OpenAI/Anthropic SW proxy with cache, retry, provider test, counters (Wave 2)
+- [x] 04-04-PLAN.md — Content helper factory, auto-tracked side-effect ledger, apply rate-limit (Wave 3)
+- [x] 04-05-PLAN.md — `fetchPage` via SW + offscreen DOMParser + SPA-shell detection (Wave 4)
+- [x] 04-06-PLAN.md — Explicit streaming LLM support over long-lived runtime ports (Wave 5)
+- [x] 04-07-PLAN.md — Helper reference experiment + popup inline missing-key warning (Wave 6)
+- [x] 04-08-PLAN.md — Full validation, build artifact capture, manual smoke checklist, state update (Wave 7)
 
 ### Phase 5: DX, SPA Composition & Sharing
 **Goal**: The daily designer iteration loop is fast — file save reapplies the experiment without full reload; multiple experiments compose correctly on SPAs (ya.ru pushState navigation re-evaluates scope); apply order is visible and reorderable; auto-generated `description.md` keeps repo docs in sync with code; tweak presets save/load from the repo; new designers self-onboard from documentation alone.
@@ -140,8 +152,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation Spike & Engine Skeleton | 5/5 | Complete    | 2026-04-25 |
-| 2. State Foundation, Messaging & Popup Shell | 0/8 | Not started | - |
-| 3. Tweak System | 0/TBD | Not started | - |
-| 4. Helpers & LLM Integration | 0/TBD | Not started | - |
+| 2. State Foundation, Messaging & Popup Shell | 8/8 | Complete    | 2026-04-26 |
+| 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
+| 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
 | 5. DX, SPA Composition & Sharing | 0/TBD | Not started | - |
 | 6. Distribution & Acceptance | 0/TBD | Not started | - |

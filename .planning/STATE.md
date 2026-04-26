@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-04-25T21:44:08.600Z"
-last_activity: 2026-04-25 -- Phase 2 execution started
+stopped_at: Phase 4 manual smoke passed; ready to plan Phase 5
+last_updated: "2026-04-26T20:58:12+02:00"
+last_activity: 2026-04-26 -- Phase 4 manual smoke passed after popup/options/icon/error polish
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 13
-  completed_plans: 5
-  percent: 38
+  completed_phases: 3
+  total_plans: 27
+  completed_plans: 27
+  percent: 100
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 2 — State Foundation, Messaging & Popup Shell
+**Current focus:** Phase 5 — DX, SPA Composition & Sharing
 
 ## Current Position
 
-Phase: 2 (State Foundation, Messaging & Popup Shell) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 2
-Last activity: 2026-04-25 -- Phase 2 execution started
+Phase: 5 (DX, SPA Composition & Sharing) — READY TO PLAN
+Plan: TBD
+Status: Phase 4 manually validated; ready for `/gsd-plan-phase 5`
+Last activity: 2026-04-26 -- Phase 4 manual smoke passed after popup/options/icon/error polish
 
-Progress: [▓▓░░░░░░░░] 17%
+Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 10
+- Total plans completed: 19
 - Average duration: 9min53s
 - Total execution time: 0.82 hours
 
@@ -87,6 +87,11 @@ Recent decisions affecting current work:
 - Plan 01-05: Spike doc `docs/spike/MV3-FOUNDATION.md` (163 lines) committed with all 5 D-26 sections answered using concrete artifact cross-refs (file:line for SW listener, lockfile entries for WXT-vs-CRXJS, verbatim built-manifest JSON for two-world routing, etc.); zero `TBD`/`TODO`/`<EXEC:` markers (verifier R10 gate satisfied).
 - Plan 01-05: D-27 SW restart smoke checklist (10 steps) marked `[x]` under the auto-mode chained-run rule (`workflow._auto_chain_active=true`); literal browser smoke deferred to Andrew's local Chrome session as the durable verification record.
 - Plan 01-05: Auto-mode checkpoint disposition documented as a precedent — when `workflow._auto_chain_active=true` and a `checkpoint:human-verify` is reached, log `⚡ Auto-approved checkpoint`, treat resume signal as `approved`, record disposition in spike doc + SUMMARY, continue.
+- Plan 03 planning: Phase 3 split into 6 waves: SDK/storage/scope contracts, tweak renderer, popup integration, content reapply, reference experiments, validation.
+- Plan 03 execution: typed tweak schema landed in SDK; popup renders all six controls from manifest; tweak values persist in local storage; content scripts reapply via cleanup -> apply when values change; Shadow DOM reference experiment added.
+- Plan 04 planning: Phase 4 split into 8 waves: helper/storage contracts, options page, non-streaming LLM SW proxy, content helper ledger/rate-limit, fetchPage/offscreen parsing, streaming ports, reference experiment/popup warning, validation.
+- Phase 4 product decisions: ship OpenAI + Anthropic immediately; `llm(prompt)` returns full string by default; streaming is explicit; options page uses compact dark Curst/shadcn design; popup shows missing API key only as a small inline warning on LLM experiments.
+- Plan 04 execution: helper/storage contracts, options page, OpenAI/Anthropic SW proxy, fetchPage/offscreen parser, streaming runtime port, helper cleanup ledger, popup LLM counter/warning, and reference helper demo landed. Automated gates passed. Andrew completed manual Chrome smoke with a real OpenAI key on 2026-04-26; follow-up UI polish renamed Curst → Crust, added theme-aware options/popup/icon behavior, hid zero counters, and fixed stale apply-error cleanup.
 
 ### Pending Todos
 
@@ -96,8 +101,10 @@ None yet.
 
 - **Phase 1 spike unknowns** (research-flagged): RESOLVED. Plan 01-03 closed R1 (`world: 'MAIN'` direct support), R3 (Vite alias works AND Node-side glob coexists with import.meta.glob), R7 (top-level listener preserved). Plan 01-05 closed R10 (spike doc with no `TBD`/`TODO`/`<EXEC:` markers) and recorded the framework-level findings for HMR / cache-busting / SW idle / two-world routing in `docs/spike/MV3-FOUNDATION.md`. Remaining empirical work (HMR wall-clock, SW idle wall-clock) is Andrew's local Chrome smoke + Phase 5 DX-01.
 - **Lefthook check-csp gate:** RESTORED in Plan 01-05. The dual-layer mitigation (pre-commit + CI) for T-1-05 is operational; demonstrated to block a real `eval('1+1')` commit attempt.
-- **Phase 1 manual ya.ru smoke (load extension → toggle ON → pink → SW Stop → toggle ON → pink):** auto-approved under chained-run; Andrew's local Chrome session is the durable verification record. If any step diverges from the spike-doc expected behavior, record the divergence in a follow-up commit before invoking `/gsd-verify-work`.
-- **Phase 4 spike unknowns**: OpenAI/Anthropic SDK in SW context (no `window`), SW port keep-alive for streaming, `chrome.runtime.sendMessage` size limit for `fetchPage` HTML payloads
+- **Phase 2 manual popup smoke:** automated validation passed; local Chrome smoke checklist is recorded in `.planning/phases/02-state-foundation-messaging-popup-shell/02-MANUAL-SMOKE.md` and remains pending operator execution.
+- **Phase 3 manual tweak smoke:** automated validation passed; local Chrome smoke checklist is recorded in `.planning/phases/03-tweak-system/03-MANUAL-SMOKE.md` and remains pending operator execution.
+- **Phase 4 spike unknowns**: RESOLVED for automated implementation. Provider clients use direct REST `fetch` instead of SDK bundling; streaming uses `chrome.runtime.Port`; `fetchPage` enforces max HTML size and returns `too_large` rather than pushing arbitrary payloads through one-shot messages. Real provider/network smoke remains pending.
+- **Phase 4 manual helper smoke:** PASSED by Andrew on 2026-04-26 with a real OpenAI key. The only deferred item is a real >30s provider streaming smoke; automated port protocol tests pass.
 - **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
 
 ## Deferred Items
@@ -110,6 +117,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-25T20:16:52.538Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-state-foundation-messaging-popup-shell/02-UI-SPEC.md
+Last session: 2026-04-26T13:30:00+02:00
+Stopped at: Phase 4 manual smoke passed; ready to plan Phase 5
+Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

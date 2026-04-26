@@ -11,24 +11,205 @@
  *  - `runStartupMigration()` for Phase 1 → Phase 2 last_error consolidation
  */
 
-import type { AutoDisableRecord, ErrorRecord } from '@platform/experiment-sdk';
+import type {
+  AutoDisableRecord,
+  ErrorRecord,
+  LlmProvider,
+  LlmUsage,
+  TweakValidationError,
+} from '@platform/experiment-sdk';
 
 // ===== Storage key constants (no string literals scattered through helpers) =====
 
 const KEY_ENABLED = 'enabled';
 const KEY_AUTODISABLED = 'autodisabled';
 const KEY_LAST_ERROR = 'last_error';
+const KEY_LLM_SETTINGS = 'llm:settings';
+const KEY_LLM_LAST_ERROR = 'llm:last_error';
+const KEY_LLM_SESSION = 'llm:session';
+const TWEAKS_PREFIX = 'tweaks:';
+const TWEAK_ERRORS_PREFIX = 'tweak_errors:';
 const ERR_WINDOW_PREFIX = 'error_window:';
 const APPLIED_PREFIX = 'applied:';
+const LLM_CACHE_PREFIX = 'llm:cache:';
 const PHASE1_LAST_ERROR_PREFIX = 'last_error:';
 const LAST_ERROR_PREFIX = 'last_error:'; // Phase 1 alias (kept for back-compat)
+
+export type LlmCostGuardSettings = {
+  cacheEnabled: boolean;
+  cacheTtlMs: number;
+  maxAttempts: number;
+  maxOutputTokens: number;
+  warningCallsPerSession: number;
+  applyRateLimitMs: number;
+};
+
+export type LlmSettings = {
+  providerKeys: Partial<Record<LlmProvider, string>>;
+  defaultProvider: LlmProvider;
+  models: Record<LlmProvider, string>;
+  costGuard: LlmCostGuardSettings;
+};
+
+export type PublicLlmConfig = Omit<LlmSettings, 'providerKeys'> & {
+  providers: Record<LlmProvider, { configured: boolean }>;
+};
+
+export type LlmCacheEntry = {
+  text: string;
+  provider: LlmProvider;
+  model: string;
+  cachedAt: number;
+  expiresAt: number;
+  usage?: LlmUsage;
+};
+
+export type LlmSessionStats = {
+  calls: number;
+  cacheHits: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  startedAt: number;
+  updatedAt: number;
+};
+
+export type LastLlmError = {
+  experimentId?: string;
+  provider?: LlmProvider;
+  message: string;
+  code?: string;
+  at: number;
+};
+
+export type LlmCacheKeyInput = {
+  provider: LlmProvider;
+  model: string;
+  prompt: string;
+  maxOutputTokens: number;
+  cacheKey?: string;
+};
+
+const DEFAULT_LLM_COST_GUARD: LlmCostGuardSettings = {
+  cacheEnabled: true,
+  cacheTtlMs: 10 * 60 * 1000,
+  maxAttempts: 3,
+  maxOutputTokens: 512,
+  warningCallsPerSession: 10,
+  applyRateLimitMs: 1000,
+};
+
+const DEFAULT_LLM_SETTINGS: LlmSettings = {
+  providerKeys: {},
+  defaultProvider: 'openai',
+  models: {
+    openai: 'gpt-5',
+    anthropic: 'claude-sonnet-4-5',
+  },
+  costGuard: DEFAULT_LLM_COST_GUARD,
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isProvider(value: unknown): value is LlmProvider {
+  return value === 'openai' || value === 'anthropic';
+}
+
+function numberOrDefault(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+function stringOrDefault(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function sanitizeLlmSettings(value: unknown): LlmSettings {
+  if (!isRecord(value)) return structuredClone(DEFAULT_LLM_SETTINGS);
+
+  const providerKeysRaw = isRecord(value.providerKeys) ? value.providerKeys : {};
+  const providerKeys: Partial<Record<LlmProvider, string>> = {};
+  for (const provider of ['openai', 'anthropic'] as const) {
+    if (typeof providerKeysRaw[provider] === 'string' && providerKeysRaw[provider].length > 0) {
+      providerKeys[provider] = providerKeysRaw[provider];
+    }
+  }
+
+  const modelsRaw = isRecord(value.models) ? value.models : {};
+  const costGuardRaw = isRecord(value.costGuard) ? value.costGuard : {};
+
+  return {
+    providerKeys,
+    defaultProvider: isProvider(value.defaultProvider)
+      ? value.defaultProvider
+      : DEFAULT_LLM_SETTINGS.defaultProvider,
+    models: {
+      openai: stringOrDefault(modelsRaw.openai, DEFAULT_LLM_SETTINGS.models.openai),
+      anthropic: stringOrDefault(modelsRaw.anthropic, DEFAULT_LLM_SETTINGS.models.anthropic),
+    },
+    costGuard: {
+      cacheEnabled:
+        typeof costGuardRaw.cacheEnabled === 'boolean'
+          ? costGuardRaw.cacheEnabled
+          : DEFAULT_LLM_COST_GUARD.cacheEnabled,
+      cacheTtlMs: numberOrDefault(costGuardRaw.cacheTtlMs, DEFAULT_LLM_COST_GUARD.cacheTtlMs),
+      maxAttempts: Math.max(
+        1,
+        numberOrDefault(costGuardRaw.maxAttempts, DEFAULT_LLM_COST_GUARD.maxAttempts),
+      ),
+      maxOutputTokens: Math.max(
+        1,
+        numberOrDefault(costGuardRaw.maxOutputTokens, DEFAULT_LLM_COST_GUARD.maxOutputTokens),
+      ),
+      warningCallsPerSession: Math.max(
+        1,
+        numberOrDefault(
+          costGuardRaw.warningCallsPerSession,
+          DEFAULT_LLM_COST_GUARD.warningCallsPerSession,
+        ),
+      ),
+      applyRateLimitMs: numberOrDefault(
+        costGuardRaw.applyRateLimitMs,
+        DEFAULT_LLM_COST_GUARD.applyRateLimitMs,
+      ),
+    },
+  };
+}
+
+function sessionStatsNow(): LlmSessionStats {
+  const now = Date.now();
+  return {
+    calls: 0,
+    cacheHits: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    startedAt: now,
+    updatedAt: now,
+  };
+}
+
+function sanitizeSessionStats(value: unknown): LlmSessionStats {
+  const defaults = sessionStatsNow();
+  if (!isRecord(value)) return defaults;
+  return {
+    calls: numberOrDefault(value.calls, defaults.calls),
+    cacheHits: numberOrDefault(value.cacheHits, defaults.cacheHits),
+    inputTokens: numberOrDefault(value.inputTokens, defaults.inputTokens),
+    outputTokens: numberOrDefault(value.outputTokens, defaults.outputTokens),
+    totalTokens: numberOrDefault(value.totalTokens, defaults.totalTokens),
+    startedAt: numberOrDefault(value.startedAt, defaults.startedAt),
+    updatedAt: numberOrDefault(value.updatedAt, defaults.updatedAt),
+  };
+}
 
 // ===== Phase 1 helpers (unchanged) =====
 
 export async function getEnabledExperiments(): Promise<Record<string, boolean>> {
   const result = await chrome.storage.local.get(KEY_ENABLED);
   const value = result[KEY_ENABLED];
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
+  if (isRecord(value)) {
     return value as Record<string, boolean>;
   }
   return {};
@@ -73,6 +254,234 @@ export async function setLastError(id: string, error: ErrorRecord): Promise<void
   const map = await getLastErrors();
   map[id] = error;
   await chrome.storage.local.set({ [KEY_LAST_ERROR]: map });
+}
+
+// ===== Phase 3 — tweaks:<id> values in storage.local =====
+
+export async function getTweakValues(id: string): Promise<Record<string, unknown>> {
+  const key = tweakValuesStorageKey(id);
+  const r = await chrome.storage.local.get(key);
+  const value = r[key];
+  return isRecord(value) ? value : {};
+}
+
+export async function setTweakValues(id: string, values: Record<string, unknown>): Promise<void> {
+  await chrome.storage.local.set({ [tweakValuesStorageKey(id)]: values });
+}
+
+export async function clearTweakValues(id: string): Promise<void> {
+  await chrome.storage.local.remove(tweakValuesStorageKey(id));
+}
+
+// ===== Phase 3 — tweak_errors:<id> validation errors in storage.local =====
+
+export async function getTweakErrors(id: string): Promise<TweakValidationError[]> {
+  const key = tweakErrorsStorageKey(id);
+  const r = await chrome.storage.local.get(key);
+  const value = r[key];
+  return Array.isArray(value) ? (value as TweakValidationError[]) : [];
+}
+
+export async function setTweakErrors(id: string, errors: TweakValidationError[]): Promise<void> {
+  await chrome.storage.local.set({ [tweakErrorsStorageKey(id)]: errors });
+}
+
+export async function clearTweakErrors(id: string): Promise<void> {
+  await chrome.storage.local.remove(tweakErrorsStorageKey(id));
+}
+
+export function tweakValuesStorageKey(id: string): string {
+  return `${TWEAKS_PREFIX}${id}`;
+}
+
+export function tweakErrorsStorageKey(id: string): string {
+  return `${TWEAK_ERRORS_PREFIX}${id}`;
+}
+
+// ===== Phase 4 — LLM settings, cache, session counters, diagnostics =====
+
+export function defaultLlmSettings(): LlmSettings {
+  return structuredClone(DEFAULT_LLM_SETTINGS);
+}
+
+export async function getLlmSettings(): Promise<LlmSettings> {
+  const result = await chrome.storage.local.get(KEY_LLM_SETTINGS);
+  return sanitizeLlmSettings(result[KEY_LLM_SETTINGS]);
+}
+
+export async function setProviderKey(provider: LlmProvider, key: string): Promise<void> {
+  const settings = await getLlmSettings();
+  const trimmed = key.trim();
+  if (trimmed.length === 0) {
+    delete settings.providerKeys[provider];
+  } else {
+    settings.providerKeys[provider] = trimmed;
+  }
+  await chrome.storage.local.set({ [KEY_LLM_SETTINGS]: settings });
+}
+
+export async function clearProviderKey(provider: LlmProvider): Promise<void> {
+  const settings = await getLlmSettings();
+  delete settings.providerKeys[provider];
+  await chrome.storage.local.set({ [KEY_LLM_SETTINGS]: settings });
+}
+
+export async function setLlmDefaults(
+  defaults: Partial<
+    Pick<LlmSettings, 'defaultProvider' | 'models'> & { costGuard: Partial<LlmCostGuardSettings> }
+  >,
+): Promise<void> {
+  const settings = await getLlmSettings();
+  const next: LlmSettings = {
+    ...settings,
+    defaultProvider: defaults.defaultProvider ?? settings.defaultProvider,
+    models: {
+      ...settings.models,
+      ...(defaults.models ?? {}),
+    },
+    costGuard: {
+      ...settings.costGuard,
+      ...(defaults.costGuard ?? {}),
+    },
+  };
+  await chrome.storage.local.set({ [KEY_LLM_SETTINGS]: sanitizeLlmSettings(next) });
+}
+
+export async function getPublicLlmConfig(): Promise<PublicLlmConfig> {
+  const settings = await getLlmSettings();
+  return {
+    defaultProvider: settings.defaultProvider,
+    models: settings.models,
+    costGuard: settings.costGuard,
+    providers: {
+      openai: { configured: Boolean(settings.providerKeys.openai) },
+      anthropic: { configured: Boolean(settings.providerKeys.anthropic) },
+    },
+  };
+}
+
+export function llmCacheStorageKey(hash: string): string {
+  return `${LLM_CACHE_PREFIX}${hash}`;
+}
+
+export function buildLlmCacheKey(input: LlmCacheKeyInput): string {
+  const normalized = JSON.stringify({
+    provider: input.provider,
+    model: input.model,
+    prompt: input.prompt,
+    maxOutputTokens: input.maxOutputTokens,
+    cacheKey: input.cacheKey ?? '',
+  });
+  return fnv1a32(normalized);
+}
+
+export async function getLlmCache(hash: string): Promise<LlmCacheEntry | undefined> {
+  const key = llmCacheStorageKey(hash);
+  const result = await chrome.storage.local.get(key);
+  const value = result[key];
+  if (!isRecord(value)) return undefined;
+  if (!isProvider(value.provider)) return undefined;
+  if (
+    typeof value.text !== 'string' ||
+    typeof value.model !== 'string' ||
+    typeof value.cachedAt !== 'number' ||
+    typeof value.expiresAt !== 'number'
+  ) {
+    return undefined;
+  }
+  if (value.expiresAt <= Date.now()) {
+    await chrome.storage.local.remove(key);
+    return undefined;
+  }
+  return {
+    text: value.text,
+    provider: value.provider,
+    model: value.model,
+    cachedAt: value.cachedAt,
+    expiresAt: value.expiresAt,
+    usage: isRecord(value.usage)
+      ? {
+          inputTokens:
+            typeof value.usage.inputTokens === 'number' ? value.usage.inputTokens : undefined,
+          outputTokens:
+            typeof value.usage.outputTokens === 'number' ? value.usage.outputTokens : undefined,
+          totalTokens:
+            typeof value.usage.totalTokens === 'number' ? value.usage.totalTokens : undefined,
+        }
+      : undefined,
+  };
+}
+
+export async function setLlmCache(hash: string, value: LlmCacheEntry): Promise<void> {
+  await chrome.storage.local.set({ [llmCacheStorageKey(hash)]: value });
+}
+
+export async function clearLlmCache(): Promise<void> {
+  const all = await chrome.storage.local.get(null);
+  const keys = Object.keys(all).filter((key) => key.startsWith(LLM_CACHE_PREFIX));
+  if (keys.length > 0) await chrome.storage.local.remove(keys);
+}
+
+export async function getLlmSessionStats(): Promise<LlmSessionStats> {
+  const result = await chrome.storage.session.get(KEY_LLM_SESSION);
+  return sanitizeSessionStats(result[KEY_LLM_SESSION]);
+}
+
+export async function incrementLlmSessionStats(
+  delta: Partial<
+    Pick<LlmSessionStats, 'calls' | 'cacheHits' | 'inputTokens' | 'outputTokens' | 'totalTokens'>
+  >,
+): Promise<LlmSessionStats> {
+  const current = await getLlmSessionStats();
+  const next: LlmSessionStats = {
+    ...current,
+    calls: current.calls + (delta.calls ?? 0),
+    cacheHits: current.cacheHits + (delta.cacheHits ?? 0),
+    inputTokens: current.inputTokens + (delta.inputTokens ?? 0),
+    outputTokens: current.outputTokens + (delta.outputTokens ?? 0),
+    totalTokens: current.totalTokens + (delta.totalTokens ?? 0),
+    updatedAt: Date.now(),
+  };
+  await chrome.storage.session.set({ [KEY_LLM_SESSION]: next });
+  return next;
+}
+
+export async function resetLlmSessionStats(): Promise<LlmSessionStats> {
+  const next = sessionStatsNow();
+  await chrome.storage.session.set({ [KEY_LLM_SESSION]: next });
+  return next;
+}
+
+export async function getLastLlmError(): Promise<LastLlmError | undefined> {
+  const result = await chrome.storage.local.get(KEY_LLM_LAST_ERROR);
+  const value = result[KEY_LLM_LAST_ERROR];
+  if (!isRecord(value) || typeof value.message !== 'string' || typeof value.at !== 'number') {
+    return undefined;
+  }
+  return {
+    experimentId: typeof value.experimentId === 'string' ? value.experimentId : undefined,
+    provider: isProvider(value.provider) ? value.provider : undefined,
+    message: value.message,
+    code: typeof value.code === 'string' ? value.code : undefined,
+    at: value.at,
+  };
+}
+
+export async function setLastLlmError(error: LastLlmError): Promise<void> {
+  await chrome.storage.local.set({ [KEY_LLM_LAST_ERROR]: error });
+}
+
+export async function clearLastLlmError(): Promise<void> {
+  await chrome.storage.local.remove(KEY_LLM_LAST_ERROR);
+}
+
+function fnv1a32(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
 // ===== Phase 2 — autodisabled map =====

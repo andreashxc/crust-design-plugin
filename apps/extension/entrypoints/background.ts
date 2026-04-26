@@ -23,9 +23,19 @@
  * SP-7 preserved: top-level listener registrations BEFORE defineBackground.
  */
 import { defineBackground } from 'wxt/utils/define-background';
+import { setActionIconTheme } from '@/background/action-icon';
+import { broadcastStateChanged } from '@/background/broadcast';
 import { handleExperimentError } from '@/background/handlers/experiment-error';
 import { handleExperimentToggle } from '@/background/handlers/experiment-toggle';
+import { handleFetchPage } from '@/background/handlers/fetch-page';
+import { handleLlmComplete } from '@/background/handlers/llm-complete';
+import {
+  handleLlmClearCache,
+  handleLlmResetSession,
+  handleProviderTest,
+} from '@/background/handlers/provider-test';
 import { handleWhoAmI } from '@/background/handlers/who-am-i';
+import { registerLlmStreamHandler } from '@/background/llm/stream';
 import { onMessage } from '@/shared/messages';
 import { runStartupMigration } from '@/shared/storage';
 
@@ -42,7 +52,18 @@ void runStartupMigration().catch((err: unknown) => {
 // @webext-core/messaging onMessage() registers the underlying chrome runtime
 // listener synchronously, preserving the Phase 1 invariant (RESEARCH R1).
 onMessage('EXPERIMENT_TOGGLE', ({ data }) => handleExperimentToggle(data));
+onMessage('TWEAKS_CHANGED', async () => {
+  await broadcastStateChanged();
+  return { ok: true };
+});
 onMessage('EXPERIMENT_ERROR', ({ data }) => handleExperimentError(data));
+onMessage('LLM_COMPLETE', ({ data }) => handleLlmComplete(data));
+onMessage('PROVIDER_TEST', ({ data }) => handleProviderTest(data));
+onMessage('LLM_CLEAR_CACHE', () => handleLlmClearCache());
+onMessage('LLM_RESET_SESSION', () => handleLlmResetSession());
+onMessage('FETCH_PAGE', ({ data }) => handleFetchPage(data));
+onMessage('ICON_THEME_CHANGED', ({ data }) => setActionIconTheme(data.theme));
+registerLlmStreamHandler();
 // WHO_AM_I (Blocker 2): handler reads sender.tab.id; throws when called
 // outside a tab context (popup / options). The envelope shape from
 // @webext-core/messaging exposes `sender` directly.

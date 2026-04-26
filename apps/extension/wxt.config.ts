@@ -11,11 +11,25 @@ const repoRoot = resolve(__dirname, '../..');
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    name: 'Designer Experiment Platform',
-    description: 'Phase 1 foundation skeleton',
+    name: 'Crust',
+    description: 'Platform for design experiments',
     version: '0.0.0',
-    permissions: ['storage', 'tabs'],
+    action: {
+      default_title: 'Crust',
+      default_icon: {
+        16: 'icon/16.png',
+        24: 'icon/24.png',
+        32: 'icon/32.png',
+      },
+    },
+    permissions: ['storage', 'tabs', 'offscreen'],
     host_permissions: ['*://ya.ru/*', '*://*.ya.ru/*'],
+    web_accessible_resources: [
+      {
+        resources: ['registry.json', 'chunks/experiments-*.js'],
+        matches: ['*://ya.ru/*', '*://*.ya.ru/*'],
+      },
+    ],
   },
   vite: () => ({
     // `buildExperiments` runs at build start: it scans `experiments/*/*/manifest.json`

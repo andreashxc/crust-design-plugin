@@ -8,10 +8,24 @@ import type {
   AutoDisableRecord,
   ErrorRecord,
   ExperimentStatus,
+  FetchPageResult,
+  Helpers,
+  LlmOptions,
+  LlmProvider,
+  LlmResult,
+  LlmUsage,
   Registry,
   RegistryEntry,
+  TweakDefinition,
+  TweakValueMap,
 } from './index';
-import { ExperimentManifest } from './index';
+import {
+  defaultTweakValues,
+  ExperimentManifest,
+  mergeTweakValues,
+  TweakValueValidationError,
+  validateTweakValues,
+} from './index';
 
 // Type-level "is the type non-never" check — the assignments must compile.
 const _statusOk: ExperimentStatus = 'applied';
@@ -32,6 +46,38 @@ const _entryOk: RegistryEntry = {
   tweaks: [],
 };
 const _registryOk: Registry = [_entryOk];
+const _tweakOk: TweakDefinition = {
+  type: 'toggle',
+  key: 'enabled',
+  label: 'Enabled',
+  default: true,
+};
+const _tweakValuesOk: TweakValueMap = { enabled: true };
+const _providerOk: LlmProvider = 'openai';
+const _usageOk: LlmUsage = { inputTokens: 1, outputTokens: 2, totalTokens: 3 };
+const _llmOptionsOk: LlmOptions = { provider: 'anthropic', maxOutputTokens: 128 };
+const _llmResultOk: LlmResult = {
+  text: 'hello',
+  provider: 'openai',
+  model: 'gpt-test',
+  cached: false,
+  usage: _usageOk,
+};
+const _fetchPageOk: FetchPageResult = {
+  ok: false,
+  url: 'https://ya.ru/',
+  reason: 'likely_spa_shell',
+  message: 'SPA shell',
+};
+const _helpersOk: Helpers = {
+  log: () => {},
+  llm: async () => 'hello',
+  fetchPage: async () => _fetchPageOk,
+  injectStyle: () => document.createElement('style'),
+  injectNode: (node) => node,
+  waitFor: async () => document.createElement('div'),
+  onUrlChange: () => () => {},
+};
 
 // Suppress unused-var warnings — these are compile checks, not runtime.
 void _statusOk;
@@ -39,6 +85,14 @@ void _errOk;
 void _autoOk;
 void _entryOk;
 void _registryOk;
+void _tweakOk;
+void _tweakValuesOk;
+void _providerOk;
+void _usageOk;
+void _llmOptionsOk;
+void _llmResultOk;
+void _fetchPageOk;
+void _helpersOk;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // From packages/experiment-sdk/src/ → tests/fixtures/manifests/ at repo root
@@ -83,6 +137,46 @@ describe('ExperimentManifest schema (D-16)', () => {
       input.scope.regex = ['^https://ya\\.ru/.*$'];
       const result = ExperimentManifest.safeParse(input);
       expect(result.success).toBe(true);
+    });
+
+    it('accepts all six typed tweak definitions', () => {
+      const input = {
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [
+          { type: 'toggle', key: 'enabled', label: 'Enabled', default: true },
+          {
+            type: 'select',
+            key: 'density',
+            label: 'Density',
+            options: ['compact', 'comfortable'],
+            default: 'compact',
+          },
+          { type: 'text', key: 'headline', label: 'Headline', default: 'Hello' },
+          {
+            type: 'number-slider',
+            key: 'scale',
+            label: 'Scale',
+            min: 0,
+            max: 10,
+            step: 1,
+            default: 5,
+          },
+          { type: 'color', key: 'accent', label: 'Accent', default: '#12aBef' },
+          {
+            type: 'multi-select',
+            key: 'sections',
+            label: 'Sections',
+            options: ['news', 'sports', 'finance'],
+            default: ['news', 'finance'],
+          },
+        ],
+      };
+
+      const result = ExperimentManifest.safeParse(input);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.tweaks).toHaveLength(6);
+      }
     });
   });
 
@@ -174,6 +268,192 @@ describe('ExperimentManifest schema (D-16)', () => {
       delete input.scope;
       const result = ExperimentManifest.safeParse(input);
       expect(result.success).toBe(false);
+    });
+
+    it('rejects select default not in options', () => {
+      const input = {
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [
+          {
+            type: 'select',
+            key: 'density',
+            label: 'Density',
+            options: ['compact', 'comfortable'],
+            default: 'wide',
+          },
+        ],
+      };
+      const result = ExperimentManifest.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.join('.') === 'tweaks.0.default')).toBe(true);
+      }
+    });
+
+    it('rejects multi-select default values not in options', () => {
+      const input = {
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [
+          {
+            type: 'multi-select',
+            key: 'sections',
+            label: 'Sections',
+            options: ['news', 'sports'],
+            default: ['news', 'finance'],
+          },
+        ],
+      };
+      const result = ExperimentManifest.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.join('.') === 'tweaks.0.default')).toBe(true);
+      }
+    });
+
+    it('rejects number-slider default outside range', () => {
+      const input = {
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [
+          {
+            type: 'number-slider',
+            key: 'scale',
+            label: 'Scale',
+            min: 0,
+            max: 10,
+            default: 11,
+          },
+        ],
+      };
+      const result = ExperimentManifest.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.join('.') === 'tweaks.0.default')).toBe(true);
+      }
+    });
+
+    it('rejects invalid color defaults', () => {
+      const input = {
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [{ type: 'color', key: 'accent', label: 'Accent', default: 'blue' }],
+      };
+      const result = ExperimentManifest.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((i) => i.path.join('.') === 'tweaks.0.default')).toBe(true);
+      }
+    });
+
+    it('rejects empty and invalid tweak keys', () => {
+      const emptyKey = ExperimentManifest.safeParse({
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [{ type: 'toggle', key: '', label: 'Enabled', default: true }],
+      });
+      expect(emptyKey.success).toBe(false);
+
+      const invalidKey = ExperimentManifest.safeParse({
+        ...(loadFixture('valid.json') as Record<string, unknown>),
+        tweaks: [{ type: 'toggle', key: 'bad key', label: 'Enabled', default: true }],
+      });
+      expect(invalidKey.success).toBe(false);
+    });
+  });
+});
+
+describe('tweak value helpers', () => {
+  const tweaks: TweakDefinition[] = [
+    { type: 'toggle', key: 'enabled', label: 'Enabled', default: true },
+    {
+      type: 'select',
+      key: 'density',
+      label: 'Density',
+      options: ['compact', 'comfortable'],
+      default: 'compact',
+    },
+    { type: 'text', key: 'headline', label: 'Headline', default: 'Hello' },
+    {
+      type: 'number-slider',
+      key: 'scale',
+      label: 'Scale',
+      min: 0,
+      max: 10,
+      default: 5,
+    },
+    { type: 'color', key: 'accent', label: 'Accent', default: '#123456' },
+    {
+      type: 'multi-select',
+      key: 'sections',
+      label: 'Sections',
+      options: ['news', 'sports', 'finance'],
+      default: ['news'],
+    },
+  ];
+
+  it('builds default value maps from tweak definitions', () => {
+    expect(defaultTweakValues(tweaks)).toEqual({
+      enabled: true,
+      density: 'compact',
+      headline: 'Hello',
+      scale: 5,
+      accent: '#123456',
+      sections: ['news'],
+    });
+  });
+
+  it('validates provided tweak values and fills omitted values with defaults', () => {
+    expect(
+      validateTweakValues(tweaks, {
+        enabled: false,
+        density: 'comfortable',
+        headline: 'Hi',
+        scale: 7,
+        accent: '#abcdef',
+        sections: ['sports', 'finance'],
+      }),
+    ).toEqual({
+      enabled: false,
+      density: 'comfortable',
+      headline: 'Hi',
+      scale: 7,
+      accent: '#abcdef',
+      sections: ['sports', 'finance'],
+    });
+
+    expect(validateTweakValues(tweaks, { headline: 'Only override' })).toEqual({
+      enabled: true,
+      density: 'compact',
+      headline: 'Only override',
+      scale: 5,
+      accent: '#123456',
+      sections: ['news'],
+    });
+  });
+
+  it('throws TweakValidationError for invalid provided values', () => {
+    expect(() => validateTweakValues(tweaks, { scale: 11 })).toThrow(TweakValueValidationError);
+    expect(() => validateTweakValues(tweaks, { sections: ['unknown'] })).toThrow(
+      TweakValueValidationError,
+    );
+    expect(() => validateTweakValues(tweaks, { extra: true })).toThrow(TweakValueValidationError);
+  });
+
+  it('merges stored values and keeps defaults for invalid or unknown stored values', () => {
+    expect(
+      mergeTweakValues(tweaks, {
+        enabled: false,
+        density: 'unknown',
+        headline: 'Stored',
+        scale: 12,
+        accent: '#654321',
+        sections: ['sports'],
+        extra: true,
+      }),
+    ).toEqual({
+      enabled: false,
+      density: 'compact',
+      headline: 'Stored',
+      scale: 5,
+      accent: '#654321',
+      sections: ['sports'],
     });
   });
 });

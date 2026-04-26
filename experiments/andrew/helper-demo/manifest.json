@@ -1,0 +1,11 @@
+{
+  "id": "01HXHEPERDEMA0000000000000",
+  "name": "Helper demo",
+  "author": "andrew",
+  "description": "Reference experiment using Phase 4 helpers on ya.ru",
+  "scope": {
+    "match": ["*://ya.ru/*", "*://*.ya.ru/*"]
+  },
+  "world": "isolated",
+  "tweaks": []
+}
