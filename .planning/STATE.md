@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 manual smoke passed; ready to plan Phase 5
-last_updated: "2026-04-26T20:58:12+02:00"
-last_activity: 2026-04-26 -- Phase 4 manual smoke passed after popup/options/icon/error polish
+stopped_at: Phase 5 Plan 05-01 complete; ready to execute 05-02
+last_updated: "2026-04-26T22:47:00+02:00"
+last_activity: 2026-04-26 -- Phase 5 Plan 05-01 completed registry metadata
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 27
-  completed_plans: 27
-  percent: 100
+  completed_phases: 4
+  total_plans: 34
+  completed_plans: 28
+  percent: 82
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 5 (DX, SPA Composition & Sharing) — READY TO PLAN
-Plan: TBD
-Status: Phase 4 manually validated; ready for `/gsd-plan-phase 5`
-Last activity: 2026-04-26 -- Phase 4 manual smoke passed after popup/options/icon/error polish
+Phase: 5 (DX, SPA Composition & Sharing) — READY TO EXECUTE
+Plan: 05-02 — Dev hot-reapply and SPA URL reconcile scheduler
+Status: Phase 5 Plan 05-01 complete; execute 05-02 next
+Last activity: 2026-04-26 -- Phase 5 Plan 05-01 completed registry metadata
 
-Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
+Progress: [▓▓▓▓▓▓▓▓░░] 82%
 
 ## Performance Metrics
 
@@ -90,8 +90,10 @@ Recent decisions affecting current work:
 - Plan 03 planning: Phase 3 split into 6 waves: SDK/storage/scope contracts, tweak renderer, popup integration, content reapply, reference experiments, validation.
 - Plan 03 execution: typed tweak schema landed in SDK; popup renders all six controls from manifest; tweak values persist in local storage; content scripts reapply via cleanup -> apply when values change; Shadow DOM reference experiment added.
 - Plan 04 planning: Phase 4 split into 8 waves: helper/storage contracts, options page, non-streaming LLM SW proxy, content helper ledger/rate-limit, fetchPage/offscreen parsing, streaming ports, reference experiment/popup warning, validation.
-- Phase 4 product decisions: ship OpenAI + Anthropic immediately; `llm(prompt)` returns full string by default; streaming is explicit; options page uses compact dark Curst/shadcn design; popup shows missing API key only as a small inline warning on LLM experiments.
+- Phase 4 product decisions: ship OpenAI + Anthropic immediately; `llm(prompt)` returns full string by default; streaming is explicit; options page uses compact dark Crust/shadcn design; popup shows missing API key only as a small inline warning on LLM experiments.
 - Plan 04 execution: helper/storage contracts, options page, OpenAI/Anthropic SW proxy, fetchPage/offscreen parser, streaming runtime port, helper cleanup ledger, popup LLM counter/warning, and reference helper demo landed. Automated gates passed. Andrew completed manual Chrome smoke with a real OpenAI key on 2026-04-26; follow-up UI polish renamed Curst → Crust, added theme-aware options/popup/icon behavior, hid zero counters, and fixed stale apply-error cleanup.
+- Phase 5 planning: split into 7 waves covering registry metadata, dev hot-reapply, SPA URL reconciliation, ordered multi-experiment composition, popup search/reorder/Open in Cursor, presets/descriptions, onboarding/update banner, and validation. Product decisions: dev reapply is local/dev-only and should not require extension reload; composition order is explicit and user-visible; drag-and-drop is required with keyboard fallback; toolbar badge hides at zero.
+- Plan 05-01 execution: registry metadata now includes source signature, dev-only sourceDir, preset metadata, and description freshness; `create-experiment` creates `description.md` and `presets/.gitkeep`; targeted tests/typecheck/CSP/lint passed.
 
 ### Pending Todos
 
@@ -118,5 +120,5 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-04-26T13:30:00+02:00
-Stopped at: Phase 4 manual smoke passed; ready to plan Phase 5
+Stopped at: Phase 5 Plan 05-01 complete; ready to execute 05-02
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

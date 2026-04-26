@@ -44,6 +44,10 @@ const _entryOk: RegistryEntry = {
   world: 'isolated',
   chunkPath: '',
   tweaks: [],
+  sourceDir: '/tmp/experiments/a/a',
+  sourceSignature: 'abc123',
+  presets: [{ name: 'Default', path: 'experiments/a/a/presets/default.json', values: {} }],
+  descriptionStatus: 'fresh',
 };
 const _registryOk: Registry = [_entryOk];
 const _tweakOk: TweakDefinition = {

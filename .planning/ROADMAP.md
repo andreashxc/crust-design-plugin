@@ -120,10 +120,16 @@ Plans:
   4. After `git pull` of a colleague's new experiment + `pnpm dev` (or rebuild), the experiment appears in the popup; designer can search by name/author/description; "Open in Cursor" deep link opens the experiment folder
   5. Designer saves current tweak values as a named preset → file appears at `experiments/<me>/<id>/presets/<name>.json` and reloads correctly via popup; auto-generated `description.md` regenerates on every build with a staleness warning if code is newer than description
   6. A new team member following `docs/ONBOARDING.md` (clone → create folder → `pnpm dev` → load unpacked) reaches "first experiment running" without admin assistance; an "update available" banner appears in the popup if a remote version is newer
-**Plans**: TBD
+**Plans**: 7 plans
 
 Plans:
-- [ ] 05-01: TBD (planned during `/gsd-plan-phase 5`)
+- [x] 05-01: Registry, SDK, and build metadata for presets, source links, and description freshness (Wave 0)
+- [ ] 05-02: Dev hot-reapply and SPA URL reconcile scheduler (Wave 1)
+- [ ] 05-03: Ordered multi-experiment composition, mutation observer, and toolbar badge (Wave 1)
+- [ ] 05-04: Popup search, drag reorder, keyboard fallback, and Open in Cursor (Wave 2)
+- [ ] 05-05: Presets, preset save workflow, and generated description status (Wave 2)
+- [ ] 05-06: Onboarding docs, empty states, and update-available banner (Wave 3)
+- [ ] 05-07: Full validation, build artifact capture, manual smoke checklist, and state update (Wave 4)
 
 **UI hint**: yes
 
@@ -155,5 +161,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. State Foundation, Messaging & Popup Shell | 8/8 | Complete    | 2026-04-26 |
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
-| 5. DX, SPA Composition & Sharing | 0/TBD | Not started | - |
+| 5. DX, SPA Composition & Sharing | 1/7 | In progress | - |
 | 6. Distribution & Acceptance | 0/TBD | Not started | - |

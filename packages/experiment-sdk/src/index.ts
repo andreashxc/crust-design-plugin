@@ -280,6 +280,10 @@ export type RegistryEntry = {
   world: 'isolated' | 'main';
   chunkPath: string; // relative to extension root, e.g. "chunks/experiments-andrew__smoke-DkJ7g.js" or '' if inlined
   tweaks: TweakDefinition[];
+  sourceDir?: string; // absolute path in dev registry only; omitted from production builds to avoid leaking local filesystem layout
+  sourceSignature?: string; // content hash for dev hot-reapply and registry refresh comparisons
+  presets?: Array<{ name: string; path: string; values: Record<string, unknown> }>;
+  descriptionStatus?: 'missing' | 'fresh' | 'stale' | 'manual';
 };
 
 export type Registry = RegistryEntry[];

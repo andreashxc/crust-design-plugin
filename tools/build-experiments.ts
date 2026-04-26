@@ -7,10 +7,14 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import type { RegistryEntry } from '@platform/experiment-sdk';
-import { ExperimentManifest } from '@platform/experiment-sdk';
+import {
+  ExperimentManifest,
+  TweakValueValidationError,
+  validateTweakValues,
+} from '@platform/experiment-sdk';
 import { buildSync } from 'esbuild';
 import { globSync } from 'glob';
 import type { OutputBundle, OutputChunk } from 'rollup';
@@ -101,6 +105,7 @@ export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin 
         root,
         scan,
         chunkByExperimentPath,
+        includeSourceDir: false,
         emitFile: this.emitFile.bind(this),
       });
 
@@ -132,6 +137,7 @@ export function writeDevExperimentArtifacts(args: { root: string; outDir: string
     root: args.root,
     scan,
     chunkByExperimentPath: new Map(),
+    includeSourceDir: true,
     emitFile: (asset) => {
       const absPath = resolve(args.outDir, asset.fileName);
       mkdirSync(dirname(absPath), { recursive: true });
@@ -153,9 +159,10 @@ function createRegistryEntries(args: {
   root: string;
   scan: ScanResult;
   chunkByExperimentPath: Map<string, string>;
+  includeSourceDir: boolean;
   emitFile: (asset: { type: 'asset'; fileName: string; source: string }) => string;
 }): RegistryEntry[] {
-  return args.scan.manifests.map(({ path, data }) => {
+  return args.scan.manifests.map(({ path, data, meta }) => {
     const manifestAbsPath = resolve(args.root, path);
     const experimentDir = dirname(manifestAbsPath);
     const folder = experimentDir.split(/[/\\]/).pop() ?? '';
@@ -179,6 +186,10 @@ function createRegistryEntries(args: {
       world: data.world,
       chunkPath,
       tweaks: data.tweaks,
+      sourceDir: args.includeSourceDir ? meta.sourceDir : undefined,
+      sourceSignature: meta.sourceSignature,
+      presets: meta.presets,
+      descriptionStatus: meta.descriptionStatus,
     };
   });
 }
@@ -215,6 +226,12 @@ function emitExperimentChunk(args: {
 export type ManifestEntry = {
   path: string;
   data: ReturnType<typeof ExperimentManifest.parse>;
+  meta: {
+    sourceDir: string;
+    sourceSignature: string;
+    presets: Array<{ name: string; path: string; values: Record<string, unknown> }>;
+    descriptionStatus: 'missing' | 'fresh' | 'stale' | 'manual';
+  };
 };
 
 export type ScanResult = {
@@ -225,7 +242,7 @@ export type ScanResult = {
 
 export type BuildExperimentError = {
   file: string;
-  kind: 'parse' | 'schema' | 'author-mismatch' | 'duplicate-tweak-key';
+  kind: 'parse' | 'schema' | 'author-mismatch' | 'duplicate-tweak-key' | 'preset';
   issues: Array<{ path: string; message: string }>;
 };
 
@@ -312,10 +329,165 @@ export function scanAndValidate(root: string): ScanResult {
       continue;
     }
 
-    manifests.push({ path: fileRel, data: parsed.data });
+    const experimentDir = dirname(absPath);
+    const presetResult = readPresets({
+      root,
+      experimentDir,
+      tweaks: parsed.data.tweaks,
+    });
+    if (presetResult.errors.length > 0) {
+      errors.push(...presetResult.errors);
+      continue;
+    }
+
+    manifests.push({
+      path: fileRel,
+      data: parsed.data,
+      meta: {
+        sourceDir: experimentDir,
+        sourceSignature: sourceSignatureFor([
+          absPath,
+          resolve(experimentDir, 'experiment.ts'),
+          ...presetResult.sourceFiles,
+        ]),
+        presets: presetResult.presets,
+        descriptionStatus: descriptionStatusFor({
+          manifestPath: absPath,
+          experimentPath: resolve(experimentDir, 'experiment.ts'),
+          descriptionPath: resolve(experimentDir, 'description.md'),
+        }),
+      },
+    });
   }
 
   return { manifests, errors, warnings };
+}
+
+function readPresets(args: {
+  root: string;
+  experimentDir: string;
+  tweaks: ReturnType<typeof ExperimentManifest.parse>['tweaks'];
+}): {
+  presets: Array<{ name: string; path: string; values: Record<string, unknown> }>;
+  sourceFiles: string[];
+  errors: BuildExperimentError[];
+} {
+  const presetPaths = globSync('presets/*.json', {
+    cwd: args.experimentDir,
+    absolute: true,
+  }).sort();
+  const presets: Array<{ name: string; path: string; values: Record<string, unknown> }> = [];
+  const errors: BuildExperimentError[] = [];
+
+  for (const presetPath of presetPaths) {
+    const fileRel = normalizePath(relative(args.root, presetPath));
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(readFileSync(presetPath, 'utf8'));
+    } catch (err) {
+      errors.push({
+        file: fileRel,
+        kind: 'parse',
+        issues: [{ path: '<root>', message: `JSON parse failed: ${String(err)}` }],
+      });
+      continue;
+    }
+
+    const normalized = normalizePreset(parsedJson, presetPath);
+    if (!normalized) {
+      errors.push({
+        file: fileRel,
+        kind: 'preset',
+        issues: [
+          {
+            path: '<root>',
+            message: 'Preset must be an object or { name?: string, values: object }',
+          },
+        ],
+      });
+      continue;
+    }
+
+    try {
+      presets.push({
+        name: normalized.name,
+        path: fileRel,
+        values: validateTweakValues(args.tweaks, normalized.values),
+      });
+    } catch (err) {
+      const issues =
+        err instanceof TweakValueValidationError
+          ? err.issues.map((issue) => ({
+              path: issue.path?.length ? issue.path.join('.') : '<root>',
+              message: issue.message,
+            }))
+          : [{ path: '<root>', message: err instanceof Error ? err.message : String(err) }];
+      errors.push({ file: fileRel, kind: 'preset', issues });
+    }
+  }
+
+  return { presets, sourceFiles: presetPaths, errors };
+}
+
+function normalizePreset(
+  value: unknown,
+  presetPath: string,
+): { name: string; values: Record<string, unknown> } | null {
+  if (!isRecord(value)) return null;
+  const fileName = presetPath.split(/[/\\]/).pop() ?? 'preset.json';
+  const fallbackName = fileName.replace(/\.json$/i, '');
+
+  if ('values' in value) {
+    if (!isRecord(value.values)) return null;
+    return {
+      name: typeof value.name === 'string' && value.name.trim() ? value.name.trim() : fallbackName,
+      values: value.values,
+    };
+  }
+
+  return { name: fallbackName, values: value };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function descriptionStatusFor(args: {
+  manifestPath: string;
+  experimentPath: string;
+  descriptionPath: string;
+}): 'missing' | 'fresh' | 'stale' | 'manual' {
+  if (!existsSync(args.descriptionPath)) return 'missing';
+  const description = readFileSync(args.descriptionPath, 'utf8');
+  if (hasManualDescriptionFrontmatter(description)) return 'manual';
+
+  const descriptionMtime = statSync(args.descriptionPath).mtimeMs;
+  const sourceMtime = Math.max(
+    statSync(args.manifestPath).mtimeMs,
+    existsSync(args.experimentPath) ? statSync(args.experimentPath).mtimeMs : 0,
+  );
+  return descriptionMtime + 1 >= sourceMtime ? 'fresh' : 'stale';
+}
+
+function hasManualDescriptionFrontmatter(markdown: string): boolean {
+  const match = /^---\n([\s\S]*?)\n---/.exec(markdown);
+  return Boolean(match?.[1]?.split('\n').some((line) => /^generated:\s*false\s*$/i.test(line)));
+}
+
+function sourceSignatureFor(files: string[]): string {
+  const hash = createHash('sha256');
+  for (const file of files) {
+    if (!existsSync(file)) continue;
+    hash.update(file);
+    hash.update('\0');
+    hash.update(readFileSync(file));
+    hash.update('\0');
+  }
+  return hash.digest('hex').slice(0, 16);
+}
+
+function normalizePath(path: string): string {
+  return path.split(sep).join('/');
 }
 
 function findDuplicateTweakKey(tweaks: unknown[]): string | null {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,6 +45,20 @@ function writeFixture(rel: string, fixtureName: string): string {
   const abs = resolve(tmpRoot, rel);
   mkdirSync(resolve(abs, '..'), { recursive: true });
   writeFileSync(abs, raw, 'utf8');
+  return abs;
+}
+
+function writeExperiment(rel = 'experiments/andrew/smoke/experiment.ts'): string {
+  const abs = resolve(tmpRoot, rel);
+  mkdirSync(resolve(abs, '..'), { recursive: true });
+  writeFileSync(abs, 'export const apply = () => () => {};\n', 'utf8');
+  return abs;
+}
+
+function writeDescription(rel: string, markdown: string): string {
+  const abs = resolve(tmpRoot, rel);
+  mkdirSync(resolve(abs, '..'), { recursive: true });
+  writeFileSync(abs, markdown, 'utf8');
   return abs;
 }
 
@@ -155,6 +169,8 @@ describe('dev experiment artifacts', () => {
     const result = writeDevExperimentArtifacts({ root: tmpRoot, outDir });
 
     expect(result.registry).toHaveLength(1);
+    expect(result.registry[0]?.sourceDir).toBe(resolve(tmpRoot, 'experiments/andrew/smoke'));
+    expect(result.registry[0]?.sourceSignature).toMatch(/^[a-f0-9]{16}$/);
     expect(existsSync(resolve(outDir, 'registry.json'))).toBe(true);
     expect(existsSync(resolve(outDir, result.registry[0]?.chunkPath ?? ''))).toBe(true);
   });
@@ -305,6 +321,95 @@ describe('scanAndValidate — tweak key validation (TWK-01)', () => {
   });
 });
 
+describe('scanAndValidate — Phase 5 metadata', () => {
+  it('discovers and validates preset files', () => {
+    writeManifest('experiments/andrew/smoke/manifest.json', {
+      id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+      name: 'Smoke',
+      author: 'andrew',
+      description: 'desc',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [{ type: 'text', key: 'headline', label: 'Headline', default: 'Default' }],
+    });
+    writeExperiment();
+    writeManifest('experiments/andrew/smoke/presets/default.json', {
+      name: 'Default preset',
+      values: { headline: 'Hello' },
+    });
+
+    const result = scanAndValidate(tmpRoot);
+
+    expect(result.errors).toEqual([]);
+    expect(result.manifests[0]?.meta.presets).toEqual([
+      {
+        name: 'Default preset',
+        path: 'experiments/andrew/smoke/presets/default.json',
+        values: { headline: 'Hello' },
+      },
+    ]);
+  });
+
+  it('reports invalid preset values with the preset file path', () => {
+    writeManifest('experiments/andrew/smoke/manifest.json', {
+      id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+      name: 'Smoke',
+      author: 'andrew',
+      description: 'desc',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [{ type: 'color', key: 'accent', label: 'Accent', default: '#ff3366' }],
+    });
+    writeExperiment();
+    writeManifest('experiments/andrew/smoke/presets/default.json', {
+      values: { accent: 'pink' },
+    });
+
+    const result = scanAndValidate(tmpRoot);
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]?.kind).toBe('preset');
+    expect(result.errors[0]?.file).toBe('experiments/andrew/smoke/presets/default.json');
+    expect(formatErrors(result.errors)).toContain('presets/default.json');
+  });
+
+  it('computes missing, fresh, stale, and manual description status', () => {
+    const manifestPath = writeManifest('experiments/andrew/smoke/manifest.json', {
+      id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+      name: 'Smoke',
+      author: 'andrew',
+      description: 'desc',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [],
+    });
+    const experimentPath = writeExperiment();
+
+    expect(scanAndValidate(tmpRoot).manifests[0]?.meta.descriptionStatus).toBe('missing');
+
+    const descriptionPath = writeDescription(
+      'experiments/andrew/smoke/description.md',
+      '---\ngenerated: true\n---\n# Smoke\n',
+    );
+    const oldTime = new Date(1000);
+    const newTime = new Date(5000);
+    utimesSync(descriptionPath, newTime, newTime);
+    utimesSync(manifestPath, oldTime, oldTime);
+    utimesSync(experimentPath, oldTime, oldTime);
+    expect(scanAndValidate(tmpRoot).manifests[0]?.meta.descriptionStatus).toBe('fresh');
+
+    utimesSync(descriptionPath, oldTime, oldTime);
+    utimesSync(experimentPath, newTime, newTime);
+    expect(scanAndValidate(tmpRoot).manifests[0]?.meta.descriptionStatus).toBe('stale');
+
+    writeDescription(
+      'experiments/andrew/smoke/description.md',
+      '---\ngenerated: false\n---\n# Smoke\n',
+    );
+    expect(scanAndValidate(tmpRoot).manifests[0]?.meta.descriptionStatus).toBe('manual');
+  });
+});
+
 describe('scanAndValidate — JSON parse failure', () => {
   it('reports a parse error for malformed JSON', () => {
     const abs = resolve(tmpRoot, 'experiments/andrew/smoke/manifest.json');
@@ -357,7 +462,7 @@ describe('build-experiments generateBundle hook (BLD-03 / BLD-04)', () => {
     expect(registry).toHaveLength(2);
   });
 
-  it('emits exactly the 9 RegistryEntry fields including folder', async () => {
+  it('emits RegistryEntry fields including Phase 5 metadata', async () => {
     writeManifest('experiments/andrew/smoke/manifest.json', {
       id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
       name: 'Smoke',
@@ -383,13 +488,17 @@ describe('build-experiments generateBundle hook (BLD-03 / BLD-04)', () => {
       'author',
       'chunkPath',
       'description',
+      'descriptionStatus',
       'folder',
       'id',
       'name',
+      'presets',
       'scope',
+      'sourceSignature',
       'tweaks',
       'world',
     ]);
+    expect(registry[0]?.sourceDir).toBeUndefined();
   });
 
   it('maps folder from the experiment directory name', async () => {

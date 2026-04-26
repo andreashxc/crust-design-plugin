@@ -31,6 +31,8 @@ const displayName = nameParts.length > 0 ? nameParts.join(' ') : titleFromFolder
 const dir = resolve(process.cwd(), 'experiments', authorArg, folderArg);
 const manifestPath = resolve(dir, 'manifest.json');
 const experimentPath = resolve(dir, 'experiment.ts');
+const descriptionPath = resolve(dir, 'description.md');
+const presetsDir = resolve(dir, 'presets');
 
 if (existsSync(dir)) {
   console.error(`Experiment folder already exists: ${dir}`);
@@ -38,6 +40,7 @@ if (existsSync(dir)) {
 }
 
 mkdirSync(dir, { recursive: true });
+mkdirSync(presetsDir, { recursive: true });
 
 writeFileSync(
   manifestPath,
@@ -86,6 +89,30 @@ export const apply: ApplyFn = ({ helpers }) => {
 `,
   'utf8',
 );
+
+writeFileSync(
+  descriptionPath,
+  `---
+generated: true
+---
+
+# ${displayName}
+
+Generated starter description for ${authorArg}/${folderArg}.
+
+## Scope
+
+- \`*://ya.ru/*\`
+- \`*://*.ya.ru/*\`
+
+## Tweaks
+
+No tweaks yet.
+`,
+  'utf8',
+);
+
+writeFileSync(resolve(presetsDir, '.gitkeep'), '', 'utf8');
 
 console.log(`Created ${dir}`);
 console.log('Run corepack pnpm dev or corepack pnpm build to stamp the manifest id.');
