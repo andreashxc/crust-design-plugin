@@ -19,3 +19,12 @@ export async function setActionIconTheme(theme: IconTheme): Promise<{ ok: true }
   });
   return { ok: true };
 }
+
+export async function setAppliedCountBadge(tabId: number, count: number): Promise<{ ok: true }> {
+  if (!chrome.action?.setBadgeText) return { ok: true };
+  await chrome.action.setBadgeText({
+    tabId,
+    text: count <= 0 ? '' : count > 99 ? '99+' : String(count),
+  });
+  return { ok: true };
+}

@@ -42,6 +42,10 @@ export type ChromeMock = {
     sendMessage: Mock;
     onRemoved: { addListener: Mock; removeListener: Mock; hasListener: Mock };
   };
+  action: {
+    setIcon: Mock;
+    setBadgeText: Mock;
+  };
 };
 
 export function makeChromeMock(): ChromeMock {
@@ -132,6 +136,10 @@ export function makeChromeMock(): ChromeMock {
       query: vi.fn(async () => [] as chrome.tabs.Tab[]),
       sendMessage: vi.fn(),
       onRemoved: { addListener: vi.fn(), removeListener: vi.fn(), hasListener: vi.fn() },
+    },
+    action: {
+      setIcon: vi.fn(async () => {}),
+      setBadgeText: vi.fn(async () => {}),
     },
   };
 }

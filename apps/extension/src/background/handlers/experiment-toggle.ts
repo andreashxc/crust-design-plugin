@@ -1,6 +1,7 @@
 import { broadcastStateChanged } from '@/background/broadcast';
 import type { ProtocolMap } from '@/shared/messages';
 import {
+  appendExperimentOrder,
   clearAutoDisable,
   clearErrorWindow,
   clearLastError,
@@ -21,6 +22,7 @@ export async function handleExperimentToggle({ id, enabled }: Args): Promise<Res
   try {
     await setEnabledExperiment(id, enabled);
     if (enabled) {
+      await appendExperimentOrder(id);
       // D-13 recovery: ON re-arms. Order: clear, clear, broadcast.
       await clearAutoDisable(id);
       await clearErrorWindow(id);

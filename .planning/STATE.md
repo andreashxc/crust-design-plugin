@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 05-02 complete; ready to execute 05-03
-last_updated: "2026-04-26T23:08:00+02:00"
-last_activity: 2026-04-26 -- Phase 5 Plan 05-02 completed dev hot-reapply scheduler
+stopped_at: Phase 5 Plan 05-03 complete; ready to execute 05-04
+last_updated: "2026-04-26T23:14:00+02:00"
+last_activity: 2026-04-26 -- Phase 5 Plan 05-03 completed composition order and badge
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 34
-  completed_plans: 29
-  percent: 85
+  completed_plans: 30
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 5 (DX, SPA Composition & Sharing) — READY TO EXECUTE
-Plan: 05-03 — Ordered multi-experiment composition, mutation observer, and toolbar badge
-Status: Phase 5 Plan 05-02 complete; execute 05-03 next
-Last activity: 2026-04-26 -- Phase 5 Plan 05-02 completed dev hot-reapply scheduler
+Plan: 05-04 — Popup search, drag reorder, keyboard fallback, and Open in Cursor
+Status: Phase 5 Plan 05-03 complete; execute 05-04 next
+Last activity: 2026-04-26 -- Phase 5 Plan 05-03 completed composition order and badge
 
-Progress: [▓▓▓▓▓▓▓▓▓░] 85%
+Progress: [▓▓▓▓▓▓▓▓▓░] 88%
 
 ## Performance Metrics
 
@@ -95,6 +95,7 @@ Recent decisions affecting current work:
 - Phase 5 planning: split into 7 waves covering registry metadata, dev hot-reapply, SPA URL reconciliation, ordered multi-experiment composition, popup search/reorder/Open in Cursor, presets/descriptions, onboarding/update banner, and validation. Product decisions: dev reapply is local/dev-only and should not require extension reload; composition order is explicit and user-visible; drag-and-drop is required with keyboard fallback; toolbar badge hides at zero.
 - Plan 05-01 execution: registry metadata now includes source signature, dev-only sourceDir, preset metadata, and description freshness; `create-experiment` creates `description.md` and `presets/.gitkeep`; targeted tests/typecheck/CSP/lint passed.
 - Plan 05-02 execution: content reconcile now uses a debounced serialized scheduler; SPA URL changes and dev registry signature changes schedule reconcile; applied entries track module keys so changed chunks/source signatures reapply even when tweaks are unchanged.
+- Plan 05-03 execution: experiment order now persists in `experiment_order`; content apply order respects it; DOM observer ignores extension-owned `[data-exp-id]` mutations; toolbar badge hides at zero and shows applied count per tab.
 
 ### Pending Todos
 
@@ -121,5 +122,5 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-04-26T13:30:00+02:00
-Stopped at: Phase 5 Plan 05-02 complete; ready to execute 05-03
+Stopped at: Phase 5 Plan 05-03 complete; ready to execute 05-04
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

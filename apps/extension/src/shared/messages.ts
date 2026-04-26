@@ -55,6 +55,7 @@ export interface ProtocolMap {
   EXPERIMENT_TOGGLE(data: { id: string; enabled: boolean }): ToggleResult;
   TWEAKS_CHANGED(data: { id: string }): ToggleResult;
   STATE_CHANGED(data: { tabId: number }): void;
+  APPLIED_COUNT_CHANGED(data: { tabId: number; count: number }): { ok: true };
   EXPERIMENT_ERROR(data: ErrorReport): { ok: true };
   STATUS_QUERY(): Record<string, ExperimentStatus>;
   WHO_AM_I(): WhoAmIResult;

@@ -27,6 +27,7 @@ const KEY_LAST_ERROR = 'last_error';
 const KEY_LLM_SETTINGS = 'llm:settings';
 const KEY_LLM_LAST_ERROR = 'llm:last_error';
 const KEY_LLM_SESSION = 'llm:session';
+const KEY_EXPERIMENT_ORDER = 'experiment_order';
 const TWEAKS_PREFIX = 'tweaks:';
 const TWEAK_ERRORS_PREFIX = 'tweak_errors:';
 const ERR_WINDOW_PREFIX = 'error_window:';
@@ -220,6 +221,47 @@ export async function setEnabledExperiment(id: string, enabled: boolean): Promis
   await chrome.storage.local.set({
     [KEY_ENABLED]: { ...current, [id]: enabled },
   });
+}
+
+// ===== Phase 5 — global experiment apply order =====
+
+export async function getExperimentOrder(): Promise<string[]> {
+  const result = await chrome.storage.local.get(KEY_EXPERIMENT_ORDER);
+  const value = result[KEY_EXPERIMENT_ORDER];
+  if (!Array.isArray(value)) return [];
+  return value.filter((id): id is string => typeof id === 'string' && id.length > 0);
+}
+
+export async function setExperimentOrder(ids: string[]): Promise<void> {
+  await chrome.storage.local.set({ [KEY_EXPERIMENT_ORDER]: uniqueStrings(ids) });
+}
+
+export async function appendExperimentOrder(id: string): Promise<void> {
+  const current = await getExperimentOrder();
+  if (current.includes(id)) return;
+  await setExperimentOrder([...current, id]);
+}
+
+export function sortRegistryByOrder<TEntry extends { id: string }>(
+  entries: TEntry[],
+  order: string[],
+): TEntry[] {
+  const orderIndex = new Map(order.map((id, index) => [id, index]));
+  return entries
+    .map((entry, index) => ({ entry, index, order: orderIndex.get(entry.id) }))
+    .sort((left, right) => {
+      if (left.order != null && right.order != null) return left.order - right.order;
+      if (left.order != null) return -1;
+      if (right.order != null) return 1;
+      return left.index - right.index;
+    })
+    .map(({ entry }) => entry);
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(
+    new Set(values.filter((value) => typeof value === 'string' && value.length > 0)),
+  );
 }
 
 /**

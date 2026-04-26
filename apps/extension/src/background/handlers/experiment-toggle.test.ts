@@ -22,6 +22,8 @@ describe('handleExperimentToggle (ENG-06 / D-13)', () => {
     expect(chrome.storage.local._data.enabled).toEqual({
       '01J0AAAAAAAAAAAAAAAAAAAAAA': true,
     });
+    // @ts-expect-error — _data introspection
+    expect(chrome.storage.local._data.experiment_order).toEqual(['01J0AAAAAAAAAAAAAAAAAAAAAA']);
     expect(chrome.tabs.sendMessage).toHaveBeenCalledTimes(2);
   });
 

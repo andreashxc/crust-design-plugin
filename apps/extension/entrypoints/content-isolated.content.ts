@@ -8,6 +8,7 @@ import {
 } from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
 import { startDevRegistryRefresh } from '@/content/dev-refresh';
+import { createDomChangeScheduler } from '@/content/dom-observer';
 import {
   createReconcileScheduler,
   filterAutoDisabled,
@@ -26,10 +27,12 @@ import {
   clearTweakErrors,
   getAutoDisabled,
   getEnabledExperiments,
+  getExperimentOrder,
   getPublicLlmConfig,
   getTweakValues,
   setAppliedInTab,
   setTweakErrors,
+  sortRegistryByOrder,
 } from '@/shared/storage';
 import { matchesScope } from '@/shared/url-match';
 
@@ -77,6 +80,7 @@ async function bootstrap(): Promise<void> {
   });
 
   createUrlChangeWatcher(() => scheduler.schedule());
+  createDomChangeScheduler(() => scheduler.schedule());
   startDevRegistryRefresh({
     enabled: import.meta.env.DEV,
     loadEntries,
@@ -95,10 +99,17 @@ async function loadEntries(): Promise<RegistryEntry[]> {
 
 async function reconcile(tabId: number): Promise<void> {
   const entries = await loadEntries();
-  const [enabled, autodisabled] = await Promise.all([getEnabledExperiments(), getAutoDisabled()]);
+  const [enabled, autodisabled, order] = await Promise.all([
+    getEnabledExperiments(),
+    getAutoDisabled(),
+    getExperimentOrder(),
+  ]);
   const eligibleEntries = filterAutoDisabled(entries, autodisabled);
-  const wantOn = eligibleEntries.filter(
-    (entry) => enabled[entry.id] && matchesScope(location.href, entry.scope),
+  const wantOn = sortRegistryByOrder(
+    eligibleEntries.filter(
+      (entry) => enabled[entry.id] && matchesScope(location.href, entry.scope),
+    ),
+    order,
   );
   const wantOnIds = new Set(wantOn.map((entry) => entry.id));
 
@@ -148,7 +159,9 @@ async function reconcile(tabId: number): Promise<void> {
     await applyEntry(entry, tweakValues, valuesKey, moduleKey);
   }
 
-  await setAppliedInTab(tabId, Array.from(cleanups.keys()));
+  const appliedIds = Array.from(cleanups.keys());
+  await setAppliedInTab(tabId, appliedIds);
+  await sendMessage('APPLIED_COUNT_CHANGED', { tabId, count: appliedIds.length }).catch(() => {});
 }
 
 async function canApplyNow(id: string): Promise<boolean> {

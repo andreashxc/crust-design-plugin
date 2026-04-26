@@ -23,7 +23,7 @@
  * SP-7 preserved: top-level listener registrations BEFORE defineBackground.
  */
 import { defineBackground } from 'wxt/utils/define-background';
-import { setActionIconTheme } from '@/background/action-icon';
+import { setActionIconTheme, setAppliedCountBadge } from '@/background/action-icon';
 import { broadcastStateChanged } from '@/background/broadcast';
 import { handleExperimentError } from '@/background/handlers/experiment-error';
 import { handleExperimentToggle } from '@/background/handlers/experiment-toggle';
@@ -63,6 +63,7 @@ onMessage('LLM_CLEAR_CACHE', () => handleLlmClearCache());
 onMessage('LLM_RESET_SESSION', () => handleLlmResetSession());
 onMessage('FETCH_PAGE', ({ data }) => handleFetchPage(data));
 onMessage('ICON_THEME_CHANGED', ({ data }) => setActionIconTheme(data.theme));
+onMessage('APPLIED_COUNT_CHANGED', ({ data }) => setAppliedCountBadge(data.tabId, data.count));
 registerLlmStreamHandler();
 // WHO_AM_I (Blocker 2): handler reads sender.tab.id; throws when called
 // outside a tab context (popup / options). The envelope shape from
@@ -75,6 +76,7 @@ onMessage('WHO_AM_I', (message) => handleWhoAmI({ sender: message.sender }));
 // chrome.tabs.onRemoved is a top-level event registration (SP-7-compatible).
 chrome.tabs.onRemoved.addListener((tabId) => {
   void chrome.storage.session.remove(`applied:${tabId}`);
+  void setAppliedCountBadge(tabId, 0);
 });
 
 // ===== WXT-DEFINED MAIN (kept near-empty per SP-7) =====

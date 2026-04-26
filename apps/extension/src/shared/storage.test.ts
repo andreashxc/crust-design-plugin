@@ -5,6 +5,7 @@ import type {
 } from '@platform/experiment-sdk';
 import { describe, expect, it } from 'vitest';
 import {
+  appendExperimentOrder,
   buildLlmCacheKey,
   clearAutoDisable,
   clearErrorWindow,
@@ -20,6 +21,7 @@ import {
   getAutoDisabled,
   getEnabledExperiments,
   getErrorWindow,
+  getExperimentOrder,
   getLastErrors,
   getLastLlmError,
   getLlmCache,
@@ -37,6 +39,7 @@ import {
   setAutoDisable,
   setEnabledExperiment,
   setErrorWindow,
+  setExperimentOrder,
   setLastError,
   setLastLlmError,
   setLlmCache,
@@ -44,6 +47,7 @@ import {
   setProviderKey,
   setTweakErrors,
   setTweakValues,
+  sortRegistryByOrder,
 } from './storage';
 
 describe('storage adapter (D-12 stateless)', () => {
@@ -177,6 +181,37 @@ describe('storage adapter (Phase 2 helpers — D-09 / D-12 / D-28)', () => {
       await setAppliedInTab(7, ['X']);
       await expect(getAppliedInTab(7)).resolves.toEqual(['X']);
     });
+  });
+});
+
+describe('storage adapter (Phase 5 experiment order)', () => {
+  it('getExperimentOrder returns [] when storage is empty or malformed', async () => {
+    await expect(getExperimentOrder()).resolves.toEqual([]);
+
+    await chrome.storage.local.set({ experiment_order: 'bad' });
+    await expect(getExperimentOrder()).resolves.toEqual([]);
+  });
+
+  it('setExperimentOrder stores unique string ids', async () => {
+    await setExperimentOrder(['B', 'A', 'B', '']);
+
+    await expect(getExperimentOrder()).resolves.toEqual(['B', 'A']);
+  });
+
+  it('appendExperimentOrder appends without duplicates', async () => {
+    await appendExperimentOrder('A');
+    await appendExperimentOrder('B');
+    await appendExperimentOrder('A');
+
+    await expect(getExperimentOrder()).resolves.toEqual(['A', 'B']);
+  });
+
+  it('sortRegistryByOrder places ordered ids first and appends unknown ids in registry order', () => {
+    expect(sortRegistryByOrder([{ id: 'A' }, { id: 'B' }, { id: 'C' }], ['C', 'A'])).toEqual([
+      { id: 'C' },
+      { id: 'A' },
+      { id: 'B' },
+    ]);
   });
 });
 

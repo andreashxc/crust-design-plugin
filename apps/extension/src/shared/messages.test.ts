@@ -23,6 +23,14 @@ describe('ProtocolMap (D-05)', () => {
     expectTypeOf<ReturnType<ProtocolMap['STATE_CHANGED']>>().toEqualTypeOf<void>();
   });
 
+  it('APPLIED_COUNT_CHANGED carries per-tab badge count payload', () => {
+    expectTypeOf<Parameters<ProtocolMap['APPLIED_COUNT_CHANGED']>[0]>().toEqualTypeOf<{
+      tabId: number;
+      count: number;
+    }>();
+    expectTypeOf<ReturnType<ProtocolMap['APPLIED_COUNT_CHANGED']>>().toEqualTypeOf<{ ok: true }>();
+  });
+
   it('EXPERIMENT_ERROR has typed args + result', () => {
     expectTypeOf<Parameters<ProtocolMap['EXPERIMENT_ERROR']>[0]>().toMatchTypeOf<{
       id: string;
