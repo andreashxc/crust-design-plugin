@@ -124,7 +124,7 @@ Plans:
 
 Plans:
 - [x] 05-01: Registry, SDK, and build metadata for presets, source links, and description freshness (Wave 0)
-- [ ] 05-02: Dev hot-reapply and SPA URL reconcile scheduler (Wave 1)
+- [x] 05-02: Dev hot-reapply and SPA URL reconcile scheduler (Wave 1)
 - [ ] 05-03: Ordered multi-experiment composition, mutation observer, and toolbar badge (Wave 1)
 - [ ] 05-04: Popup search, drag reorder, keyboard fallback, and Open in Cursor (Wave 2)
 - [ ] 05-05: Presets, preset save workflow, and generated description status (Wave 2)
@@ -161,5 +161,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. State Foundation, Messaging & Popup Shell | 8/8 | Complete    | 2026-04-26 |
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
-| 5. DX, SPA Composition & Sharing | 1/7 | In progress | - |
+| 5. DX, SPA Composition & Sharing | 2/7 | In progress | - |
 | 6. Distribution & Acceptance | 0/TBD | Not started | - |

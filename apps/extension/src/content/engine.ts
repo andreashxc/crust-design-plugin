@@ -45,6 +45,74 @@ export function shouldReapplyForTweakValues(
   return appliedValuesKey !== stableTweakValuesKey(nextValues);
 }
 
+export function moduleKeyForEntry(entry: { chunkPath: string; sourceSignature?: string }): string {
+  return `${entry.chunkPath}:${entry.sourceSignature ?? ''}`;
+}
+
+export function shouldReapplyExperiment(args: {
+  appliedValuesKey?: string;
+  nextValues: Record<string, unknown>;
+  appliedModuleKey?: string;
+  nextModuleKey: string;
+}): boolean {
+  return (
+    args.appliedModuleKey !== args.nextModuleKey ||
+    shouldReapplyForTweakValues(args.appliedValuesKey, args.nextValues)
+  );
+}
+
+export function createReconcileScheduler(
+  reconcile: () => Promise<void>,
+  options: {
+    debounceMs?: number;
+    setTimeout?: typeof setTimeout;
+    clearTimeout?: typeof clearTimeout;
+    onError?: (err: unknown) => void;
+  } = {},
+): { schedule: () => void; runNow: () => Promise<void> } {
+  const debounceMs = options.debounceMs ?? 100;
+  const setTimer = options.setTimeout ?? setTimeout;
+  const clearTimer = options.clearTimeout ?? clearTimeout;
+  const onError = options.onError ?? ((err) => console.error('[engine] reconcile failed', err));
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let inFlight = false;
+  let queued = false;
+
+  const runNow = async () => {
+    if (timer) {
+      clearTimer(timer);
+      timer = undefined;
+    }
+    if (inFlight) {
+      queued = true;
+      return;
+    }
+
+    inFlight = true;
+    try {
+      do {
+        queued = false;
+        await reconcile();
+      } while (queued);
+    } catch (err) {
+      onError(err);
+    } finally {
+      inFlight = false;
+    }
+  };
+
+  return {
+    schedule: () => {
+      if (timer) clearTimer(timer);
+      timer = setTimer(() => {
+        timer = undefined;
+        void runNow();
+      }, debounceMs);
+    },
+    runNow,
+  };
+}
+
 function sortRecord(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortRecord);
   if (!value || typeof value !== 'object') return value;

@@ -7,14 +7,18 @@ import {
   validateTweakValues,
 } from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
+import { startDevRegistryRefresh } from '@/content/dev-refresh';
 import {
+  createReconcileScheduler,
   filterAutoDisabled,
   filterByWorld,
   isAbortError,
-  shouldReapplyForTweakValues,
+  moduleKeyForEntry,
+  shouldReapplyExperiment,
   stableTweakValuesKey,
 } from '@/content/engine';
 import { createHelperContext } from '@/content/helpers';
+import { createUrlChangeWatcher } from '@/content/url-change';
 import { syncActionIconWithColorScheme } from '@/shared/icon-theme';
 import { onMessage, sendMessage } from '@/shared/messages';
 import {
@@ -33,6 +37,7 @@ type AppliedExperiment = {
   cleanup: CleanupFn;
   controller: AbortController;
   valuesKey: string;
+  moduleKey: string;
 };
 
 const cleanups = new Map<string, AppliedExperiment>();
@@ -57,17 +62,27 @@ export default defineContentScript({
 
 async function bootstrap(): Promise<void> {
   const { tabId } = await sendMessage('WHO_AM_I', undefined);
+  const scheduler = createReconcileScheduler(() => reconcile(tabId));
 
-  await reconcile(tabId);
+  await scheduler.runNow();
 
   onMessage('STATE_CHANGED', ({ data }) => {
     if (data.tabId !== tabId) return;
-    void reconcile(tabId);
+    scheduler.schedule();
   });
 
-  onMessage('TWEAKS_CHANGED', ({ data }) => {
-    void reconcile(tabId, data.id);
+  onMessage('TWEAKS_CHANGED', () => {
+    scheduler.schedule();
     return { ok: true };
+  });
+
+  createUrlChangeWatcher(() => scheduler.schedule());
+  startDevRegistryRefresh({
+    enabled: import.meta.env.DEV,
+    loadEntries,
+    getEnabledExperiments,
+    getCurrentUrl: () => location.href,
+    schedule: scheduler.schedule,
   });
 }
 
@@ -78,18 +93,8 @@ async function loadEntries(): Promise<RegistryEntry[]> {
   return filterByWorld(registry, 'isolated');
 }
 
-async function reconcile(tabId: number, changedId?: string): Promise<void> {
+async function reconcile(tabId: number): Promise<void> {
   const entries = await loadEntries();
-  if (changedId && !entries.some((entry) => entry.id === changedId)) {
-    const applied = cleanups.get(changedId);
-    if (applied) {
-      await cleanupApplied(changedId, applied);
-      cleanups.delete(changedId);
-      await setAppliedInTab(tabId, Array.from(cleanups.keys()));
-    }
-    return;
-  }
-
   const [enabled, autodisabled] = await Promise.all([getEnabledExperiments(), getAutoDisabled()]);
   const eligibleEntries = filterAutoDisabled(entries, autodisabled);
   const wantOn = eligibleEntries.filter(
@@ -123,14 +128,24 @@ async function reconcile(tabId: number, changedId?: string): Promise<void> {
       throw err;
     }
     const valuesKey = stableTweakValuesKey(tweakValues);
+    const moduleKey = moduleKeyForEntry(entry);
     const applied = cleanups.get(entry.id);
-    if (!shouldReapplyForTweakValues(applied?.valuesKey, tweakValues)) continue;
+    if (
+      !shouldReapplyExperiment({
+        appliedValuesKey: applied?.valuesKey,
+        nextValues: tweakValues,
+        appliedModuleKey: applied?.moduleKey,
+        nextModuleKey: moduleKey,
+      })
+    ) {
+      continue;
+    }
     if (!(await canApplyNow(entry.id))) continue;
     if (applied) {
       await cleanupApplied(entry.id, applied);
       cleanups.delete(entry.id);
     }
-    await applyEntry(entry, tweakValues, valuesKey);
+    await applyEntry(entry, tweakValues, valuesKey, moduleKey);
   }
 
   await setAppliedInTab(tabId, Array.from(cleanups.keys()));
@@ -164,6 +179,7 @@ async function applyEntry(
   entry: RegistryEntry,
   tweakValues: Record<string, unknown>,
   valuesKey: string,
+  moduleKey: string,
 ): Promise<void> {
   try {
     const mod = (await import(/* @vite-ignore */ chrome.runtime.getURL(entry.chunkPath))) as {
@@ -188,6 +204,7 @@ async function applyEntry(
       },
       controller,
       valuesKey,
+      moduleKey,
     });
     await clearLastError(entry.id);
   } catch (err) {

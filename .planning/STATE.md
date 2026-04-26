@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 05-01 complete; ready to execute 05-02
-last_updated: "2026-04-26T22:47:00+02:00"
-last_activity: 2026-04-26 -- Phase 5 Plan 05-01 completed registry metadata
+stopped_at: Phase 5 Plan 05-02 complete; ready to execute 05-03
+last_updated: "2026-04-26T23:08:00+02:00"
+last_activity: 2026-04-26 -- Phase 5 Plan 05-02 completed dev hot-reapply scheduler
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 34
-  completed_plans: 28
-  percent: 82
+  completed_plans: 29
+  percent: 85
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 5 (DX, SPA Composition & Sharing) — READY TO EXECUTE
-Plan: 05-02 — Dev hot-reapply and SPA URL reconcile scheduler
-Status: Phase 5 Plan 05-01 complete; execute 05-02 next
-Last activity: 2026-04-26 -- Phase 5 Plan 05-01 completed registry metadata
+Plan: 05-03 — Ordered multi-experiment composition, mutation observer, and toolbar badge
+Status: Phase 5 Plan 05-02 complete; execute 05-03 next
+Last activity: 2026-04-26 -- Phase 5 Plan 05-02 completed dev hot-reapply scheduler
 
-Progress: [▓▓▓▓▓▓▓▓░░] 82%
+Progress: [▓▓▓▓▓▓▓▓▓░] 85%
 
 ## Performance Metrics
 
@@ -94,6 +94,7 @@ Recent decisions affecting current work:
 - Plan 04 execution: helper/storage contracts, options page, OpenAI/Anthropic SW proxy, fetchPage/offscreen parser, streaming runtime port, helper cleanup ledger, popup LLM counter/warning, and reference helper demo landed. Automated gates passed. Andrew completed manual Chrome smoke with a real OpenAI key on 2026-04-26; follow-up UI polish renamed Curst → Crust, added theme-aware options/popup/icon behavior, hid zero counters, and fixed stale apply-error cleanup.
 - Phase 5 planning: split into 7 waves covering registry metadata, dev hot-reapply, SPA URL reconciliation, ordered multi-experiment composition, popup search/reorder/Open in Cursor, presets/descriptions, onboarding/update banner, and validation. Product decisions: dev reapply is local/dev-only and should not require extension reload; composition order is explicit and user-visible; drag-and-drop is required with keyboard fallback; toolbar badge hides at zero.
 - Plan 05-01 execution: registry metadata now includes source signature, dev-only sourceDir, preset metadata, and description freshness; `create-experiment` creates `description.md` and `presets/.gitkeep`; targeted tests/typecheck/CSP/lint passed.
+- Plan 05-02 execution: content reconcile now uses a debounced serialized scheduler; SPA URL changes and dev registry signature changes schedule reconcile; applied entries track module keys so changed chunks/source signatures reapply even when tweaks are unchanged.
 
 ### Pending Todos
 
@@ -120,5 +121,5 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-04-26T13:30:00+02:00
-Stopped at: Phase 5 Plan 05-01 complete; ready to execute 05-02
+Stopped at: Phase 5 Plan 05-02 complete; ready to execute 05-03
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

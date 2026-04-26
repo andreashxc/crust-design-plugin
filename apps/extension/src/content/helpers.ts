@@ -7,6 +7,7 @@ import type {
   LlmOptions,
   WaitForOptions,
 } from '@platform/experiment-sdk';
+import { createUrlChangeWatcher } from '@/content/url-change';
 import { sendMessage } from '@/shared/messages';
 
 export type HelperFactoryArgs = {
@@ -85,37 +86,7 @@ export function createHelperContext(args: HelperFactoryArgs): {
         selector: string,
         options?: WaitForOptions,
       ): Promise<TElement> => waitForElement(selector, options, args.signal, track),
-      onUrlChange: (callback) => {
-        const handler = () => callback(location.href);
-        window.addEventListener('popstate', handler);
-        window.addEventListener('hashchange', handler);
-        const originalPush = history.pushState;
-        const originalReplace = history.replaceState;
-        const patchedPushState = function pushState(
-          this: History,
-          ...params: Parameters<History['pushState']>
-        ) {
-          const result = originalPush.apply(this, params);
-          handler();
-          return result;
-        };
-        const patchedReplaceState = function replaceState(
-          this: History,
-          ...params: Parameters<History['replaceState']>
-        ) {
-          const result = originalReplace.apply(this, params);
-          handler();
-          return result;
-        };
-        history.pushState = patchedPushState;
-        history.replaceState = patchedReplaceState;
-        return track(() => {
-          window.removeEventListener('popstate', handler);
-          window.removeEventListener('hashchange', handler);
-          if (history.pushState === patchedPushState) history.pushState = originalPush;
-          if (history.replaceState === patchedReplaceState) history.replaceState = originalReplace;
-        });
-      },
+      onUrlChange: (callback) => track(createUrlChangeWatcher(callback)),
     },
     cleanup: () => cleanupLedger(ledger),
   };
