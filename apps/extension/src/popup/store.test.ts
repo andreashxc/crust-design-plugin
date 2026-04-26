@@ -29,6 +29,7 @@ describe('popup store (D-27)', () => {
       llmSession: null,
       publicLlmConfig: null,
       lastLlmError: undefined,
+      experimentOrder: [],
       activeTabId: null,
       activeTabUrl: null,
       appliedInActiveTab: [],
@@ -47,6 +48,7 @@ describe('popup store (D-27)', () => {
     expect(state.llmSession).toBeNull();
     expect(state.publicLlmConfig).toBeNull();
     expect(state.lastLlmError).toBeUndefined();
+    expect(state.experimentOrder).toEqual([]);
     expect(state.activeTabId).toBeNull();
     expect(state.activeTabUrl).toBeNull();
     expect(state.appliedInActiveTab).toEqual([]);
@@ -95,6 +97,7 @@ describe('popup store (D-27)', () => {
       providers: { openai: { configured: true }, anthropic: { configured: false } },
     });
     useStore.getState().setLastLlmError({ experimentId: 'A', message: 'm', at: 3 });
+    useStore.getState().setExperimentOrder(['B', 'A']);
     useStore.getState().setActiveTab(7);
     useStore.getState().setActiveTabUrl('https://ya.ru/path');
     useStore.getState().setAppliedInActiveTab(['A']);
@@ -110,6 +113,7 @@ describe('popup store (D-27)', () => {
     expect(state.llmSession?.totalTokens).toBe(5);
     expect(state.publicLlmConfig?.providers.openai.configured).toBe(true);
     expect(state.lastLlmError?.experimentId).toBe('A');
+    expect(state.experimentOrder).toEqual(['B', 'A']);
     expect(state.activeTabId).toBe(7);
     expect(state.activeTabUrl).toBe('https://ya.ru/path');
     expect(state.appliedInActiveTab).toEqual(['A']);

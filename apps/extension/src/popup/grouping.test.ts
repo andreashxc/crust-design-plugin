@@ -1,6 +1,6 @@
 import type { Registry, RegistryEntry } from '@platform/experiment-sdk';
 import { describe, expect, it } from 'vitest';
-import { groupByAuthor } from './grouping';
+import { filterRegistryBySearch, groupByAuthor, reorderIds } from './grouping';
 
 function makeEntry(author: string, id: string, match = ['*://ya.ru/*']): RegistryEntry {
   return {
@@ -24,7 +24,7 @@ describe('groupByAuthor (D-22)', () => {
     expect(groupByAuthor([], { matchesScope: stubMatchesScope })).toEqual([]);
   });
 
-  it('groups entries by author sorted alphabetical case-insensitive', () => {
+  it('groups entries by author in registry order', () => {
     const registry: Registry = [
       makeEntry('zoe', '01J0ZZZZZZZZZZZZZZZZZZZZZZ'),
       makeEntry('Andrew', '01J0AAAAAAAAAAAAAAAAAAAAAA'),
@@ -33,12 +33,7 @@ describe('groupByAuthor (D-22)', () => {
     ];
 
     const groups = groupByAuthor(registry, { matchesScope: stubMatchesScope });
-    expect(groups.map((group) => group.author.toLowerCase())).toEqual([
-      'andrew',
-      'andrew',
-      'beth',
-      'zoe',
-    ]);
+    expect(groups.map((group) => group.author)).toEqual(['zoe', 'Andrew', 'andrew', 'Beth']);
   });
 
   it('entry count is total experiments by author', () => {
@@ -87,5 +82,23 @@ describe('groupByAuthor (D-22)', () => {
     );
 
     expect(groups.map((group) => group.author)).toEqual(['andrew']);
+  });
+});
+
+describe('popup filtering and reorder helpers', () => {
+  it('filters by name, author, and description', () => {
+    const registry: Registry = [
+      { ...makeEntry('andrew', 'A'), name: 'Helper demo', description: 'Phase helpers' },
+      { ...makeEntry('beth', 'B'), name: 'Smoke pink', description: 'Turns ya.ru pink' },
+    ];
+
+    expect(filterRegistryBySearch(registry, 'helper').map((entry) => entry.id)).toEqual(['A']);
+    expect(filterRegistryBySearch(registry, 'beth').map((entry) => entry.id)).toEqual(['B']);
+    expect(filterRegistryBySearch(registry, 'pink').map((entry) => entry.id)).toEqual(['B']);
+  });
+
+  it('reorders ids by active and target ids', () => {
+    expect(reorderIds(['A', 'B', 'C'], 'A', 'C')).toEqual(['B', 'C', 'A']);
+    expect(reorderIds(['A', 'B', 'C'], 'C', 'A')).toEqual(['C', 'A', 'B']);
   });
 });

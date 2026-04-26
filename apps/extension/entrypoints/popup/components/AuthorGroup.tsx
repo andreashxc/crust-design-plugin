@@ -4,7 +4,7 @@ import type { AuthorGroup as Group } from '@/popup/grouping';
 import { useStore } from '@/popup/store';
 import { ExperimentRow } from './ExperimentRow';
 
-export function AuthorGroup({ group }: { group: Group }) {
+export function AuthorGroup({ group, visibleIds }: { group: Group; visibleIds: string[] }) {
   const groupId = `author-group-${group.author}`;
   const enabled = useStore((state) => state.enabled);
   const enabledCount = group.entries.filter((entry) => enabled[entry.id]).length;
@@ -24,7 +24,12 @@ export function AuthorGroup({ group }: { group: Group }) {
       </CollapsibleTrigger>
       <CollapsibleContent id={groupId} className="mt-2 flex flex-col gap-1.5">
         {group.entries.map((entry) => (
-          <ExperimentRow key={entry.id} entry={entry} />
+          <ExperimentRow
+            key={entry.id}
+            entry={entry}
+            visibleIds={visibleIds}
+            index={visibleIds.indexOf(entry.id)}
+          />
         ))}
       </CollapsibleContent>
     </Collapsible>

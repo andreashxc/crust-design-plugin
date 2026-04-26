@@ -1,10 +1,12 @@
-import { RefreshCw, Settings } from 'lucide-react';
+import { RefreshCw, Search, Settings, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { groupByAuthor } from '@/popup/grouping';
+import { filterRegistryBySearch, groupByAuthor } from '@/popup/grouping';
 import { hydratePopupStore } from '@/popup/registry-refresh';
 import { useStore } from '@/popup/store';
+import { sortRegistryByOrder } from '@/shared/storage';
 import { matchesScope } from '@/shared/url-match';
 import { AuthorGroup } from './components/AuthorGroup';
 import { EmptyState } from './components/EmptyState';
@@ -14,8 +16,16 @@ export function App() {
   const activeTabUrl = useStore((state) => state.activeTabUrl);
   const bootstrapped = useStore((state) => state.bootstrapped);
   const llmSession = useStore((state) => state.llmSession);
+  const experimentOrder = useStore((state) => state.experimentOrder);
   const [refreshing, setRefreshing] = useState(false);
-  const groups = groupByAuthor(registry, { activeTabUrl, matchesScope });
+  const [query, setQuery] = useState('');
+  const orderedRegistry = sortRegistryByOrder(registry, experimentOrder);
+  const scopedRegistry = activeTabUrl
+    ? orderedRegistry.filter((entry) => matchesScope(activeTabUrl, entry.scope))
+    : orderedRegistry;
+  const filteredRegistry = filterRegistryBySearch(scopedRegistry, query);
+  const visibleIds = filteredRegistry.map((entry) => entry.id);
+  const groups = groupByAuthor(filteredRegistry, { activeTabUrl, matchesScope });
   const llmLabel =
     llmSession && llmSession.calls > 0
       ? `LLM ${llmSession.calls} ${llmSession.calls === 1 ? 'call' : 'calls'}${
@@ -66,15 +76,45 @@ export function App() {
           </Button>
         </div>
       </header>
+      {bootstrapped && registry.length > 0 ? (
+        <div className="relative mt-2">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2"
+            aria-hidden="true"
+          />
+          <Input
+            aria-label="Search experiments"
+            placeholder="Search experiments"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="h-8 px-7 text-xs"
+          />
+          {query ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Clear search"
+              className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2"
+              onClick={() => setQuery('')}
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       <ScrollArea className="mt-2 max-h-[calc(100vh-4rem)] min-h-0 pr-2">
         <div className="pb-3">
           {!bootstrapped && registry.length === 0 ? <div>Reading state…</div> : null}
           {bootstrapped && registry.length === 0 ? <EmptyState /> : null}
-          {bootstrapped && registry.length > 0 && groups.length === 0 ? (
+          {bootstrapped && registry.length > 0 && scopedRegistry.length === 0 ? (
             <div className="text-muted-foreground mt-2 text-xs">No experiments match this page</div>
           ) : null}
+          {bootstrapped && scopedRegistry.length > 0 && groups.length === 0 ? (
+            <div className="text-muted-foreground mt-2 text-xs">No matches</div>
+          ) : null}
           {groups.map((group) => (
-            <AuthorGroup key={group.author} group={group} />
+            <AuthorGroup key={group.author} group={group} visibleIds={visibleIds} />
           ))}
         </div>
       </ScrollArea>

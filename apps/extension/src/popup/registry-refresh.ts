@@ -4,6 +4,7 @@ import {
   getAppliedInTab,
   getAutoDisabled,
   getEnabledExperiments,
+  getExperimentOrder,
   getLastErrors,
   getLastLlmError,
   getLlmSessionStats,
@@ -23,6 +24,7 @@ export async function hydratePopupStore(): Promise<void> {
     publicLlmConfig,
     lastLlmError,
     llmSession,
+    experimentOrder,
     tabs,
     tweakValuesEntries,
     tweakErrorEntries,
@@ -33,6 +35,7 @@ export async function hydratePopupStore(): Promise<void> {
     getPublicLlmConfig(),
     getLastLlmError(),
     getLlmSessionStats(),
+    getExperimentOrder(),
     chrome.tabs.query({ active: true, currentWindow: true }),
     Promise.all(
       registry.map(
@@ -54,6 +57,7 @@ export async function hydratePopupStore(): Promise<void> {
     publicLlmConfig,
     lastLlmError,
     llmSession,
+    experimentOrder,
     tweakValues: Object.fromEntries(tweakValuesEntries),
     tweakErrors: Object.fromEntries(tweakErrorEntries),
     activeTabId,

@@ -4,19 +4,31 @@ import {
   TweakValueValidationError,
   validateTweakValues,
 } from '@platform/experiment-sdk';
-import { AlertCircle, ChevronDown, ChevronRight, ChevronUp, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  FolderOpen,
+  GripVertical,
+  Loader2,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { reorderIds } from '@/popup/grouping';
 import { computeStatus } from '@/popup/status';
 import { useStore } from '@/popup/store';
 import { sendMessage } from '@/shared/messages';
 import {
   clearTweakErrors,
   clearTweakValues,
+  setExperimentOrder as persistExperimentOrder,
   setTweakErrors as persistTweakErrors,
   setTweakValues as persistTweakValues,
 } from '@/shared/storage';
@@ -28,7 +40,15 @@ function shortMessage(message: string): string {
   return message.length > 80 ? `${message.slice(0, 79)}…` : message;
 }
 
-export function ExperimentRow({ entry }: { entry: RegistryEntry }) {
+export function ExperimentRow({
+  entry,
+  visibleIds,
+  index,
+}: {
+  entry: RegistryEntry;
+  visibleIds: string[];
+  index: number;
+}) {
   const enabled = useStore((state) => state.enabled[entry.id] ?? false);
   const autodisabled = useStore((state) => state.autodisabled[entry.id]);
   const lastError = useStore((state) => state.lastError[entry.id]);
@@ -42,13 +62,16 @@ export function ExperimentRow({ entry }: { entry: RegistryEntry }) {
   const setEnabled = useStore((state) => state.setEnabled);
   const setStoreTweakValues = useStore((state) => state.setTweakValues);
   const setStoreTweakErrors = useStore((state) => state.setTweakErrors);
+  const setStoreExperimentOrder = useStore((state) => state.setExperimentOrder);
   const enabledMap = useStore((state) => state.enabled);
   const tweakValuesMap = useStore((state) => state.tweakValues);
   const tweakErrorsMap = useStore((state) => state.tweakErrors);
+  const experimentOrder = useStore((state) => state.experimentOrder);
   const [inFlight, setInFlight] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [stackOpen, setStackOpen] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(enabled);
+  const [sourceStatus, setSourceStatus] = useState<string | null>(null);
   const resolvedTweakValues = useMemo(
     () => tweakValues ?? defaultTweakValues(entry.tweaks),
     [entry.tweaks, tweakValues],
@@ -133,8 +156,45 @@ export function ExperimentRow({ entry }: { entry: RegistryEntry }) {
     await notifyTweakChange().catch(() => {});
   }
 
+  async function persistVisibleOrder(nextVisibleIds: string[]) {
+    const visibleSet = new Set(nextVisibleIds);
+    const nextOrder = [...nextVisibleIds, ...experimentOrder.filter((id) => !visibleSet.has(id))];
+    setStoreExperimentOrder(nextOrder);
+    await persistExperimentOrder(nextOrder);
+    await notifyTweakChange().catch(() => {});
+  }
+
+  async function moveTo(overId: string | undefined) {
+    if (!overId) return;
+    await persistVisibleOrder(reorderIds(visibleIds, entry.id, overId));
+  }
+
+  async function handleOpenSource() {
+    if (!entry.sourceDir) return;
+    setSourceStatus(null);
+    try {
+      await chrome.tabs.create?.({ url: `cursor://file/${encodeURI(entry.sourceDir)}` });
+    } catch {
+      await navigator.clipboard?.writeText(entry.sourceDir);
+      setSourceStatus('Path copied');
+    }
+  }
+
   return (
-    <Card className="border-border/80 bg-card/95 gap-2 rounded-md p-2.5 shadow-none">
+    <Card
+      className="border-border/80 bg-card/95 gap-2 rounded-md p-2.5 shadow-none"
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData('text/plain', entry.id);
+        event.dataTransfer.effectAllowed = 'move';
+      }}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        const draggedId = event.dataTransfer.getData('text/plain');
+        void persistVisibleOrder(reorderIds(visibleIds, draggedId, entry.id));
+      }}
+    >
       <div
         className={cn(
           'relative',
@@ -149,6 +209,49 @@ export function ExperimentRow({ entry }: { entry: RegistryEntry }) {
             </p>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Drag ${entry.name}`}
+              className="text-muted-foreground h-6 w-5 cursor-grab"
+            >
+              <GripVertical className="size-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${entry.name} up`}
+              className="text-muted-foreground h-6 w-5"
+              disabled={index === 0}
+              onClick={() => void moveTo(visibleIds[index - 1])}
+            >
+              <ArrowUp className="size-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Move ${entry.name} down`}
+              className="text-muted-foreground h-6 w-5"
+              disabled={index >= visibleIds.length - 1}
+              onClick={() => void moveTo(visibleIds[index + 1])}
+            >
+              <ArrowDown className="size-3.5" aria-hidden="true" />
+            </Button>
+            {entry.sourceDir ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Open ${entry.name} in Cursor`}
+                className="text-muted-foreground h-6 w-5"
+                onClick={() => void handleOpenSource()}
+              >
+                <FolderOpen className="size-3.5" aria-hidden="true" />
+              </Button>
+            ) : null}
             {inFlight ? <Loader2 className="size-3 animate-spin" aria-label="Updating" /> : null}
             <Switch
               aria-label={`Toggle ${entry.name}`}
@@ -189,6 +292,8 @@ export function ExperimentRow({ entry }: { entry: RegistryEntry }) {
           Toggle failed: {toggleError}
         </div>
       ) : null}
+
+      {sourceStatus ? <div className="text-muted-foreground text-xs">{sourceStatus}</div> : null}
 
       {missingLlmKey ? (
         <div className="text-muted-foreground border-border/80 bg-muted/40 mt-1 flex items-center justify-between gap-2 rounded-sm border px-2 py-1 text-xs">

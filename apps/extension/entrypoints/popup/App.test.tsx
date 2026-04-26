@@ -26,9 +26,10 @@ function makeEntry(overrides: Partial<RegistryEntry> = {}): RegistryEntry {
   };
 }
 
-function resetStore(entry = makeEntry()) {
+function resetStore(entryOrRegistry: RegistryEntry | RegistryEntry[] = makeEntry()) {
+  const registry = Array.isArray(entryOrRegistry) ? entryOrRegistry : [entryOrRegistry];
   useStore.setState({
-    registry: [entry],
+    registry,
     enabled: {},
     autodisabled: {},
     lastError: {},
@@ -37,6 +38,7 @@ function resetStore(entry = makeEntry()) {
     llmSession: null,
     publicLlmConfig: null,
     lastLlmError: undefined,
+    experimentOrder: [],
     activeTabId: 7,
     activeTabUrl: 'https://ya.ru/',
     appliedInActiveTab: [],
@@ -111,6 +113,26 @@ describe('popup App', () => {
 
     expect(screen.queryByText('LLM 0 calls')).toBeNull();
     expect(screen.queryByText('0 / 0')).toBeNull();
+  });
+
+  it('filters experiments by search text after scope filtering', () => {
+    resetStore([
+      makeEntry({ name: 'Helper demo', description: 'Phase helpers' }),
+      makeEntry({
+        id: '01J0BBBBBBBBBBBBBBBBBBBBBB',
+        folder: 'smoke-two',
+        name: 'Smoke pink',
+        description: 'Turns ya.ru pink',
+      }),
+    ]);
+
+    render(<App />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search experiments' }), {
+      target: { value: 'helper' },
+    });
+
+    expect(screen.getByText('Helper demo')).toBeTruthy();
+    expect(screen.queryByText('Smoke pink')).toBeNull();
   });
 
   it('opens global Crust options from the popup header', () => {
@@ -221,6 +243,65 @@ describe('popup App', () => {
       expect(chromeMock().runtime.sendMessage).toHaveBeenCalledWith({
         name: 'EXPERIMENT_TOGGLE',
         data: { id: '01J0AAAAAAAAAAAAAAAAAAAAAA', enabled: true },
+      });
+    });
+  });
+
+  it('persists keyboard reorder and broadcasts a reapply signal', async () => {
+    chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
+    resetStore([
+      makeEntry({ id: 'A', name: 'Tweak demo' }),
+      makeEntry({ id: 'B', name: 'Smoke pink' }),
+    ]);
+    useStore.setState({ experimentOrder: ['A', 'B'] });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Move Tweak demo down' }));
+
+    await waitFor(() => {
+      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({ experiment_order: ['B', 'A'] });
+      expect(chromeMock().runtime.sendMessage).toHaveBeenCalledWith({
+        name: 'TWEAKS_CHANGED',
+        data: { id: 'A' },
+      });
+    });
+  });
+
+  it('persists drag reorder', async () => {
+    chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
+    resetStore([
+      makeEntry({ id: 'A', name: 'Tweak demo' }),
+      makeEntry({ id: 'B', name: 'Smoke pink' }),
+    ]);
+    useStore.setState({ experimentOrder: ['A', 'B'] });
+    const transfer = new Map<string, string>();
+    const dataTransfer = {
+      effectAllowed: 'move',
+      setData: (type: string, value: string) => transfer.set(type, value),
+      getData: (type: string) => transfer.get(type) ?? '',
+    };
+
+    render(<App />);
+    const source = screen.getByText('Tweak demo').closest('[draggable="true"]');
+    const target = screen.getByText('Smoke pink').closest('[draggable="true"]');
+    if (!source || !target) throw new Error('Expected draggable rows');
+    fireEvent.dragStart(source, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+
+    await waitFor(() => {
+      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({ experiment_order: ['B', 'A'] });
+    });
+  });
+
+  it('opens source folder in Cursor when sourceDir exists', async () => {
+    resetStore(makeEntry({ sourceDir: '/tmp/crust/experiments/andrew/smoke' }));
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Smoke pink in Cursor' }));
+
+    await waitFor(() => {
+      expect(chromeMock().tabs.create).toHaveBeenCalledWith({
+        url: 'cursor://file//tmp/crust/experiments/andrew/smoke',
       });
     });
   });

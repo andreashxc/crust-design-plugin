@@ -22,6 +22,7 @@ type StorageSlice = {
   llmSession: LlmSessionStats | null;
   publicLlmConfig: PublicLlmConfig | null;
   lastLlmError?: LastLlmError;
+  experimentOrder: string[];
   setEnabled: (enabled: Record<string, boolean>) => void;
   setAutoDisabled: (autodisabled: Record<string, AutoDisableRecord>) => void;
   setLastError: (lastError: Record<string, ErrorRecord>) => void;
@@ -30,6 +31,7 @@ type StorageSlice = {
   setLlmSession: (llmSession: LlmSessionStats | null) => void;
   setPublicLlmConfig: (publicLlmConfig: PublicLlmConfig | null) => void;
   setLastLlmError: (lastLlmError?: LastLlmError) => void;
+  setExperimentOrder: (experimentOrder: string[]) => void;
 };
 
 type TabSlice = {
@@ -59,6 +61,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   llmSession: null,
   publicLlmConfig: null,
   lastLlmError: undefined,
+  experimentOrder: [],
   setEnabled: (enabled) => set({ enabled }),
   setAutoDisabled: (autodisabled) => set({ autodisabled }),
   setLastError: (lastError) => set({ lastError }),
@@ -67,6 +70,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   setLlmSession: (llmSession) => set({ llmSession }),
   setPublicLlmConfig: (publicLlmConfig) => set({ publicLlmConfig }),
   setLastLlmError: (lastLlmError) => set({ lastLlmError }),
+  setExperimentOrder: (experimentOrder) => set({ experimentOrder }),
 });
 
 const tabSlice: StateCreator<RootState, [], [], TabSlice> = (set) => ({

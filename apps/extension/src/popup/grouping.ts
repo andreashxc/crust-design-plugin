@@ -21,11 +21,31 @@ export function groupByAuthor(
     byAuthor.set(entry.author, entries);
   }
 
-  return Array.from(byAuthor.entries())
-    .sort(([a], [b]) => a.toLowerCase().localeCompare(b.toLowerCase()))
-    .map(([author, entries]) => ({
-      author,
-      entries,
-      defaultOpen: Boolean(ctx.activeTabUrl && entries.length > 0),
-    }));
+  return Array.from(byAuthor.entries()).map(([author, entries]) => ({
+    author,
+    entries,
+    defaultOpen: Boolean(ctx.activeTabUrl && entries.length > 0),
+  }));
+}
+
+export function filterRegistryBySearch(registry: Registry, query: string): Registry {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return registry;
+  return registry.filter((entry) =>
+    [entry.name, entry.author, entry.description].some((value) =>
+      value.toLowerCase().includes(normalized),
+    ),
+  );
+}
+
+export function reorderIds(ids: string[], activeId: string, overId: string): string[] {
+  if (activeId === overId) return ids;
+  const from = ids.indexOf(activeId);
+  const to = ids.indexOf(overId);
+  if (from < 0 || to < 0) return ids;
+  const next = [...ids];
+  const [item] = next.splice(from, 1);
+  if (!item) return ids;
+  next.splice(to, 0, item);
+  return next;
 }
