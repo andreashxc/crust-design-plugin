@@ -1,7 +1,9 @@
-import { Settings } from 'lucide-react';
+import { RefreshCw, Settings } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { groupByAuthor } from '@/popup/grouping';
+import { hydratePopupStore } from '@/popup/registry-refresh';
 import { useStore } from '@/popup/store';
 import { matchesScope } from '@/shared/url-match';
 import { AuthorGroup } from './components/AuthorGroup';
@@ -12,6 +14,7 @@ export function App() {
   const activeTabUrl = useStore((state) => state.activeTabUrl);
   const bootstrapped = useStore((state) => state.bootstrapped);
   const llmSession = useStore((state) => state.llmSession);
+  const [refreshing, setRefreshing] = useState(false);
   const groups = groupByAuthor(registry, { activeTabUrl, matchesScope });
   const llmLabel =
     llmSession && llmSession.calls > 0
@@ -30,6 +33,27 @@ export function App() {
               {llmLabel}
             </span>
           ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label="Reload experiments"
+            disabled={refreshing}
+            onClick={() => {
+              setRefreshing(true);
+              void hydratePopupStore()
+                .catch((err: unknown) => {
+                  console.error('[popup] registry refresh failed', err);
+                })
+                .finally(() => setRefreshing(false));
+            }}
+          >
+            <RefreshCw
+              className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`}
+              aria-hidden="true"
+            />
+          </Button>
           <Button
             type="button"
             variant="ghost"

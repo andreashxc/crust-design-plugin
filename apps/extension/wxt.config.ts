@@ -6,6 +6,7 @@ import { defineConfig } from 'wxt';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
+const chromeOutDir = resolve(__dirname, '.output/chrome-mv3');
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -36,7 +37,7 @@ export default defineConfig({
     // from the repo root, ULID-stamps any empty `id`, runs Zod validation, and enforces
     // manifest.author === <folder name>. Passing `root: repoRoot` is required because
     // Vite's cwd inside this WXT app is `apps/extension/`, not the repo root.
-    plugins: [tailwindcss(), buildExperiments({ root: repoRoot })],
+    plugins: [tailwindcss(), buildExperiments({ root: repoRoot, devOutDir: chromeOutDir })],
     resolve: {
       alias: {
         // `@/*` resolves to apps/extension/src/* — WXT/Vite does NOT auto-honor

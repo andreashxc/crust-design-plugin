@@ -56,28 +56,40 @@ export default defineContentScript({
 });
 
 async function bootstrap(): Promise<void> {
-  const [{ tabId }, registry] = await Promise.all([
-    sendMessage('WHO_AM_I', undefined),
-    fetch(chrome.runtime.getURL('registry.json')).then((r) => r.json() as Promise<Registry>),
-  ]);
+  const { tabId } = await sendMessage('WHO_AM_I', undefined);
 
-  const isolatedEntries = filterByWorld(registry, 'isolated');
-
-  await reconcile(tabId, isolatedEntries);
+  await reconcile(tabId);
 
   onMessage('STATE_CHANGED', ({ data }) => {
     if (data.tabId !== tabId) return;
-    void reconcile(tabId, isolatedEntries);
+    void reconcile(tabId);
   });
 
   onMessage('TWEAKS_CHANGED', ({ data }) => {
-    if (data.id && !isolatedEntries.some((entry) => entry.id === data.id)) return { ok: true };
-    void reconcile(tabId, isolatedEntries);
+    void reconcile(tabId, data.id);
     return { ok: true };
   });
 }
 
-async function reconcile(tabId: number, entries: RegistryEntry[]): Promise<void> {
+async function loadEntries(): Promise<RegistryEntry[]> {
+  const registry = await fetch(chrome.runtime.getURL('registry.json')).then(
+    (r) => r.json() as Promise<Registry>,
+  );
+  return filterByWorld(registry, 'isolated');
+}
+
+async function reconcile(tabId: number, changedId?: string): Promise<void> {
+  const entries = await loadEntries();
+  if (changedId && !entries.some((entry) => entry.id === changedId)) {
+    const applied = cleanups.get(changedId);
+    if (applied) {
+      await cleanupApplied(changedId, applied);
+      cleanups.delete(changedId);
+      await setAppliedInTab(tabId, Array.from(cleanups.keys()));
+    }
+    return;
+  }
+
   const [enabled, autodisabled] = await Promise.all([getEnabledExperiments(), getAutoDisabled()]);
   const eligibleEntries = filterAutoDisabled(entries, autodisabled);
   const wantOn = eligibleEntries.filter(

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +8,9 @@ import {
   authorFromPath,
   buildExperiments,
   formatErrors,
+  isExperimentPath,
   scanAndValidate,
+  writeDevExperimentArtifacts,
 } from './build-experiments';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -122,6 +124,64 @@ describe('scanAndValidate — discovery (BLD-01)', () => {
     const result = scanAndValidate(tmpRoot);
     expect(result.manifests).toEqual([]);
     expect(result.errors).toEqual([]);
+  });
+});
+
+describe('dev experiment artifacts', () => {
+  it('identifies paths under experiments/', () => {
+    expect(
+      isExperimentPath(tmpRoot, resolve(tmpRoot, 'experiments/andrew/foo/manifest.json')),
+    ).toBe(true);
+    expect(isExperimentPath(tmpRoot, resolve(tmpRoot, 'apps/extension/src/App.tsx'))).toBe(false);
+  });
+
+  it('writes registry.json and experiment chunks for dev refresh', () => {
+    writeManifest('experiments/andrew/smoke/manifest.json', {
+      id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+      name: 'Smoke',
+      author: 'andrew',
+      description: 'desc',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [],
+    });
+    writeFileSync(
+      resolve(tmpRoot, 'experiments/andrew/smoke/experiment.ts'),
+      "export const apply = () => () => { document.body.dataset.smoke = 'clean'; };\n",
+      'utf8',
+    );
+
+    const outDir = resolve(tmpRoot, 'apps/extension/.output/chrome-mv3');
+    const result = writeDevExperimentArtifacts({ root: tmpRoot, outDir });
+
+    expect(result.registry).toHaveLength(1);
+    expect(existsSync(resolve(outDir, 'registry.json'))).toBe(true);
+    expect(existsSync(resolve(outDir, result.registry[0]?.chunkPath ?? ''))).toBe(true);
+  });
+
+  it('removes stale dev experiment chunks before writing fresh output', () => {
+    writeManifest('experiments/andrew/smoke/manifest.json', {
+      id: '01J0AAAAAAAAAAAAAAAAAAAAAA',
+      name: 'Smoke',
+      author: 'andrew',
+      description: 'desc',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [],
+    });
+    writeFileSync(
+      resolve(tmpRoot, 'experiments/andrew/smoke/experiment.ts'),
+      'export const apply = () => () => {};\n',
+      'utf8',
+    );
+    const outDir = resolve(tmpRoot, 'apps/extension/.output/chrome-mv3');
+    const staleChunk = resolve(outDir, 'chunks/experiments-andrew__old-deadbeef.js');
+    mkdirSync(resolve(staleChunk, '..'), { recursive: true });
+    writeFileSync(staleChunk, 'stale', 'utf8');
+
+    writeDevExperimentArtifacts({ root: tmpRoot, outDir });
+
+    expect(existsSync(staleChunk)).toBe(false);
   });
 });
 

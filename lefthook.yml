@@ -2,10 +2,10 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      run: pnpm lint
+      run: corepack pnpm lint
     typecheck:
-      run: pnpm typecheck
+      run: corepack pnpm typecheck
     test:
-      run: pnpm test --run
+      run: corepack pnpm test --run
     check-csp:
-      run: pnpm check-csp
+      run: corepack pnpm check-csp

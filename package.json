@@ -14,7 +14,8 @@
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -b --pretty",
     "test": "vitest",
-    "check-csp": "tsx scripts/check-csp.ts"
+    "check-csp": "tsx scripts/check-csp.ts",
+    "create-experiment": "tsx scripts/create-experiment.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

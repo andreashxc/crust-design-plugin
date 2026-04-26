@@ -7,8 +7,8 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import type { RegistryEntry } from '@platform/experiment-sdk';
 import { ExperimentManifest } from '@platform/experiment-sdk';
 import { buildSync } from 'esbuild';
@@ -20,6 +20,14 @@ import type { Plugin } from 'vite';
 export type BuildExperimentsOptions = {
   /** Repo root containing the `experiments/` folder. Defaults to `process.cwd()`. */
   root?: string;
+  /**
+   * Extension output dir used by WXT dev. In production builds Rollup emits files
+   * through `generateBundle`; in dev we write registry/chunks here so new folders
+   * can appear without a manual rebuild command.
+   */
+  devOutDir?: string;
+  /** Disable the dev watcher in tests or unusual embed contexts. Defaults to true. */
+  devWatch?: boolean;
 };
 
 export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin {
@@ -33,6 +41,47 @@ export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin 
         throw new Error(formatErrors(scan.errors));
       }
       // result.warnings are informational (e.g., ULID written) — already logged.
+    },
+    configureServer(server) {
+      if (options.devWatch === false || !options.devOutDir) return;
+
+      const experimentsPattern = resolve(root, 'experiments/**/*');
+      server.watcher.add(experimentsPattern);
+
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      const refresh = () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          timer = null;
+          try {
+            const result = writeDevExperimentArtifacts({
+              root,
+              outDir: options.devOutDir ?? '',
+            });
+            server.config.logger.info(
+              `[build-experiments] refreshed ${result.registry.length} experiments`,
+            );
+            server.ws.send({ type: 'full-reload' });
+          } catch (err) {
+            server.config.logger.error(
+              `[build-experiments] dev refresh failed:\n${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            );
+          }
+        }, 75);
+      };
+
+      const onFsEvent = (file: string) => {
+        if (isExperimentPath(root, file)) refresh();
+      };
+      server.watcher.on('add', onFsEvent);
+      server.watcher.on('change', onFsEvent);
+      server.watcher.on('unlink', onFsEvent);
+      server.watcher.on('addDir', onFsEvent);
+      server.watcher.on('unlinkDir', onFsEvent);
+
+      refresh();
     },
     generateBundle(_options, bundle: OutputBundle) {
       if (!scan) return;
@@ -48,31 +97,11 @@ export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin 
         }
       }
 
-      const registry: RegistryEntry[] = scan.manifests.map(({ path, data }) => {
-        const manifestAbsPath = resolve(root, path);
-        const experimentDir = dirname(manifestAbsPath);
-        const folder = experimentDir.split(/[/\\]/).pop() ?? '';
-        const absExperimentTs = resolve(experimentDir, 'experiment.ts');
-        const chunkPath =
-          chunkByExperimentPath.get(absExperimentTs) ??
-          emitExperimentChunk({
-            emitFile: this.emitFile.bind(this),
-            absExperimentTs,
-            author: data.author,
-            folder,
-          });
-
-        return {
-          id: data.id,
-          author: data.author,
-          folder,
-          name: data.name,
-          description: data.description,
-          scope: data.scope,
-          world: data.world,
-          chunkPath,
-          tweaks: data.tweaks,
-        };
+      const registry = createRegistryEntries({
+        root,
+        scan,
+        chunkByExperimentPath,
+        emitFile: this.emitFile.bind(this),
       });
 
       this.emitFile({
@@ -82,6 +111,76 @@ export function buildExperiments(options: BuildExperimentsOptions = {}): Plugin 
       });
     },
   };
+}
+
+export function writeDevExperimentArtifacts(args: { root: string; outDir: string }): {
+  registry: RegistryEntry[];
+  warnings: string[];
+} {
+  const scan = scanAndValidate(args.root);
+  if (scan.errors.length > 0) {
+    throw new Error(formatErrors(scan.errors));
+  }
+
+  mkdirSync(args.outDir, { recursive: true });
+  const chunksDir = resolve(args.outDir, 'chunks');
+  for (const oldChunk of globSync('experiments-*.js', { cwd: chunksDir, absolute: true })) {
+    rmSync(oldChunk, { force: true });
+  }
+
+  const registry = createRegistryEntries({
+    root: args.root,
+    scan,
+    chunkByExperimentPath: new Map(),
+    emitFile: (asset) => {
+      const absPath = resolve(args.outDir, asset.fileName);
+      mkdirSync(dirname(absPath), { recursive: true });
+      writeFileSync(absPath, asset.source, 'utf8');
+      return asset.fileName;
+    },
+  });
+
+  writeFileSync(resolve(args.outDir, 'registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
+  return { registry, warnings: scan.warnings };
+}
+
+export function isExperimentPath(root: string, file: string): boolean {
+  const rel = relative(resolve(root, 'experiments'), resolve(file));
+  return Boolean(rel) && !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function createRegistryEntries(args: {
+  root: string;
+  scan: ScanResult;
+  chunkByExperimentPath: Map<string, string>;
+  emitFile: (asset: { type: 'asset'; fileName: string; source: string }) => string;
+}): RegistryEntry[] {
+  return args.scan.manifests.map(({ path, data }) => {
+    const manifestAbsPath = resolve(args.root, path);
+    const experimentDir = dirname(manifestAbsPath);
+    const folder = experimentDir.split(/[/\\]/).pop() ?? '';
+    const absExperimentTs = resolve(experimentDir, 'experiment.ts');
+    const chunkPath =
+      args.chunkByExperimentPath.get(absExperimentTs) ??
+      emitExperimentChunk({
+        emitFile: args.emitFile,
+        absExperimentTs,
+        author: data.author,
+        folder,
+      });
+
+    return {
+      id: data.id,
+      author: data.author,
+      folder,
+      name: data.name,
+      description: data.description,
+      scope: data.scope,
+      world: data.world,
+      chunkPath,
+      tweaks: data.tweaks,
+    };
+  });
 }
 
 function emitExperimentChunk(args: {

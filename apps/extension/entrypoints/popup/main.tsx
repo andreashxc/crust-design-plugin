@@ -1,76 +1,20 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@/styles/popup.css';
-import { mergeTweakValues, type Registry } from '@platform/experiment-sdk';
+import { mergeTweakValues } from '@platform/experiment-sdk';
+import { hydratePopupStore } from '@/popup/registry-refresh';
 import { useStore } from '@/popup/store';
 import { syncActionIconWithColorScheme } from '@/shared/icon-theme';
 import {
-  getAppliedInTab,
-  getAutoDisabled,
-  getEnabledExperiments,
-  getLastErrors,
   getLastLlmError,
   getLlmSessionStats,
   getPublicLlmConfig,
-  getTweakErrors,
-  getTweakValues,
   tweakErrorsStorageKey,
   tweakValuesStorageKey,
 } from '@/shared/storage';
 import { App } from './App';
 
 syncActionIconWithColorScheme();
-
-async function bootstrapStore(): Promise<void> {
-  const registry = (await fetch(chrome.runtime.getURL('registry.json')).then((r) =>
-    r.json(),
-  )) as Registry;
-  const [
-    enabled,
-    autodisabled,
-    lastError,
-    publicLlmConfig,
-    lastLlmError,
-    llmSession,
-    tabs,
-    tweakValuesEntries,
-    tweakErrorEntries,
-  ] = await Promise.all([
-    getEnabledExperiments(),
-    getAutoDisabled(),
-    getLastErrors(),
-    getPublicLlmConfig(),
-    getLastLlmError(),
-    getLlmSessionStats(),
-    chrome.tabs.query({ active: true, currentWindow: true }),
-    Promise.all(
-      registry.map(
-        async (entry) =>
-          [entry.id, mergeTweakValues(entry.tweaks, await getTweakValues(entry.id))] as const,
-      ),
-    ),
-    Promise.all(registry.map(async (entry) => [entry.id, await getTweakErrors(entry.id)] as const)),
-  ]);
-  const activeTab = tabs[0];
-  const activeTabId = activeTab?.id ?? null;
-  const appliedInActiveTab = activeTabId != null ? await getAppliedInTab(activeTabId) : [];
-
-  useStore.setState({
-    registry,
-    enabled,
-    autodisabled,
-    lastError,
-    publicLlmConfig,
-    lastLlmError,
-    llmSession,
-    tweakValues: Object.fromEntries(tweakValuesEntries),
-    tweakErrors: Object.fromEntries(tweakErrorEntries),
-    activeTabId,
-    activeTabUrl: activeTab?.url ?? null,
-    appliedInActiveTab,
-    bootstrapped: true,
-  });
-}
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local') {
@@ -136,7 +80,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
-void bootstrapStore().catch((err: unknown) => {
+void hydratePopupStore().catch((err: unknown) => {
   console.error('[popup] bootstrap failed', err);
   useStore.getState().setBootstrapped(true);
 });

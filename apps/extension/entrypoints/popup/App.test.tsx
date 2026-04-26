@@ -2,7 +2,7 @@
 
 import type { RegistryEntry } from '@platform/experiment-sdk';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useStore } from '@/popup/store';
 import type { ChromeMock } from '@/test-setup/chrome-mock';
 import { App } from './App';
@@ -119,6 +119,27 @@ describe('popup App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open Crust options' }));
 
     expect(chromeMock().runtime.openOptionsPage).toHaveBeenCalled();
+  });
+
+  it('reloads registry from the popup header', async () => {
+    const nextEntry = makeEntry({
+      id: '01J0BBBBBBBBBBBBBBBBBBBBBB',
+      folder: 'new-demo',
+      name: 'New demo',
+    });
+    const fetchMock = vi.fn(async () => ({
+      json: async () => [nextEntry],
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    chromeMock().tabs.query.mockResolvedValue([{ id: 7, url: 'https://ya.ru/' }]);
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload experiments' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('New demo')).toBeTruthy();
+    });
+    expect(fetchMock).toHaveBeenCalledWith('chrome-extension://test/registry.json');
   });
 
   it('shows only inline missing-key warning for the affected LLM experiment', () => {
