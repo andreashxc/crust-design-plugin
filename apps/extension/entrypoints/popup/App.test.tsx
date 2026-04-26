@@ -338,6 +338,115 @@ describe('popup App', () => {
     });
   });
 
+  it('loads a valid tweak preset and broadcasts TWEAKS_CHANGED', async () => {
+    chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
+    resetStore(
+      makeEntry({
+        tweaks: [{ type: 'text', key: 'headline', label: 'Headline', default: 'Hello' }],
+        presets: [
+          {
+            name: 'Compact',
+            path: 'experiments/andrew/smoke/presets/compact.json',
+            values: { headline: 'Short' },
+          },
+        ],
+      }),
+    );
+    useStore.setState({
+      enabled: { '01J0AAAAAAAAAAAAAAAAAAAAAA': true },
+      tweakValues: { '01J0AAAAAAAAAAAAAAAAAAAAAA': { headline: 'Hello' } },
+    });
+
+    render(<App />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Load preset' }), {
+      target: { value: 'Compact' },
+    });
+
+    await waitFor(() => {
+      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({
+        'tweaks:01J0AAAAAAAAAAAAAAAAAAAAAA': { headline: 'Short' },
+      });
+      expect(chromeMock().runtime.sendMessage).toHaveBeenCalledWith({
+        name: 'TWEAKS_CHANGED',
+        data: { id: '01J0AAAAAAAAAAAAAAAAAAAAAA' },
+      });
+    });
+  });
+
+  it('shows invalid preset errors without broadcasting TWEAKS_CHANGED', async () => {
+    chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
+    resetStore(
+      makeEntry({
+        tweaks: [{ type: 'text', key: 'headline', label: 'Headline', default: 'Hello' }],
+        presets: [
+          {
+            name: 'Broken',
+            path: 'experiments/andrew/smoke/presets/broken.json',
+            values: { headline: 12 },
+          },
+        ],
+      }),
+    );
+    useStore.setState({
+      enabled: { '01J0AAAAAAAAAAAAAAAAAAAAAA': true },
+      tweakValues: { '01J0AAAAAAAAAAAAAAAAAAAAAA': { headline: 'Hello' } },
+    });
+
+    render(<App />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Load preset' }), {
+      target: { value: 'Broken' },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Preset "Broken" is invalid')).toBeTruthy();
+    });
+    expect(chromeMock().runtime.sendMessage).not.toHaveBeenCalledWith({
+      name: 'TWEAKS_CHANGED',
+      data: { id: '01J0AAAAAAAAAAAAAAAAAAAAAA' },
+    });
+  });
+
+  it('copies a truthful CLI preset save command', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    resetStore(
+      makeEntry({
+        author: 'andrew',
+        folder: 'smoke',
+        tweaks: [{ type: 'text', key: 'headline', label: 'Headline', default: 'Hello' }],
+      }),
+    );
+    useStore.setState({
+      enabled: { '01J0AAAAAAAAAAAAAAAAAAAAAA': true },
+      tweakValues: { '01J0AAAAAAAAAAAAAAAAAAAAAA': { headline: 'Hello' } },
+    });
+
+    render(<App />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Preset name' }), {
+      target: { value: 'Compact' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Copy command/ }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        "corepack pnpm save-preset 'andrew/smoke' 'Compact' '{\"headline\":\"Hello\"}'",
+      );
+    });
+    expect(screen.getByText('Save command copied')).toBeTruthy();
+  });
+
+  it('surfaces stale description status without blocking the row', () => {
+    resetStore(makeEntry({ descriptionStatus: 'stale' }));
+
+    render(<App />);
+
+    expect(screen.getByText('Description stale')).toBeTruthy();
+    expect(screen.getByRole('switch', { name: 'Toggle Smoke pink' })).toBeTruthy();
+  });
+
   it('hides tweak controls while the experiment is disabled', () => {
     resetStore(
       makeEntry({

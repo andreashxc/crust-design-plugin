@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 Plan 05-04 complete; ready to execute 05-05
-last_updated: "2026-04-26T23:24:00+02:00"
-last_activity: 2026-04-26 -- Phase 5 Plan 05-04 completed popup search and reorder
+stopped_at: Phase 5 Plan 05-05 complete; ready to execute 05-06
+last_updated: "2026-04-26T23:48:00+02:00"
+last_activity: 2026-04-26 -- Phase 5 Plan 05-05 completed presets and generated descriptions
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 34
-  completed_plans: 31
-  percent: 91
+  completed_plans: 32
+  percent: 94
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 5 (DX, SPA Composition & Sharing) — READY TO EXECUTE
-Plan: 05-05 — Presets, preset save workflow, and generated description status
-Status: Phase 5 Plan 05-04 complete; execute 05-05 next
-Last activity: 2026-04-26 -- Phase 5 Plan 05-04 completed popup search and reorder
+Plan: 05-06 — Onboarding docs, empty states, and update-available banner
+Status: Phase 5 Plan 05-05 complete; execute 05-06 next
+Last activity: 2026-04-26 -- Phase 5 Plan 05-05 completed presets and generated descriptions
 
-Progress: [▓▓▓▓▓▓▓▓▓░] 91%
+Progress: [▓▓▓▓▓▓▓▓▓░] 94%
 
 ## Performance Metrics
 
@@ -97,6 +97,7 @@ Recent decisions affecting current work:
 - Plan 05-02 execution: content reconcile now uses a debounced serialized scheduler; SPA URL changes and dev registry signature changes schedule reconcile; applied entries track module keys so changed chunks/source signatures reapply even when tweaks are unchanged.
 - Plan 05-03 execution: experiment order now persists in `experiment_order`; content apply order respects it; DOM observer ignores extension-owned `[data-exp-id]` mutations; toolbar badge hides at zero and shows applied count per tab.
 - Plan 05-04 execution: popup search filters name/author/description after scope; experiment order is visible and reorderable via drag/drop plus move buttons; dev source folders can open through Cursor links when registry includes `sourceDir`.
+- Plan 05-05 execution: popup can load validated tweak presets, copy a truthful `corepack pnpm save-preset` command for repo writes, and warn on missing/stale generated descriptions; CLI scripts now save presets and generate deterministic `description.md` files without overwriting manual docs.
 
 ### Pending Todos
 
@@ -122,6 +123,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-26T13:30:00+02:00
-Stopped at: Phase 5 Plan 05-04 complete; ready to execute 05-05
+Last session: 2026-04-26T23:48:00+02:00
+Stopped at: Phase 5 Plan 05-05 complete; ready to execute 05-06
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

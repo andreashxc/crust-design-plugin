@@ -15,7 +15,9 @@
     "typecheck": "tsc -b --pretty",
     "test": "vitest",
     "check-csp": "tsx scripts/check-csp.ts",
-    "create-experiment": "tsx scripts/create-experiment.ts"
+    "create-experiment": "tsx scripts/create-experiment.ts",
+    "generate-descriptions": "tsx scripts/generate-descriptions.ts",
+    "save-preset": "tsx scripts/save-preset.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

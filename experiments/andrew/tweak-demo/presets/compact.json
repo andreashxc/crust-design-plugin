@@ -1,0 +1,11 @@
+{
+  "name": "compact",
+  "values": {
+    "position": "top",
+    "headline": "Hello",
+    "scale": 100,
+    "accent": "#ff3366",
+    "details": ["url", "badge"]
+  },
+  "updatedAt": "2026-04-26T21:41:31.776Z"
+}

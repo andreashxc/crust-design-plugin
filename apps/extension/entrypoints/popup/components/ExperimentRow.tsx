@@ -40,6 +40,16 @@ function shortMessage(message: string): string {
   return message.length > 80 ? `${message.slice(0, 79)}…` : message;
 }
 
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function descriptionWarning(status: RegistryEntry['descriptionStatus']): string | null {
+  if (status === 'missing') return 'Description missing';
+  if (status === 'stale') return 'Description stale';
+  return null;
+}
+
 export function ExperimentRow({
   entry,
   visibleIds,
@@ -72,10 +82,14 @@ export function ExperimentRow({
   const [stackOpen, setStackOpen] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(enabled);
   const [sourceStatus, setSourceStatus] = useState<string | null>(null);
+  const [selectedPresetName, setSelectedPresetName] = useState<string | null>(null);
+  const [presetSaveName, setPresetSaveName] = useState('custom-preset');
+  const [presetStatus, setPresetStatus] = useState<string | null>(null);
   const resolvedTweakValues = useMemo(
     () => tweakValues ?? defaultTweakValues(entry.tweaks),
     [entry.tweaks, tweakValues],
   );
+  const descWarning = descriptionWarning(entry.descriptionStatus);
 
   const status = computeStatus(entry, {
     enabled,
@@ -154,6 +168,53 @@ export function ExperimentRow({
     await clearTweakValues(entry.id);
     await clearTweakErrors(entry.id);
     await notifyTweakChange().catch(() => {});
+  }
+
+  async function handlePresetLoad(name: string) {
+    if (!name) return;
+    const preset = entry.presets?.find((item) => item.name === name);
+    if (!preset) return;
+
+    try {
+      const validValues = validateTweakValues(entry.tweaks, preset.values);
+      setStoreTweakValues({ ...tweakValuesMap, [entry.id]: validValues });
+      setStoreTweakErrors({ ...tweakErrorsMap, [entry.id]: [] });
+      await persistTweakValues(entry.id, validValues);
+      await clearTweakErrors(entry.id);
+      setSelectedPresetName(preset.name);
+      setPresetStatus(`Loaded ${preset.name}`);
+      const result = await notifyTweakChange();
+      if (!result?.ok) {
+        setStoreTweakErrors({
+          ...tweakErrorsMap,
+          [entry.id]: [{ message: result?.error ?? 'Failed to apply preset' }],
+        });
+      }
+    } catch (err) {
+      const errors =
+        err instanceof TweakValueValidationError
+          ? err.issues
+          : [{ message: err instanceof Error ? err.message : String(err) }];
+      setStoreTweakErrors({ ...tweakErrorsMap, [entry.id]: errors });
+      await persistTweakErrors(entry.id, errors);
+      setPresetStatus(`Preset "${preset.name}" is invalid`);
+    }
+  }
+
+  async function handleCopyPresetCommand() {
+    const name = presetSaveName.trim() || 'custom-preset';
+    const command = [
+      'corepack pnpm save-preset',
+      shellQuote(`${entry.author}/${entry.folder}`),
+      shellQuote(name),
+      shellQuote(JSON.stringify(resolvedTweakValues)),
+    ].join(' ');
+    try {
+      await navigator.clipboard?.writeText(command);
+      setPresetStatus('Save command copied');
+    } catch {
+      setPresetStatus(command);
+    }
   }
 
   async function persistVisibleOrder(nextVisibleIds: string[]) {
@@ -286,6 +347,8 @@ export function ExperimentRow({
         ) : null}
       </div>
 
+      {descWarning ? <div className="text-muted-foreground text-xs">{descWarning}</div> : null}
+
       {toggleError ? (
         <div className="text-destructive flex items-center gap-1 text-xs">
           <AlertCircle className="size-3" aria-hidden="true" />
@@ -349,8 +412,15 @@ export function ExperimentRow({
               tweaks={entry.tweaks}
               values={resolvedTweakValues}
               errors={tweakErrors ?? EMPTY_TWEAK_ERRORS}
+              presets={entry.presets}
+              selectedPresetName={selectedPresetName}
+              presetSaveName={presetSaveName}
+              presetStatus={presetStatus}
               onChange={handleTweakChange}
               onReset={handleTweakReset}
+              onPresetLoad={(name) => void handlePresetLoad(name)}
+              onPresetSaveNameChange={setPresetSaveName}
+              onCopyPresetCommand={() => void handleCopyPresetCommand()}
             />
           ) : null}
         </div>
