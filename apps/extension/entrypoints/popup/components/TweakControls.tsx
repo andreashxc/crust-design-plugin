@@ -1,12 +1,11 @@
 import type { TweakDefinition, TweakValue, TweakValueMap } from '@platform/experiment-sdk';
+import { ColorControl, Slider as DialSlider, SelectControl, TextControl, Toggle } from 'dialkit';
 import { Copy, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectOption } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { controlWriteMode, formatTweakValue, updateTweakValue } from '@/popup/tweaks';
+import { controlWriteMode, updateTweakValue } from '@/popup/tweaks';
 
 type TweakControlError = {
   path?: Array<string | number>;
@@ -54,6 +53,54 @@ function errorsFor(errors: TweakControlError[] | undefined, tweak: TweakDefiniti
   return (errors ?? [])
     .filter((error) => errorKey(error) === tweak.key)
     .map((error) => error.message);
+}
+
+function LabelledTextControl({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const input = rootRef.current?.querySelector('input');
+    input?.setAttribute('aria-label', label);
+  }, [label]);
+
+  return (
+    <div ref={rootRef}>
+      <TextControl label={label} value={value} placeholder={placeholder} onChange={onChange} />
+    </div>
+  );
+}
+
+function LabelledColorControl({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const input = rootRef.current?.querySelector('input[type="color"]');
+    input?.setAttribute('aria-label', label);
+  }, [label]);
+
+  return (
+    <div ref={rootRef}>
+      <ColorControl label={label} value={value} onChange={onChange} />
+    </div>
+  );
 }
 
 export function TweakControls({
@@ -106,104 +153,126 @@ export function TweakControls({
 
   function renderControl(tweak: TweakDefinition) {
     const controlId = `tweak-${tweak.key}`;
-    const invalid = errorsFor(errors, tweak).length > 0;
     const currentValue = draftValues[tweak.key] ?? values[tweak.key] ?? tweak.default;
 
     switch (tweak.type) {
       case 'toggle':
         return (
-          <Checkbox
-            id={controlId}
-            aria-invalid={invalid}
-            checked={booleanValue(values[tweak.key], tweak.default)}
-            onCheckedChange={(checked) => commitValue(tweak, checked)}
-          />
+          <>
+            <input
+              id={controlId}
+              type="checkbox"
+              aria-label={tweak.label}
+              className="sr-only"
+              checked={booleanValue(values[tweak.key], tweak.default)}
+              onChange={(event) => commitValue(tweak, event.currentTarget.checked)}
+            />
+            <Toggle
+              label={tweak.label}
+              checked={booleanValue(values[tweak.key], tweak.default)}
+              onChange={(checked) => commitValue(tweak, checked)}
+            />
+          </>
         );
       case 'select':
         return (
-          <Select
-            id={controlId}
-            aria-invalid={invalid}
-            className="h-8 text-xs"
-            value={stringValue(values[tweak.key], tweak.default)}
-            onChange={(event) => commitValue(tweak, event.currentTarget.value)}
-          >
-            {tweak.options.map((option) => (
-              <SelectOption key={option} value={option}>
-                {option}
-              </SelectOption>
-            ))}
-          </Select>
+          <>
+            <select
+              id={controlId}
+              aria-label={tweak.label}
+              className="sr-only"
+              value={stringValue(values[tweak.key], tweak.default)}
+              onChange={(event) => commitValue(tweak, event.currentTarget.value)}
+            >
+              {tweak.options.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <SelectControl
+              label={tweak.label}
+              value={stringValue(values[tweak.key], tweak.default)}
+              options={tweak.options}
+              onChange={(value) => commitValue(tweak, value)}
+            />
+          </>
         );
       case 'text':
         return (
-          <Input
-            id={controlId}
-            aria-invalid={invalid}
-            className="h-8 text-xs"
+          <LabelledTextControl
+            label={tweak.label}
             value={stringValue(currentValue, tweak.default)}
             placeholder={tweak.placeholder}
-            onChange={(event) => commitValue(tweak, event.currentTarget.value)}
+            onChange={(value) => commitValue(tweak, value)}
           />
         );
       case 'number-slider': {
         const value = numberValue(currentValue, tweak.default);
         return (
-          <div className="flex items-center gap-2">
-            <Slider
+          <>
+            <input
               id={controlId}
-              aria-invalid={invalid}
+              type="range"
+              aria-label={tweak.label}
+              className="sr-only"
               min={tweak.min}
               max={tweak.max}
               step={tweak.step ?? 1}
               value={value}
-              className="h-4"
-              onValueChange={(next) => commitValue(tweak, next)}
+              onChange={(event) => commitValue(tweak, event.currentTarget.valueAsNumber)}
             />
-            <output
-              htmlFor={controlId}
-              className="text-muted-foreground min-w-8 text-right text-xs"
-            >
-              {formatTweakValue(tweak, value)}
-            </output>
-          </div>
+            <DialSlider
+              label={tweak.label}
+              min={tweak.min}
+              max={tweak.max}
+              step={tweak.step ?? 1}
+              value={value}
+              onChange={(next) => commitValue(tweak, next)}
+            />
+          </>
         );
       }
       case 'color':
         return (
-          <div className="flex items-center gap-2">
-            <Input
-              id={controlId}
-              type="color"
-              aria-invalid={invalid}
-              className="h-8 w-10"
-              value={stringValue(values[tweak.key], tweak.default)}
-              onChange={(event) => commitValue(tweak, event.currentTarget.value)}
-            />
-            <span className="text-muted-foreground font-mono text-xs">
-              {formatTweakValue(tweak, values[tweak.key])}
-            </span>
-          </div>
+          <LabelledColorControl
+            label={tweak.label}
+            value={stringValue(values[tweak.key], tweak.default)}
+            onChange={(value) => commitValue(tweak, value)}
+          />
         );
       case 'multi-select': {
         const selected = stringArrayValue(values[tweak.key], tweak.default);
         return (
-          <div className="grid gap-1.5" id={controlId} aria-invalid={invalid}>
+          <div className="dialkit-multi-select">
+            <div className="dialkit-multi-select-label">{tweak.label}</div>
             {tweak.options.map((option) => {
               const optionId = `${controlId}-${option}`;
               return (
-                <div key={option} className="flex items-center gap-1.5 text-xs">
-                  <Checkbox
+                <div key={option} className="grid gap-0">
+                  <input
                     id={optionId}
+                    type="checkbox"
+                    aria-label={option}
+                    className="sr-only"
                     checked={selected.includes(option)}
-                    onCheckedChange={(checked) => {
+                    onChange={(event) => {
+                      const next = event.currentTarget.checked
+                        ? [...selected, option]
+                        : selected.filter((value) => value !== option);
+                      commitValue(tweak, next);
+                    }}
+                  />
+                  <Toggle
+                    label={option}
+                    checked={selected.includes(option)}
+                    onChange={(checked) => {
                       const next = checked
                         ? [...selected, option]
                         : selected.filter((value) => value !== option);
                       commitValue(tweak, next);
                     }}
                   />
-                  <label htmlFor={optionId}>{option}</label>
                 </div>
               );
             })}
@@ -287,15 +356,11 @@ export function TweakControls({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2">
+      <div className="tweak-dialkit flex flex-col gap-1.5">
         {tweaks.map((tweak) => {
           const controlErrors = errorsFor(errors, tweak);
-          const controlId = `tweak-${tweak.key}`;
           return (
             <div key={tweak.key} className="grid gap-1">
-              <label htmlFor={controlId} className="text-xs font-medium">
-                {tweak.label}
-              </label>
               {tweak.description ? (
                 <p className="text-muted-foreground text-xs">{tweak.description}</p>
               ) : null}
