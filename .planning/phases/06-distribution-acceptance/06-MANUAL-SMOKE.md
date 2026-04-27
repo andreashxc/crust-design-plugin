@@ -1,59 +1,279 @@
-# Phase 6 Manual Smoke: Chrome/Yandex Sideload and Acceptance
+# Phase 6 Manual Smoke: ручная проверка Crust
 
-Use this checklist after `corepack pnpm package:chrome` or after downloading a GitHub Release artifact. Both browser paths verify load unpacked sideloading.
+Этот файл нужен, чтобы руками проверить, что расширение можно поставить в браузер и что основные сценарии работают.
 
-## Build Inputs
+## Что именно мы проверяем
 
-| Item | Expected | Result |
-|------|----------|--------|
-| Unpacked dev path | `apps/extension/.output/chrome-mv3` exists | Pending |
-| Release unpacked zip | `crust-chrome-mv3-unpacked.zip` downloads and unzips to `chrome-mv3` | Pending |
-| WXT zip | `platformextension-0.0.0-chrome.zip` is attached to the release | Pending |
+Нужно убедиться, что:
 
-## Chrome Load Unpacked
+- Crust ставится в Chrome через "Load unpacked".
+- Crust ставится в Yandex Browser через "Load unpacked".
+- В popup видны эксперименты разных авторов.
+- Можно включить несколько экспериментов на одной странице.
+- Можно поменять порядок экспериментов перетаскиванием.
+- LLM-эксперимент понятно ведёт себя без API key и с API key.
+- `fetchPage`-эксперимент что-то получает со страницы или показывает понятную ошибку.
+- Новый человек по инструкции сможет запустить первый эксперимент меньше чем за 15 минут.
 
-1. Open `chrome://extensions`.
-2. Enable Developer mode.
-3. Click "Load unpacked".
-4. Select either `apps/extension/.output/chrome-mv3` or the unzipped release `chrome-mv3` folder.
-5. Open `https://ya.ru/`.
-6. Open the Crust toolbar popup.
+## Какие файлы сборки есть и зачем
 
-| Check | Expected | Result |
-|-------|----------|--------|
-| Extension loads | Crust icon appears in the toolbar | Pending |
-| Registry loads | Popup shows `andrew`, `designer1`, `designer2`, and `designer3` when groups are expanded | Pending |
-| No console errors | Extension error page has no new load-time errors | Pending |
+После команды:
 
-## Yandex Browser Load Unpacked
+```sh
+corepack pnpm package:chrome
+```
 
-1. Open `browser://extensions` in Yandex Browser. If redirected or unsupported, try `chrome://extensions`.
-2. Enable Developer mode.
-3. Click "Load unpacked".
-4. Select either `apps/extension/.output/chrome-mv3` or the unzipped release `chrome-mv3` folder.
-5. Open `https://ya.ru/`.
-6. Open the Crust toolbar popup.
+появляются основные артефакты:
 
-| Check | Expected | Result |
-|-------|----------|--------|
-| Extension loads | Crust icon appears in the toolbar | Pending |
-| Popup opens | Dark/light theme follows the browser appearance | Pending |
-| Registry loads | Acceptance fixture authors are visible | Pending |
-| No console errors | Extension error page has no new load-time errors | Pending |
+| Файл или папка | Зачем нужен |
+|----------------|-------------|
+| `apps/extension/.output/chrome-mv3` | Главная папка для проверки локально. Именно её обычно выбираем в браузере через "Load unpacked". |
+| `apps/extension/.output/crust-chrome-mv3-unpacked.zip` | Zip с той же папкой `chrome-mv3`. Нужен, чтобы передать/скачать релиз и потом распаковать для "Load unpacked". |
+| `apps/extension/.output/platformextension-0.0.0-chrome.zip` | Автоматический zip от WXT. Он полезен как стандартный build artifact, но для ручной установки сейчас проще использовать `crust-chrome-mv3-unpacked.zip`. |
 
-## Acceptance Flow
+Если коротко: для твоей ручной проверки используй папку `apps/extension/.output/chrome-mv3` или распакованный `crust-chrome-mv3-unpacked.zip`.
 
-| Scenario | Steps | Expected | Result |
-|----------|-------|----------|--------|
-| Fork | Copy fork command for `designer1/acceptance-banner`, replace `<your-author>`, run it in the repo | New folder appears under the target author, `manifest.id` is empty before rebuild, then stamped after dev refresh/build | Pending |
-| Composition | Enable `designer1/acceptance-banner` and `designer2/page-summary` on one ya.ru tab, reorder them in popup | Both overlays remain visible with no duplicate DOM nodes or apply-order errors | Pending |
-| LLM missing key | Enable `designer3/ai-label` without an API key | Popup shows only the small inline missing-key warning for that experiment | Pending |
-| LLM configured key | Add an OpenAI or Anthropic key in options, enable `designer3/ai-label` | Overlay updates with an LLM label and LLM call counter increments | Pending |
-| fetchPage | Enable `designer2/page-summary` | Overlay shows fetched page metadata or a clear `fetchPage` reason | Pending |
-| Tweaks | Enable `designer1/acceptance-banner`, expand tweaks, change headline/density/accent/timestamp | Overlay updates after each tweak change | Pending |
-| Onboarding <15 minutes | Start from a clean clone and follow `docs/ONBOARDING.md` | New user reaches first experiment running in <15 minutes | Pending |
+`platformextension-0.0.0-chrome.zip` можно просто проверить, что он существует. Ставить именно его руками не нужно.
 
-## Notes
+## Подготовка
 
-- Record browser name, version, OS, and date for each completed run.
-- If Yandex Browser blocks sideloaded MV3 behavior differently from Chrome, capture the exact error text and extension error page entry.
+1. Собери расширение:
+
+```sh
+corepack pnpm package:chrome
+```
+
+2. Проверь, что есть папка:
+
+```text
+apps/extension/.output/chrome-mv3
+```
+
+3. Для release-проверки можно дополнительно распаковать:
+
+```text
+apps/extension/.output/crust-chrome-mv3-unpacked.zip
+```
+
+Внутри должна быть папка `chrome-mv3`.
+
+## Проверка в Chrome
+
+1. Открой `chrome://extensions`.
+2. Включи Developer mode.
+3. Нажми "Load unpacked".
+4. Выбери папку `apps/extension/.output/chrome-mv3`.
+5. Открой `https://ya.ru/`.
+6. Нажми на иконку Crust в toolbar.
+
+Ожидаемый результат:
+
+| Что проверить | Как должно быть |
+|---------------|-----------------|
+| Расширение установилось | В toolbar есть иконка Crust. |
+| Popup открывается | Открывается окно Crust без красных ошибок. |
+| Эксперименты видны | В списке есть группы `andrew`, `designer1`, `designer2`, `designer3`. |
+| Счётчики не мешают | Нули не показываются, показываются только ненулевые счётчики. |
+
+## Проверка в Yandex Browser
+
+1. Открой `browser://extensions`.
+2. Если не открылось, попробуй `chrome://extensions`.
+3. Включи Developer mode.
+4. Нажми "Load unpacked".
+5. Выбери папку `apps/extension/.output/chrome-mv3`.
+6. Открой `https://ya.ru/`.
+7. Нажми на иконку Crust в toolbar.
+
+Ожидаемый результат:
+
+| Что проверить | Как должно быть |
+|---------------|-----------------|
+| Расширение установилось | В toolbar есть иконка Crust. |
+| Popup открывается | Открывается окно Crust. |
+| Тема выглядит нормально | Светлая/тёмная тема не ломает контраст. |
+| Эксперименты видны | Есть группы `andrew`, `designer1`, `designer2`, `designer3`. |
+
+Если Yandex Browser показывает ошибку расширения, нужно записать точный текст ошибки и на каком шаге она появилась.
+
+## Acceptance Flow простыми словами
+
+Это не один большой сценарий, а набор маленьких проверок. Их можно делать по очереди.
+
+### 1. Fork: скопировать чужой эксперимент себе
+
+Зачем это нужно:
+
+Дизайнер может взять эксперимент коллеги и сделать свою копию, чтобы менять её независимо.
+
+Как проверить:
+
+1. В popup найди эксперимент `Acceptance banner` от `designer1`.
+2. Нажми кнопку копирования fork-команды.
+3. В буфере появится команда примерно такая:
+
+```sh
+corepack pnpm fork-experiment 'designer1/acceptance-banner' '<your-author>'
+```
+
+4. Замени `<your-author>` на своё имя автора, например:
+
+```sh
+corepack pnpm fork-experiment 'designer1/acceptance-banner' 'andrew'
+```
+
+5. Выполни команду в корне проекта.
+
+Ожидаемый результат:
+
+- появится папка `experiments/andrew/acceptance-banner`, если такой папки ещё не было;
+- внутри будет копия эксперимента;
+- в `manifest.json` будет `"author": "andrew"`;
+- `id` сначала будет пустой, а при следующей сборке или dev-refresh система выдаст новый id.
+
+Если папка уже есть, команда должна отказать, чтобы не затереть существующую работу.
+
+### 2. Composition: несколько экспериментов на одной странице
+
+Зачем это нужно:
+
+Нужно убедиться, что два эксперимента могут работать одновременно на `ya.ru` и не ломают друг друга.
+
+Как проверить:
+
+1. Открой `https://ya.ru/`.
+2. В popup включи `designer1 / Acceptance banner`.
+3. Включи `designer2 / Page summary`.
+4. Посмотри на страницу.
+
+Ожидаемый результат:
+
+- оба визуальных блока видны;
+- они не дублируются бесконечно;
+- нет красной ошибки в popup;
+- выключение каждого эксперимента убирает только его блок.
+
+Потом попробуй перетащить карточки экспериментов в popup, чтобы поменять порядок.
+
+Ожидаемый результат:
+
+- порядок сохраняется;
+- после следующего apply/reapply эксперименты продолжают работать;
+- ошибок нет.
+
+### 3. LLM без API key
+
+Зачем это нужно:
+
+Проверяем, что если ключ ChatGPT/Anthropic не настроен, пользователь видит понятное предупреждение, а не поломанный popup.
+
+Как проверить:
+
+1. Удали или временно не добавляй API key в Options.
+2. Включи `designer3 / AI label`.
+
+Ожидаемый результат:
+
+- у этого эксперимента появляется маленькое inline warning про missing API key;
+- остальные эксперименты не получают это предупреждение;
+- popup не показывает большую глобальную ошибку.
+
+### 4. LLM с API key
+
+Зачем это нужно:
+
+Проверяем, что LLM helper реально вызывает провайдера и результат появляется на странице.
+
+Как проверить:
+
+1. Открой Options через иконку шестерёнки в popup.
+2. Добавь OpenAI или Anthropic API key.
+3. Вернись на `https://ya.ru/`.
+4. Включи `designer3 / AI label`.
+
+Ожидаемый результат:
+
+- на странице появляется блок `AI label`;
+- текст внутри обновляется результатом LLM;
+- в header popup появляется ненулевой счётчик LLM calls/tokens.
+
+### 5. fetchPage
+
+Зачем это нужно:
+
+Проверяем helper, который может загрузить HTML текущей страницы через service worker.
+
+Как проверить:
+
+1. Открой `https://ya.ru/`.
+2. Включи `designer2 / Page summary`.
+
+Ожидаемый результат:
+
+- на странице появляется блок `Page summary`;
+- внутри либо заголовок/текст страницы, либо понятная причина вроде `fetchPage: likely_spa_shell`;
+- красной ошибки в popup быть не должно.
+
+### 6. Tweaks
+
+Зачем это нужно:
+
+Проверяем, что настройки эксперимента меняют результат на странице.
+
+Как проверить:
+
+1. Включи `designer1 / Acceptance banner`.
+2. Раскрой tweaks у этого эксперимента.
+3. Поменяй:
+   - headline;
+   - density;
+   - accent color;
+   - show timestamp.
+
+Ожидаемый результат:
+
+- блок на странице меняется после изменения настроек;
+- настройки не раскрываются сами по себе при простом включении эксперимента;
+- если свернуть tweaks, они не занимают много места.
+
+### 7. Onboarding меньше 15 минут
+
+Зачем это нужно:
+
+Проверяем, что новый человек сможет начать работу без нашей помощи.
+
+Как проверить:
+
+1. Представь, что человек впервые открыл проект.
+2. Следуй `docs/ONBOARDING.md`.
+3. Засеки время от clone/install до первого включенного эксперимента на `ya.ru`.
+
+Ожидаемый результат:
+
+- первый эксперимент запущен меньше чем за 15 минут;
+- если инструкция непонятна на каком-то шаге, это нужно записать и поправить docs.
+
+## Что записать после проверки
+
+После ручной проверки запиши:
+
+- браузер: Chrome или Yandex Browser;
+- версия браузера;
+- macOS version;
+- дата проверки;
+- какие пункты прошли;
+- какие пункты не прошли;
+- точный текст ошибки, если была ошибка.
+
+## Минимальный результат, чтобы считать smoke успешным
+
+Smoke можно считать успешным, если:
+
+- Chrome ставит расширение через "Load unpacked";
+- Yandex Browser ставит расширение через "Load unpacked";
+- popup открывается;
+- эксперименты видны;
+- хотя бы два эксперимента одновременно работают на `ya.ru`;
+- LLM без ключа показывает понятное предупреждение;
+- `designer2 / Page summary` не падает с красной ошибкой;
+- tweaks у `designer1 / Acceptance banner` меняют блок на странице.
