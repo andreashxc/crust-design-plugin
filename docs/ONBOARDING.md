@@ -44,35 +44,56 @@ When dev mode is running, load the extension:
 
 Keep `corepack pnpm dev` running while you work. Crust watches `experiments/**`, refreshes the dev registry, and reapplies enabled experiments without a full extension reload.
 
-## Create An Experiment
+## Create Or Change An Experiment
 
-Ask your coding agent:
+Describe the experiment in normal language. You do not need to invent an experiment ID, folder name, or display name. The coding agent should choose those, create the files, and explain what it did. If the agent cannot safely infer something important, it should ask a product question before coding.
+
+Paste a prompt like this:
 
 ```text
-Create a new Crust experiment.
+Create or update a Crust experiment.
 
-Author: <your-name>
-Folder: <experiment-folder>
-Display name: <Human readable name>
-Target page: <URL>
-Goal: <what should change on the page>
+What I want:
+<describe the experiment behavior and visual result>
 
-Use the project helpers when possible. Keep the experiment small, reversible, and scoped to the target page.
+Where it should work:
+<list the page URLs or URL patterns>
+
+How it should work:
+<describe when it appears, what it changes, what should happen on click/hover/scroll, and any states or variants>
+
+Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
+Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
+If this should be a new experiment, create it there.
+If there is already a matching experiment, update that one instead of creating a duplicate.
+
+Keep it small and reversible. Add tweak controls only when they would help me test variants in the popup.
+After editing, run the relevant checks and tell me exactly what to reload or test in the browser.
 ```
 
-Or run the helper directly:
+Example prompt:
 
-```sh
-corepack pnpm create-experiment <author> <folder> [Display name]
+```text
+Create or update a Crust experiment.
+
+What I want:
+On ya.ru, show a compact floating promo card near the search box. It should look native to the page, not like a developer demo.
+
+Where it should work:
+https://ya.ru/
+
+How it should work:
+The card appears after the page loads. It has a short headline, a small close button, and a CTA button. Closing it hides it until the experiment is toggled off and on again. Add tweaks for headline text, accent color, and card position.
+
+Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
+Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
+If this should be a new experiment, create it there.
+If there is already a matching experiment, update that one instead of creating a duplicate.
+
+Keep it small and reversible. After editing, run checks and tell me what to test.
 ```
 
-Example:
-
-```sh
-corepack pnpm create-experiment andrew search-banner "Search Banner"
-```
-
-This creates:
+The agent will usually create or edit:
 
 ```text
 experiments/<author>/<folder>/
@@ -83,23 +104,6 @@ experiments/<author>/<folder>/
 ```
 
 Fresh public forks include only examples in `experiments/examples/**`. Your own folders like `experiments/andrew/**` are local by default and ignored by git, so private experiments are not accidentally published.
-
-## Edit An Experiment
-
-Ask your coding agent:
-
-```text
-Edit the Crust experiment in experiments/<author>/<folder>.
-
-Goal:
-<describe the visual or behavior change>
-
-Requirements:
-- Keep the manifest scope narrow.
-- Do not edit unrelated experiments.
-- Preserve existing tweak controls unless I ask to change them.
-- After editing, run the relevant tests/build checks and tell me what to reload or test in the browser.
-```
 
 Then test in the browser:
 
@@ -224,35 +228,56 @@ corepack pnpm dev
 
 Пока работаешь, оставляй `corepack pnpm dev` запущенным. Crust следит за `experiments/**`, обновляет список экспериментов и заново применяет включенные эксперименты без полной перезагрузки расширения.
 
-## Создать Эксперимент
+## Создать Или Изменить Эксперимент
 
-Попроси AI-агента:
+Опиши эксперимент обычным языком. Не нужно придумывать ID, имя папки или красивое название. AI-агент должен сам выбрать название, создать файлы и объяснить, что сделал. Если ему не хватает важной продуктовой информации, он должен сначала задать вопрос.
+
+Вставь примерно такой запрос:
 
 ```text
-Создай новый Crust experiment.
+Создай или измени Crust experiment.
 
-Author: <твое-имя>
-Folder: <папка-эксперимента>
-Display name: <человеческое название>
-Target page: <URL>
-Goal: <что должно поменяться на странице>
+Что я хочу:
+<опиши поведение эксперимента и визуальный результат>
 
-Используй project helpers, если они подходят. Сделай эксперимент маленьким, обратимым и ограниченным нужной страницей.
+Где это должно работать:
+<перечисли URL страниц или паттерны URL>
+
+Как это должно работать:
+<опиши когда появляется, что меняет, что происходит при клике/hover/scroll, какие есть состояния или варианты>
+
+Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
+Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
+Если это новый эксперимент, создай его там.
+Если похожий эксперимент уже есть, измени его, а не создавай дубль.
+
+Сделай эксперимент маленьким и обратимым. Добавляй tweak controls только если они помогут тестировать варианты в popup.
+После изменений запусти нужные проверки и скажи, что именно мне перезагрузить или проверить в браузере.
 ```
 
-Или запусти команду:
+Пример запроса:
 
-```sh
-corepack pnpm create-experiment <author> <folder> [Display name]
+```text
+Создай или измени Crust experiment.
+
+Что я хочу:
+На ya.ru покажи компактную floating promo-карточку рядом с поиском. Она должна выглядеть нативно для страницы, не как developer demo.
+
+Где это должно работать:
+https://ya.ru/
+
+Как это должно работать:
+Карточка появляется после загрузки страницы. В ней короткий заголовок, маленькая кнопка закрытия и CTA-кнопка. Закрытие скрывает карточку до выключения и повторного включения эксперимента. Добавь твики для текста заголовка, accent color и позиции карточки.
+
+Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
+Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
+Если это новый эксперимент, создай его там.
+Если похожий эксперимент уже есть, измени его, а не создавай дубль.
+
+Сделай эксперимент маленьким и обратимым. После изменений запусти проверки и скажи, что мне тестировать.
 ```
 
-Пример:
-
-```sh
-corepack pnpm create-experiment andrew search-banner "Search Banner"
-```
-
-Будет создана папка:
+Обычно агент создаст или изменит:
 
 ```text
 experiments/<author>/<folder>/
@@ -263,23 +288,6 @@ experiments/<author>/<folder>/
 ```
 
 В публичном GitHub лежат только примеры в `experiments/examples/**`. Твои личные папки вроде `experiments/andrew/**` по умолчанию локальные и игнорируются git, чтобы случайно не запушить приватные эксперименты.
-
-## Изменить Эксперимент
-
-Попроси AI-агента:
-
-```text
-Измени Crust experiment в experiments/<author>/<folder>.
-
-Цель:
-<опиши визуальное или поведенческое изменение>
-
-Требования:
-- Не расширяй scope в manifest без необходимости.
-- Не трогай чужие и несвязанные эксперименты.
-- Не удаляй существующие tweak controls, если я прямо не попросил.
-- После изменений запусти нужные проверки и скажи, что мне проверить в браузере.
-```
 
 Потом проверь в браузере:
 
