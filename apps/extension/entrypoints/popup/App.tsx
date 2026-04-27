@@ -1,5 +1,5 @@
 import { RefreshCw, Search, Settings, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,7 +28,9 @@ export function App() {
   const setStoreAuthorGroupOrder = useStore((state) => state.setAuthorGroupOrder);
   const setUpdateState = useStore((state) => state.setUpdateState);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const orderedRegistry = sortRegistryByOrder(registry, experimentOrder);
   const scopedRegistry = activeTabUrl
     ? orderedRegistry.filter((entry) => matchesScope(activeTabUrl, entry.scope))
@@ -40,6 +42,7 @@ export function App() {
     authorGroupOrder,
   );
   const visibleAuthors = groups.map((group) => group.author);
+  const canSearch = bootstrapped && registry.length > 0;
   const llmLabel =
     llmSession && llmSession.calls > 0
       ? `LLM ${llmSession.calls} ${llmSession.calls === 1 ? 'call' : 'calls'}${
@@ -54,6 +57,17 @@ export function App() {
       if (result?.state) setUpdateState(result.state);
     });
   }, [bootstrapped, setUpdateState]);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  function toggleSearch() {
+    setSearchOpen((open) => {
+      if (open) setQuery('');
+      return !open;
+    });
+  }
 
   async function persistVisibleAuthorOrder(nextVisibleAuthors: string[]) {
     const visibleSet = new Set(nextVisibleAuthors);
@@ -96,6 +110,19 @@ export function App() {
               aria-hidden="true"
             />
           </Button>
+          {canSearch ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label={searchOpen ? 'Hide search' : 'Show search'}
+              aria-pressed={searchOpen}
+              onClick={toggleSearch}
+            >
+              <Search className="size-3.5" aria-hidden="true" />
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -122,13 +149,14 @@ export function App() {
           </Button>
         </div>
       ) : null}
-      {bootstrapped && registry.length > 0 ? (
+      {canSearch && searchOpen ? (
         <div className="relative mt-2">
           <Search
             className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2"
             aria-hidden="true"
           />
           <Input
+            ref={searchInputRef}
             aria-label="Search experiments"
             placeholder="Search experiments"
             value={query}
@@ -142,7 +170,10 @@ export function App() {
               size="icon"
               aria-label="Clear search"
               className="absolute top-1/2 right-1 h-6 w-6 -translate-y-1/2"
-              onClick={() => setQuery('')}
+              onClick={() => {
+                setQuery('');
+                setSearchOpen(false);
+              }}
             >
               <X className="size-3.5" aria-hidden="true" />
             </Button>

@@ -197,6 +197,16 @@ describe('popup App', () => {
     expect(screen.queryByText('0 / 0')).toBeNull();
   });
 
+  it('hides search by default and opens it from the header button', () => {
+    render(<App />);
+
+    expect(screen.queryByRole('textbox', { name: 'Search experiments' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show search' }));
+
+    expect(screen.getByRole('textbox', { name: 'Search experiments' })).toBeTruthy();
+  });
+
   it('filters experiments by search text after scope filtering', () => {
     resetStore([
       makeEntry({ name: 'Helper demo', description: 'Phase helpers' }),
@@ -209,6 +219,7 @@ describe('popup App', () => {
     ]);
 
     render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show search' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Search experiments' }), {
       target: { value: 'helper' },
     });
@@ -300,6 +311,7 @@ describe('popup App', () => {
 
     resetStore(makeEntry({ name: 'Smoke pink' }));
     rerender(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show search' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Search experiments' }), {
       target: { value: 'nothing' },
     });
