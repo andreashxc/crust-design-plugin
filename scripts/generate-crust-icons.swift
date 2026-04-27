@@ -66,7 +66,7 @@ func writeIcon(size: Int, suffix: String, color: CGColor) throws {
   context.translateBy(x: -12, y: -12)
   context.addPath(crustLogoPath())
   context.setStrokeColor(color)
-  context.setLineWidth(2.15)
+  context.setLineWidth(1.55)
   context.setLineJoin(.round)
   context.setLineCap(.round)
   context.strokePath()
