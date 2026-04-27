@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  Copy,
   FolderOpen,
   GripVertical,
   Loader2,
@@ -82,6 +83,7 @@ export function ExperimentRow({
   const [stackOpen, setStackOpen] = useState(false);
   const [tweaksOpen, setTweaksOpen] = useState(enabled);
   const [sourceStatus, setSourceStatus] = useState<string | null>(null);
+  const [forkStatus, setForkStatus] = useState<string | null>(null);
   const [selectedPresetName, setSelectedPresetName] = useState<string | null>(null);
   const [presetSaveName, setPresetSaveName] = useState('custom-preset');
   const [presetStatus, setPresetStatus] = useState<string | null>(null);
@@ -217,6 +219,21 @@ export function ExperimentRow({
     }
   }
 
+  async function handleCopyForkCommand() {
+    const command = [
+      'corepack pnpm fork-experiment',
+      shellQuote(`${entry.author}/${entry.folder}`),
+      shellQuote('<your-author>'),
+    ].join(' ');
+    setForkStatus(null);
+    try {
+      await navigator.clipboard?.writeText(command);
+      setForkStatus('Fork command copied');
+    } catch {
+      setForkStatus(command);
+    }
+  }
+
   async function persistVisibleOrder(nextVisibleIds: string[]) {
     const visibleSet = new Set(nextVisibleIds);
     const nextOrder = [...nextVisibleIds, ...experimentOrder.filter((id) => !visibleSet.has(id))];
@@ -313,6 +330,16 @@ export function ExperimentRow({
                 <FolderOpen className="size-3.5" aria-hidden="true" />
               </Button>
             ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Copy fork command for ${entry.name}`}
+              className="text-muted-foreground h-6 w-5"
+              onClick={() => void handleCopyForkCommand()}
+            >
+              <Copy className="size-3.5" aria-hidden="true" />
+            </Button>
             {inFlight ? <Loader2 className="size-3 animate-spin" aria-label="Updating" /> : null}
             <Switch
               aria-label={`Toggle ${entry.name}`}
@@ -357,6 +384,8 @@ export function ExperimentRow({
       ) : null}
 
       {sourceStatus ? <div className="text-muted-foreground text-xs">{sourceStatus}</div> : null}
+
+      {forkStatus ? <div className="text-muted-foreground text-xs">{forkStatus}</div> : null}
 
       {missingLlmKey ? (
         <div className="text-muted-foreground border-border/80 bg-muted/40 mt-1 flex items-center justify-between gap-2 rounded-sm border px-2 py-1 text-xs">

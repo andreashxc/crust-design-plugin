@@ -97,6 +97,23 @@ corepack pnpm save-preset <author>/<folder> <preset-name> '<json-values>'
 
 The popup can load presets when they are present in the registry. The popup copy command is intentional: extension pages do not write directly into the repo.
 
+## Fork a Teammate's Experiment
+
+The popup can copy a local fork command for any visible experiment. Running it copies the experiment into your author folder:
+
+```sh
+corepack pnpm fork-experiment <source-id-or-author/folder> <target-author> [target-folder]
+```
+
+Examples:
+
+```sh
+corepack pnpm fork-experiment andrew/search-banner designer2
+corepack pnpm fork-experiment 01KQEXAMPLEEXAMPLEEXAMPLE designer2 search-banner-v2
+```
+
+The command refuses to overwrite an existing target folder. The forked manifest keeps the source settings but changes `author` and clears `id`, so the next `corepack pnpm dev` refresh or rebuild stamps a new stable ULID.
+
 ## Descriptions
 
 `description.md` explains the experiment to teammates. Generated descriptions use:

@@ -489,6 +489,25 @@ describe('popup App', () => {
     expect(screen.getByText('Save command copied')).toBeTruthy();
   });
 
+  it('copies a truthful CLI fork command', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    resetStore(makeEntry({ author: 'andrew', folder: 'smoke', name: 'Smoke pink' }));
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy fork command for Smoke pink' }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        "corepack pnpm fork-experiment 'andrew/smoke' '<your-author>'",
+      );
+    });
+    expect(screen.getByText('Fork command copied')).toBeTruthy();
+  });
+
   it('surfaces stale description status without blocking the row', () => {
     resetStore(makeEntry({ descriptionStatus: 'stale' }));
 
