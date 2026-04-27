@@ -1,7 +1,7 @@
 {
-  "id": "01KQ2X3A4B5C6D7E8F9G0H1J2K",
+  "id": "01KQEX1N4P0MB85K9G2M7H9AFC",
   "name": "Tweak demo",
-  "author": "andrew",
+  "author": "examples",
   "description": "Reference experiment demonstrating Phase 3 tweak controls on ya.ru",
   "scope": {
     "match": [

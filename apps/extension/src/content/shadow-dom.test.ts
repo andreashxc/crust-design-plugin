@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const shadowPanelSource = readFileSync(
   fileURLToPath(
-    new URL('../../../../experiments/andrew/shadow-panel/experiment.ts', import.meta.url),
+    new URL('../../../../experiments/examples/shadow-panel/experiment.ts', import.meta.url),
   ),
   'utf8',
 );

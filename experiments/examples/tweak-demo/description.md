@@ -1,6 +1,6 @@
 ---
 generated: true
-generatedAt: 2026-04-26T15:04:33.713Z
+generatedAt: 2026-04-27T11:53:58.565Z
 ---
 
 # Tweak demo
@@ -9,7 +9,7 @@ Reference experiment demonstrating Phase 3 tweak controls on ya.ru
 
 ## Metadata
 
-- Author: `andrew`
+- Author: `examples`
 - World: `isolated`
 
 ## Scope

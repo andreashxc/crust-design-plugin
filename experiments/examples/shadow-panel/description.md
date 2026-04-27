@@ -1,6 +1,6 @@
 ---
 generated: true
-generatedAt: 2026-04-26T11:20:09.601Z
+generatedAt: 2026-04-27T11:53:58.435Z
 ---
 
 # Shadow panel
@@ -9,7 +9,7 @@ Reference experiment demonstrating an isolated Shadow DOM panel on ya.ru
 
 ## Metadata
 
-- Author: `andrew`
+- Author: `examples`
 - World: `isolated`
 
 ## Scope

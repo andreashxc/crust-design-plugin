@@ -1,7 +1,7 @@
 {
-  "id": "01KQ2X4M5N6P7Q8R9S0T1V2W3X",
+  "id": "01KQEX8D4208N0WM34E33PXCJ0",
   "name": "Shadow panel",
-  "author": "andrew",
+  "author": "examples",
   "description": "Reference experiment demonstrating an isolated Shadow DOM panel on ya.ru",
   "scope": {
     "match": [

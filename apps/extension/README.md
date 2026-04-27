@@ -12,7 +12,7 @@ Examples:
 
 ```sh
 corepack pnpm create-experiment andrew hero-test "Hero Test"
-corepack pnpm create-experiment designer1 search-card
+corepack pnpm create-experiment alex search-card
 ```
 
 Experiments live at:
@@ -24,6 +24,10 @@ experiments/<author>/<folder>/
   description.md
   presets/
 ```
+
+The public repo tracks only curated examples under `experiments/examples/**`.
+Your own `experiments/<author>/**` folders are ignored by git unless you
+explicitly force-add them.
 
 While `corepack pnpm dev` is running, Crust watches `experiments/**` and refreshes
 the generated `registry.json` plus experiment chunks when files are added,

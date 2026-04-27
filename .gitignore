@@ -8,3 +8,11 @@ coverage/
 .DS_Store
 .env
 .env.local
+
+# Keep public forks clean: only curated examples are tracked by default.
+# Personal/client experiments under experiments/<author>/ stay local unless
+# intentionally force-added.
+experiments/*
+!experiments/.gitkeep
+!experiments/examples/
+!experiments/examples/**

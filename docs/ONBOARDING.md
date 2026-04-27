@@ -35,6 +35,8 @@ corepack pnpm dev
 
 This path is for designers actively editing experiments. Keep `corepack pnpm dev` running so changes under `experiments/**` refresh the dev registry.
 
+Fresh forks include only public examples in `experiments/examples/**`. Your own `experiments/<author>/**` folders are local by default and are ignored by git.
+
 ## Create Your First Experiment
 
 Create an experiment folder under your author name:
@@ -80,10 +82,10 @@ corepack pnpm generate-descriptions
 
 ## Share With Teammates
 
-Commit and push your experiment:
+Personal experiment folders are ignored by default so public forks do not accidentally publish private work. To share an experiment, use a private repo/branch, or explicitly force-add it when you really want it in git:
 
 ```sh
-git add experiments/<author>/<folder>
+git add -f experiments/<author>/<folder>
 git commit -m "Add <experiment name>"
 git push
 ```

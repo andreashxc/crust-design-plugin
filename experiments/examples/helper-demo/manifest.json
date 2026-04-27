@@ -1,7 +1,7 @@
 {
-  "id": "01HXHEPERDEMA0000000000000",
+  "id": "01KQEX50R3G9C9E91RS62HYE6E",
   "name": "Helper demo",
-  "author": "andrew",
+  "author": "examples",
   "description": "Reference experiment using Phase 4 helpers on ya.ru",
   "scope": {
     "match": ["*://ya.ru/*", "*://*.ya.ru/*"]

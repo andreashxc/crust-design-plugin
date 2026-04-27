@@ -2,6 +2,8 @@
 
 Experiments live in `experiments/<author>/<folder>/` and are bundled into the extension. MV3 does not allow Crust to execute JavaScript fetched from git at runtime, so pulled experiments appear after `corepack pnpm dev` refreshes the dev registry or after a rebuild.
 
+The public GitHub repo tracks only curated examples under `experiments/examples/**`. Personal, client, or NDA experiments under `experiments/<author>/**` are ignored by default so forks stay clean.
+
 ## Folder Shape
 
 ```text
@@ -13,6 +15,8 @@ experiments/<author>/<folder>/
 ```
 
 The `author` in `manifest.json` must match the folder name under `experiments/`.
+
+For local work, use your own author folder, for example `experiments/andrew/search-banner/`. Do not put private work under `experiments/examples/`; that folder is intentionally public.
 
 ## Manifest
 
@@ -114,9 +118,9 @@ corepack pnpm fork-experiment 01KQEXAMPLEEXAMPLEEXAMPLE designer2 search-banner-
 
 The command refuses to overwrite an existing target folder. The forked manifest keeps the source settings but changes `author` and clears `id`, so the next `corepack pnpm dev` refresh or rebuild stamps a new stable ULID.
 
-## Acceptance Fixtures
+## Public Examples
 
-The repo includes small Phase 6 fixtures under `experiments/designer1`, `experiments/designer2`, and `experiments/designer3`. They are intentionally simple and scoped to ya.ru so a new designer can verify composition, tweak controls, `fetchPage()`, and `llm()` without creating their own experiment first.
+The repo includes small public examples under `experiments/examples`. They are intentionally simple and scoped to ya.ru so a new designer can verify composition, tweak controls, Shadow DOM rendering, `fetchPage()`, and `llm()` without creating their own experiment first.
 
 ## Descriptions
 
