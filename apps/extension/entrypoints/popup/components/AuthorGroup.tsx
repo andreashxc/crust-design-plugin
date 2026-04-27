@@ -24,12 +24,7 @@ export function AuthorGroup({ group, visibleIds }: { group: Group; visibleIds: s
       </CollapsibleTrigger>
       <CollapsibleContent id={groupId} className="mt-2 flex flex-col gap-1.5">
         {group.entries.map((entry) => (
-          <ExperimentRow
-            key={entry.id}
-            entry={entry}
-            visibleIds={visibleIds}
-            index={visibleIds.indexOf(entry.id)}
-          />
+          <ExperimentRow key={entry.id} entry={entry} visibleIds={visibleIds} />
         ))}
       </CollapsibleContent>
     </Collapsible>

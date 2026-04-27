@@ -6,14 +6,11 @@ import {
 } from '@platform/experiment-sdk';
 import {
   AlertCircle,
-  ArrowDown,
-  ArrowUp,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   Copy,
   FolderOpen,
-  GripVertical,
   Loader2,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -54,11 +51,9 @@ function descriptionWarning(status: RegistryEntry['descriptionStatus']): string 
 export function ExperimentRow({
   entry,
   visibleIds,
-  index,
 }: {
   entry: RegistryEntry;
   visibleIds: string[];
-  index: number;
 }) {
   const enabled = useStore((state) => state.enabled[entry.id] ?? false);
   const autodisabled = useStore((state) => state.autodisabled[entry.id]);
@@ -242,11 +237,6 @@ export function ExperimentRow({
     await notifyTweakChange().catch(() => {});
   }
 
-  async function moveTo(overId: string | undefined) {
-    if (!overId) return;
-    await persistVisibleOrder(reorderIds(visibleIds, entry.id, overId));
-  }
-
   async function handleOpenSource() {
     if (!entry.sourceDir) return;
     setSourceStatus(null);
@@ -287,37 +277,6 @@ export function ExperimentRow({
             </p>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-1.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Drag ${entry.name}`}
-              className="text-muted-foreground h-6 w-5 cursor-grab"
-            >
-              <GripVertical className="size-3.5" aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Move ${entry.name} up`}
-              className="text-muted-foreground h-6 w-5"
-              disabled={index === 0}
-              onClick={() => void moveTo(visibleIds[index - 1])}
-            >
-              <ArrowUp className="size-3.5" aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`Move ${entry.name} down`}
-              className="text-muted-foreground h-6 w-5"
-              disabled={index >= visibleIds.length - 1}
-              onClick={() => void moveTo(visibleIds[index + 1])}
-            >
-              <ArrowDown className="size-3.5" aria-hidden="true" />
-            </Button>
             {entry.sourceDir ? (
               <Button
                 type="button"

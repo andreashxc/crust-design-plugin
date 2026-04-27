@@ -298,26 +298,6 @@ describe('popup App', () => {
     });
   });
 
-  it('persists keyboard reorder and broadcasts a reapply signal', async () => {
-    chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
-    resetStore([
-      makeEntry({ id: 'A', name: 'Tweak demo' }),
-      makeEntry({ id: 'B', name: 'Smoke pink' }),
-    ]);
-    useStore.setState({ experimentOrder: ['A', 'B'] });
-
-    render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Move Tweak demo down' }));
-
-    await waitFor(() => {
-      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({ experiment_order: ['B', 'A'] });
-      expect(chromeMock().runtime.sendMessage).toHaveBeenCalledWith({
-        name: 'TWEAKS_CHANGED',
-        data: { id: 'A' },
-      });
-    });
-  });
-
   it('persists drag reorder', async () => {
     chromeMock().runtime.sendMessage.mockResolvedValue({ ok: true });
     resetStore([
