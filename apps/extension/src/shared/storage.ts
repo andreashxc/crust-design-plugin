@@ -28,6 +28,7 @@ const KEY_LLM_SETTINGS = 'llm:settings';
 const KEY_LLM_LAST_ERROR = 'llm:last_error';
 const KEY_LLM_SESSION = 'llm:session';
 const KEY_EXPERIMENT_ORDER = 'experiment_order';
+const KEY_AUTHOR_GROUP_OPEN = 'popup:author_group_open';
 const KEY_UPDATE_STATE = 'update:state';
 const TWEAKS_PREFIX = 'tweaks:';
 const TWEAK_ERRORS_PREFIX = 'tweak_errors:';
@@ -273,6 +274,30 @@ export async function appendExperimentOrder(id: string): Promise<void> {
   const current = await getExperimentOrder();
   if (current.includes(id)) return;
   await setExperimentOrder([...current, id]);
+}
+
+// ===== Popup UI state — author group expansion =====
+
+export async function getAuthorGroupOpenState(): Promise<Record<string, boolean>> {
+  const result = await chrome.storage.local.get(KEY_AUTHOR_GROUP_OPEN);
+  const value = result[KEY_AUTHOR_GROUP_OPEN];
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, boolean] => {
+      const [author, open] = entry;
+      return author.length > 0 && typeof open === 'boolean';
+    }),
+  );
+}
+
+export async function setAuthorGroupOpenState(state: Record<string, boolean>): Promise<void> {
+  const sanitized = Object.fromEntries(
+    Object.entries(state).filter((entry): entry is [string, boolean] => {
+      const [author, open] = entry;
+      return author.length > 0 && typeof open === 'boolean';
+    }),
+  );
+  await chrome.storage.local.set({ [KEY_AUTHOR_GROUP_OPEN]: sanitized });
 }
 
 // ===== Phase 5 — sideload update check cache =====

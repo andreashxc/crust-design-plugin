@@ -23,6 +23,7 @@ type StorageSlice = {
   publicLlmConfig: PublicLlmConfig | null;
   lastLlmError?: LastLlmError;
   experimentOrder: string[];
+  authorGroupOpen: Record<string, boolean>;
   updateState: UpdateState | null;
   setEnabled: (enabled: Record<string, boolean>) => void;
   setAutoDisabled: (autodisabled: Record<string, AutoDisableRecord>) => void;
@@ -33,6 +34,7 @@ type StorageSlice = {
   setPublicLlmConfig: (publicLlmConfig: PublicLlmConfig | null) => void;
   setLastLlmError: (lastLlmError?: LastLlmError) => void;
   setExperimentOrder: (experimentOrder: string[]) => void;
+  setAuthorGroupOpen: (authorGroupOpen: Record<string, boolean>) => void;
   setUpdateState: (updateState: UpdateState | null) => void;
 };
 
@@ -64,6 +66,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   publicLlmConfig: null,
   lastLlmError: undefined,
   experimentOrder: [],
+  authorGroupOpen: {},
   updateState: null,
   setEnabled: (enabled) => set({ enabled }),
   setAutoDisabled: (autodisabled) => set({ autodisabled }),
@@ -74,6 +77,7 @@ const storageSlice: StateCreator<RootState, [], [], StorageSlice> = (set) => ({
   setPublicLlmConfig: (publicLlmConfig) => set({ publicLlmConfig }),
   setLastLlmError: (lastLlmError) => set({ lastLlmError }),
   setExperimentOrder: (experimentOrder) => set({ experimentOrder }),
+  setAuthorGroupOpen: (authorGroupOpen) => set({ authorGroupOpen }),
   setUpdateState: (updateState) => set({ updateState }),
 });
 

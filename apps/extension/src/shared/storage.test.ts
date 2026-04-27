@@ -18,6 +18,7 @@ import {
   clearTweakValues,
   defaultLlmSettings,
   getAppliedInTab,
+  getAuthorGroupOpenState,
   getAutoDisabled,
   getEnabledExperiments,
   getErrorWindow,
@@ -37,6 +38,7 @@ import {
   resetLlmSessionStats,
   runStartupMigration,
   setAppliedInTab,
+  setAuthorGroupOpenState,
   setAutoDisable,
   setEnabledExperiment,
   setErrorWindow,
@@ -94,6 +96,24 @@ describe('storage adapter (D-12 stateless)', () => {
   it('returns {} when storage value is malformed (string instead of object)', async () => {
     await chrome.storage.local.set({ enabled: 'not-an-object' });
     await expect(getEnabledExperiments()).resolves.toEqual({});
+  });
+});
+
+describe('storage adapter — popup author group state', () => {
+  it('round-trips author group open state and drops malformed values', async () => {
+    await chrome.storage.local.set({
+      'popup:author_group_open': {
+        andrew: true,
+        beth: false,
+        invalid: 'yes',
+        empty: null,
+      },
+    });
+
+    await expect(getAuthorGroupOpenState()).resolves.toEqual({ andrew: true, beth: false });
+
+    await setAuthorGroupOpenState({ andrew: false, beth: true });
+    await expect(getAuthorGroupOpenState()).resolves.toEqual({ andrew: false, beth: true });
   });
 });
 

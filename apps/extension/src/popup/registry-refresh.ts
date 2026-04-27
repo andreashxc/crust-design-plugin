@@ -2,6 +2,7 @@ import { mergeTweakValues, type Registry } from '@platform/experiment-sdk';
 import { useStore } from '@/popup/store';
 import {
   getAppliedInTab,
+  getAuthorGroupOpenState,
   getAutoDisabled,
   getEnabledExperiments,
   getExperimentOrder,
@@ -26,6 +27,7 @@ export async function hydratePopupStore(): Promise<void> {
     lastLlmError,
     llmSession,
     experimentOrder,
+    authorGroupOpen,
     updateState,
     tabs,
     tweakValuesEntries,
@@ -38,6 +40,7 @@ export async function hydratePopupStore(): Promise<void> {
     getLastLlmError(),
     getLlmSessionStats(),
     getExperimentOrder(),
+    getAuthorGroupOpenState(),
     getUpdateState(),
     chrome.tabs.query({ active: true, currentWindow: true }),
     Promise.all(
@@ -61,6 +64,7 @@ export async function hydratePopupStore(): Promise<void> {
     lastLlmError,
     llmSession,
     experimentOrder,
+    authorGroupOpen,
     updateState,
     tweakValues: Object.fromEntries(tweakValuesEntries),
     tweakErrors: Object.fromEntries(tweakErrorEntries),

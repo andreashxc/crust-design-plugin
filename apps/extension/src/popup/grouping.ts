@@ -21,11 +21,17 @@ export function groupByAuthor(
     byAuthor.set(entry.author, entries);
   }
 
-  return Array.from(byAuthor.entries()).map(([author, entries]) => ({
+  const groups = Array.from(byAuthor.entries()).map(([author, entries]) => ({
     author,
     entries,
-    defaultOpen: Boolean(ctx.activeTabUrl && entries.length > 0),
+    defaultOpen: false,
   }));
+
+  if (groups.length === 1 && groups[0]) {
+    groups[0].defaultOpen = true;
+  }
+
+  return groups;
 }
 
 export function filterRegistryBySearch(registry: Registry, query: string): Registry {

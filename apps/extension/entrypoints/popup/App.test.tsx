@@ -39,6 +39,7 @@ function resetStore(entryOrRegistry: RegistryEntry | RegistryEntry[] = makeEntry
     publicLlmConfig: null,
     lastLlmError: undefined,
     experimentOrder: [],
+    authorGroupOpen: {},
     updateState: null,
     activeTabId: 7,
     activeTabUrl: 'https://ya.ru/',
@@ -56,7 +57,7 @@ describe('popup App', () => {
     cleanup();
   });
 
-  it('renders author group and disabled row', () => {
+  it('renders one author group open by default', () => {
     render(<App />);
     expect(screen.getByText('Crust')).toBeTruthy();
     expect(screen.getByText('andrew')).toBeTruthy();
@@ -64,6 +65,42 @@ describe('popup App', () => {
     expect(
       screen.getByRole('switch', { name: 'Toggle Smoke pink' }).getAttribute('aria-checked'),
     ).toBe('false');
+  });
+
+  it('renders multiple author groups collapsed by default and persists opened groups', async () => {
+    resetStore([
+      makeEntry({ id: 'A', author: 'andrew', name: 'Andrew demo' }),
+      makeEntry({ id: 'B', author: 'beth', name: 'Beth demo' }),
+    ]);
+
+    render(<App />);
+
+    expect(screen.getByText('andrew')).toBeTruthy();
+    expect(screen.getByText('beth')).toBeTruthy();
+    expect(screen.queryByText('Andrew demo')).toBeNull();
+    expect(screen.queryByText('Beth demo')).toBeNull();
+
+    fireEvent.click(screen.getByText('andrew'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Andrew demo')).toBeTruthy();
+      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({
+        'popup:author_group_open': { andrew: true },
+      });
+    });
+  });
+
+  it('restores persisted author group expansion state', () => {
+    resetStore([
+      makeEntry({ id: 'A', author: 'andrew', name: 'Andrew demo' }),
+      makeEntry({ id: 'B', author: 'beth', name: 'Beth demo' }),
+    ]);
+    useStore.setState({ authorGroupOpen: { andrew: true, beth: false } });
+
+    render(<App />);
+
+    expect(screen.getByText('Andrew demo')).toBeTruthy();
+    expect(screen.queryByText('Beth demo')).toBeNull();
   });
 
   it('renders an enabled switch when the experiment is on', () => {

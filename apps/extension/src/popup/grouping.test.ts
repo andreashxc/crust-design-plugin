@@ -49,7 +49,7 @@ describe('groupByAuthor (D-22)', () => {
     expect(groups.find((group) => group.author === 'beth')?.entries).toHaveLength(1);
   });
 
-  it('defaultOpen=true when at least one entry matches active tab', () => {
+  it('defaultOpen=true when exactly one author group is visible', () => {
     const registry: Registry = [
       makeEntry('andrew', '01J0AAAAAAAAAAAAAAAAAAAAAA', ['*://ya.ru/*']),
       makeEntry('beth', '01J0BBBBBBBBBBBBBBBBBBBBBB', ['*://example.com/*']),
@@ -64,12 +64,18 @@ describe('groupByAuthor (D-22)', () => {
     expect(groups.find((group) => group.author === 'beth')).toBeUndefined();
   });
 
-  it('defaultOpen=false when activeTabUrl is missing', () => {
-    const groups = groupByAuthor([makeEntry('andrew', '01J0AAAAAAAAAAAAAAAAAAAAAA')], {
-      matchesScope: stubMatchesScope,
-    });
+  it('defaultOpen=false for all groups when multiple author groups are visible', () => {
+    const groups = groupByAuthor(
+      [
+        makeEntry('andrew', '01J0AAAAAAAAAAAAAAAAAAAAAA'),
+        makeEntry('beth', '01J0BBBBBBBBBBBBBBBBBBBBBB'),
+      ],
+      {
+        matchesScope: stubMatchesScope,
+      },
+    );
 
-    expect(groups[0]?.defaultOpen).toBe(false);
+    expect(groups.map((group) => group.defaultOpen)).toEqual([false, false]);
   });
 
   it('filters entries by active tab URL when present', () => {
