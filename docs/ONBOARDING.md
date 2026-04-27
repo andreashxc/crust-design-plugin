@@ -2,7 +2,7 @@
 
 Crust is a local Chromium MV3 extension for running repo-based design experiments on real pages.
 
-## First Run
+## Dev Install
 
 1. Clone the repo.
 
@@ -32,6 +32,8 @@ corepack pnpm dev
 - Select `apps/extension/.output/chrome-mv3`.
 
 5. Open `https://ya.ru/`, then open the Crust toolbar popup.
+
+This path is for designers actively editing experiments. Keep `corepack pnpm dev` running so changes under `experiments/**` refresh the dev registry.
 
 ## Create Your First Experiment
 
@@ -88,7 +90,7 @@ git push
 
 After teammates pull and run `corepack pnpm dev` or rebuild, your experiment appears in their popup when the active tab matches its scope.
 
-## Install From a Release
+## Release Install
 
 Release tags produce sideload artifacts in GitHub Releases:
 
@@ -99,12 +101,12 @@ To install a release build:
 
 1. Download `crust-chrome-mv3-unpacked.zip`.
 2. Unzip it locally.
-3. Open `chrome://extensions`.
+3. Open `chrome://extensions` in Chrome, or `browser://extensions` in Yandex Browser.
 4. Enable Developer mode.
 5. Click "Load unpacked".
 6. Select the unzipped `chrome-mv3` folder.
 
-Crust does not currently publish a signed `.crx` without a configured release signing key. Use the unpacked zip for v1 sideload testing.
+This path is for sideload testing a packaged release without running the dev server. Crust does not currently publish a signed `.crx` without a configured release signing key. Use the unpacked zip for v1 sideload testing.
 
 ## Troubleshooting
 

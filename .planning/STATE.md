@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 Plan 06-03 complete; ready to execute 06-04
-last_updated: "2026-04-27T10:31:00+02:00"
-last_activity: 2026-04-27 -- Phase 6 Plan 06-03 added three-designer acceptance fixtures
+stopped_at: Phase 6 Plan 06-04 complete; ready to execute 06-05
+last_updated: "2026-04-27T10:36:00+02:00"
+last_activity: 2026-04-27 -- Phase 6 Plan 06-04 added Chrome/Yandex manual smoke checklist
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 37
-  percent: 95
+  completed_plans: 38
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 6 (Distribution & Acceptance) — IN PROGRESS
-Plan: 06-04 — Chrome/Yandex sideload manual smoke checklist
-Status: Plan 06-03 complete; execute 06-04 next
-Last activity: 2026-04-27 -- Phase 6 Plan 06-03 added three-designer acceptance fixtures
+Plan: 06-05 — Final validation, artifact capture, and acceptance report
+Status: Plan 06-04 complete; execute 06-05 next
+Last activity: 2026-04-27 -- Phase 6 Plan 06-04 added Chrome/Yandex manual smoke checklist
 
-Progress: [▓▓▓▓▓▓▓▓▓▓] 95%
+Progress: [▓▓▓▓▓▓▓▓▓▓] 97%
 
 ## Performance Metrics
 
@@ -104,6 +104,7 @@ Recent decisions affecting current work:
 - Plan 06-01 execution: added root `package:chrome`, GitHub tag release workflow, and release install docs; packaging emits WXT zip plus `crust-chrome-mv3-unpacked.zip`; no unsigned `.crx` is faked without a signing key.
 - Plan 06-02 execution: added `corepack pnpm fork-experiment`, popup copy-fork command, and authoring docs; CLI smoke confirmed copied files, `manifest.author` rewrite, and empty `manifest.id` for the next build stamp.
 - Plan 06-03 execution: added `designer1`, `designer2`, and `designer3` acceptance fixtures covering multi-tweak controls, `helpers.fetchPage`, and `helpers.llm`; build output includes all three fixture chunks.
+- Plan 06-04 execution: added `06-MANUAL-SMOKE.md` with Chrome and Yandex Browser load-unpacked paths, release artifact checks, fork/composition/LLM/fetchPage rows, and `<15 minutes` onboarding acceptance.
 
 ### Pending Todos
 
@@ -130,6 +131,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T10:31:00+02:00
-Stopped at: Phase 6 Plan 06-03 complete; ready to execute 06-04
+Last session: 2026-04-27T10:36:00+02:00
+Stopped at: Phase 6 Plan 06-04 complete; ready to execute 06-05
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md
