@@ -52,6 +52,8 @@
   --dial-surface: color-mix(in oklch, var(--input) 55%, var(--background));
   --dial-surface-hover: color-mix(in oklch, var(--input) 75%, var(--background));
   --dial-surface-active: color-mix(in oklch, var(--input) 90%, var(--foreground) 10%);
+  --dial-slider-fill: color-mix(in oklch, var(--input) 94%, var(--foreground));
+  --dial-slider-fill-active: color-mix(in oklch, var(--input) 90%, var(--foreground));
   --dial-glass-bg: var(--popover);
   --dial-dropdown-bg: var(--popover);
   --dial-border: var(--border);
@@ -88,6 +90,8 @@
     --dial-surface: #303030;
     --dial-surface-hover: #393939;
     --dial-surface-active: #474747;
+    --dial-slider-fill: #474747;
+    --dial-slider-fill-active: #5c5c5c;
     --dial-glass-bg: #242424;
     --dial-dropdown-bg: #2a2a2a;
     --dial-border: #383838;
@@ -243,12 +247,12 @@ body {
   top: 0;
   bottom: 0;
   left: 0;
-  background: var(--dial-surface-active);
+  background: var(--dial-slider-fill);
   pointer-events: none;
 }
 
 .dialkit-slider-active .dialkit-slider-fill {
-  background: var(--dial-border-hover);
+  background: var(--dial-slider-fill-active);
 }
 
 .dialkit-slider-handle {
