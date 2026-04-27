@@ -64,8 +64,8 @@ How it should work:
 
 Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
 Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
-If this should be a new experiment, create it there.
-If there is already a matching experiment, update that one instead of creating a duplicate.
+Create a new experiment by default.
+Only update an existing experiment if I explicitly ask you to change that experiment.
 
 Keep it small and reversible. Add tweak controls only when they would help me test variants in the popup.
 After editing, run the relevant checks and tell me exactly what to reload or test in the browser.
@@ -87,8 +87,8 @@ The card appears after the page loads. It has a short headline, a small close bu
 
 Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
 Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
-If this should be a new experiment, create it there.
-If there is already a matching experiment, update that one instead of creating a duplicate.
+Create a new experiment by default.
+Only update an existing experiment if I explicitly ask you to change that experiment.
 
 Keep it small and reversible. After editing, run checks and tell me what to test.
 ```
@@ -248,8 +248,8 @@ corepack pnpm dev
 
 Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
 Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
-Если это новый эксперимент, создай его там.
-Если похожий эксперимент уже есть, измени его, а не создавай дубль.
+По умолчанию создай новый эксперимент.
+Изменяй существующий эксперимент только если я прямо попросил изменить именно его.
 
 Сделай эксперимент маленьким и обратимым. Добавляй tweak controls только если они помогут тестировать варианты в popup.
 После изменений запусти нужные проверки и скажи, что именно мне перезагрузить или проверить в браузере.
@@ -271,8 +271,8 @@ https://ya.ru/
 
 Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
 Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
-Если это новый эксперимент, создай его там.
-Если похожий эксперимент уже есть, измени его, а не создавай дубль.
+По умолчанию создай новый эксперимент.
+Изменяй существующий эксперимент только если я прямо попросил изменить именно его.
 
 Сделай эксперимент маленьким и обратимым. После изменений запусти проверки и скажи, что мне тестировать.
 ```
