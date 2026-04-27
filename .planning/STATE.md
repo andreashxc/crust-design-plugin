@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 planned; ready to execute 06-01
-last_updated: "2026-04-27T00:12:00+02:00"
-last_activity: 2026-04-27 -- Phase 6 planned into 5 executable plans
+stopped_at: Phase 6 Plan 06-01 complete; ready to execute 06-02
+last_updated: "2026-04-27T00:33:00+02:00"
+last_activity: 2026-04-27 -- Phase 6 Plan 06-01 added release packaging workflow and install docs
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 34
-  percent: 100
+  completed_plans: 35
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 6 — Distribution & Acceptance planning
+**Current focus:** Phase 6 — Distribution & Acceptance execution
 
 ## Current Position
 
-Phase: 6 (Distribution & Acceptance) — READY TO EXECUTE
-Plan: 06-01 — Packaging scripts and GitHub release workflow
-Status: Phase 6 planned into executable plans; execute 06-01 next
-Last activity: 2026-04-27 -- Phase 6 planned into 5 executable plans
+Phase: 6 (Distribution & Acceptance) — IN PROGRESS
+Plan: 06-02 — Fork-to-my-folder CLI and popup copy command
+Status: Plan 06-01 complete; execute 06-02 next
+Last activity: 2026-04-27 -- Phase 6 Plan 06-01 added release packaging workflow and install docs
 
-Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
+Progress: [▓▓▓▓▓▓▓▓▓░] 90%
 
 ## Performance Metrics
 
@@ -101,6 +101,7 @@ Recent decisions affecting current work:
 - Plan 05-06 execution: `docs/ONBOARDING.md` and `docs/EXPERIMENT_AUTHORING.md` now cover self-service setup, authoring, helpers, presets, and troubleshooting; popup empty states distinguish no registry, scope mismatch, and search mismatch; background update check caches GitHub compare results and the popup shows a quiet banner only when the sideload commit is behind `main`.
 - Plan 05-07 execution: full automated Phase 5 gates passed (`test -- --run`, typecheck, lint, check-csp, build); production manifest keeps GitHub update permission scoped to `https://api.github.com/repos/andreashxc/overlay-plugin/compare/*`; built registry includes `sourceSignature`, `presets`, and `descriptionStatus`; `05-MANUAL-SMOKE.md` records the 10 browser checks for Andrew.
 - Phase 6 planning: created `06-CONTEXT.md`, `06-RESEARCH.md`, `06-PATTERNS.md`, `06-VALIDATION.md`, and 5 executable plans covering packaging/release workflow, fork command/UI, three-designer fixtures, Chrome/Yandex smoke checklist, and final acceptance closeout.
+- Plan 06-01 execution: added root `package:chrome`, GitHub tag release workflow, and release install docs; packaging emits WXT zip plus `crust-chrome-mv3-unpacked.zip`; no unsigned `.crx` is faked without a signing key.
 
 ### Pending Todos
 
@@ -127,6 +128,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T00:12:00+02:00
-Stopped at: Phase 6 planned; ready to execute 06-01
+Last session: 2026-04-27T00:33:00+02:00
+Stopped at: Phase 6 Plan 06-01 complete; ready to execute 06-02
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

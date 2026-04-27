@@ -146,7 +146,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 06-01: Packaging scripts and GitHub release workflow
+- [x] 06-01: Packaging scripts and GitHub release workflow
 - [ ] 06-02: Fork-to-my-folder CLI and popup copy command
 - [ ] 06-03: Three-designer acceptance fixture experiments
 - [ ] 06-04: Chrome/Yandex sideload manual smoke checklist
@@ -166,4 +166,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
 | 5. DX, SPA Composition & Sharing | 7/7 | Complete + manual smoke pending | 2026-04-26 |
-| 6. Distribution & Acceptance | 0/5 | Planned | - |
+| 6. Distribution & Acceptance | 1/5 | In Progress | - |

@@ -88,6 +88,24 @@ git push
 
 After teammates pull and run `corepack pnpm dev` or rebuild, your experiment appears in their popup when the active tab matches its scope.
 
+## Install From a Release
+
+Release tags produce sideload artifacts in GitHub Releases:
+
+- WXT Chrome zip, for example `platformextension-0.0.0-chrome.zip`
+- `crust-chrome-mv3-unpacked.zip` for "Load unpacked"
+
+To install a release build:
+
+1. Download `crust-chrome-mv3-unpacked.zip`.
+2. Unzip it locally.
+3. Open `chrome://extensions`.
+4. Enable Developer mode.
+5. Click "Load unpacked".
+6. Select the unzipped `chrome-mv3` folder.
+
+Crust does not currently publish a signed `.crx` without a configured release signing key. Use the unpacked zip for v1 sideload testing.
+
 ## Troubleshooting
 
 - Popup says no experiments yet: run `corepack pnpm dev` or `corepack pnpm build`.

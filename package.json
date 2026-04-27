@@ -17,7 +17,8 @@
     "check-csp": "tsx scripts/check-csp.ts",
     "create-experiment": "tsx scripts/create-experiment.ts",
     "generate-descriptions": "tsx scripts/generate-descriptions.ts",
-    "save-preset": "tsx scripts/save-preset.ts"
+    "save-preset": "tsx scripts/save-preset.ts",
+    "package:chrome": "corepack pnpm build && corepack pnpm -F @platform/extension zip && cd apps/extension/.output && rm -f crust-chrome-mv3-unpacked.zip && zip -qr crust-chrome-mv3-unpacked.zip chrome-mv3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

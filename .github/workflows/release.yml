@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test --run
+
+      - name: Check CSP
+        run: pnpm check-csp
+
+      - name: Package Chrome MV3
+        run: pnpm package:chrome
+
+      - name: List artifacts
+        run: find apps/extension/.output -maxdepth 1 -type f -name '*.zip' -print
+
+      - name: Upload GitHub Release artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/extension/.output/*.zip
