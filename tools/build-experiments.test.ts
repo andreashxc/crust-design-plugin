@@ -410,6 +410,28 @@ describe('scanAndValidate — Phase 5 metadata', () => {
   });
 });
 
+describe('scanAndValidate — Phase 6 acceptance fixtures', () => {
+  it('includes three designer fixture authors with required helper coverage', () => {
+    const result = scanAndValidate(REPO_ROOT);
+    expect(result.errors).toEqual([]);
+
+    const fixtureAuthors = new Set(['designer1', 'designer2', 'designer3']);
+    const fixtures = result.manifests.filter(({ data }) => fixtureAuthors.has(data.author));
+
+    expect(new Set(fixtures.map(({ data }) => data.author))).toEqual(fixtureAuthors);
+    expect(
+      fixtures.every(({ data }) => data.scope.match.some((match) => match.includes('ya.ru'))),
+    ).toBe(true);
+    expect(fixtures.some(({ data }) => data.tweaks.length >= 3)).toBe(true);
+
+    const fixtureSource = fixtures
+      .map(({ path }) => readFileSync(resolve(REPO_ROOT, dirname(path), 'experiment.ts'), 'utf8'))
+      .join('\n');
+    expect(fixtureSource).toContain('helpers.fetchPage');
+    expect(fixtureSource).toContain('helpers.llm');
+  });
+});
+
 describe('scanAndValidate — JSON parse failure', () => {
   it('reports a parse error for malformed JSON', () => {
     const abs = resolve(tmpRoot, 'experiments/andrew/smoke/manifest.json');

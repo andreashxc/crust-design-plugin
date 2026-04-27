@@ -114,6 +114,10 @@ corepack pnpm fork-experiment 01KQEXAMPLEEXAMPLEEXAMPLE designer2 search-banner-
 
 The command refuses to overwrite an existing target folder. The forked manifest keeps the source settings but changes `author` and clears `id`, so the next `corepack pnpm dev` refresh or rebuild stamps a new stable ULID.
 
+## Acceptance Fixtures
+
+The repo includes small Phase 6 fixtures under `experiments/designer1`, `experiments/designer2`, and `experiments/designer3`. They are intentionally simple and scoped to ya.ru so a new designer can verify composition, tweak controls, `fetchPage()`, and `llm()` without creating their own experiment first.
+
 ## Descriptions
 
 `description.md` explains the experiment to teammates. Generated descriptions use:

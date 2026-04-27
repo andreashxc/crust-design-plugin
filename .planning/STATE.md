@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 Plan 06-02 complete; ready to execute 06-03
-last_updated: "2026-04-27T10:25:00+02:00"
-last_activity: 2026-04-27 -- Phase 6 Plan 06-02 added fork CLI and popup copy command
+stopped_at: Phase 6 Plan 06-03 complete; ready to execute 06-04
+last_updated: "2026-04-27T10:31:00+02:00"
+last_activity: 2026-04-27 -- Phase 6 Plan 06-03 added three-designer acceptance fixtures
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 39
-  completed_plans: 36
-  percent: 92
+  completed_plans: 37
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 6 (Distribution & Acceptance) — IN PROGRESS
-Plan: 06-03 — Three-designer acceptance fixture experiments
-Status: Plan 06-02 complete; execute 06-03 next
-Last activity: 2026-04-27 -- Phase 6 Plan 06-02 added fork CLI and popup copy command
+Plan: 06-04 — Chrome/Yandex sideload manual smoke checklist
+Status: Plan 06-03 complete; execute 06-04 next
+Last activity: 2026-04-27 -- Phase 6 Plan 06-03 added three-designer acceptance fixtures
 
-Progress: [▓▓▓▓▓▓▓▓▓░] 92%
+Progress: [▓▓▓▓▓▓▓▓▓▓] 95%
 
 ## Performance Metrics
 
@@ -103,6 +103,7 @@ Recent decisions affecting current work:
 - Phase 6 planning: created `06-CONTEXT.md`, `06-RESEARCH.md`, `06-PATTERNS.md`, `06-VALIDATION.md`, and 5 executable plans covering packaging/release workflow, fork command/UI, three-designer fixtures, Chrome/Yandex smoke checklist, and final acceptance closeout.
 - Plan 06-01 execution: added root `package:chrome`, GitHub tag release workflow, and release install docs; packaging emits WXT zip plus `crust-chrome-mv3-unpacked.zip`; no unsigned `.crx` is faked without a signing key.
 - Plan 06-02 execution: added `corepack pnpm fork-experiment`, popup copy-fork command, and authoring docs; CLI smoke confirmed copied files, `manifest.author` rewrite, and empty `manifest.id` for the next build stamp.
+- Plan 06-03 execution: added `designer1`, `designer2`, and `designer3` acceptance fixtures covering multi-tweak controls, `helpers.fetchPage`, and `helpers.llm`; build output includes all three fixture chunks.
 
 ### Pending Todos
 
@@ -129,6 +130,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T10:25:00+02:00
-Stopped at: Phase 6 Plan 06-02 complete; ready to execute 06-03
+Last session: 2026-04-27T10:31:00+02:00
+Stopped at: Phase 6 Plan 06-03 complete; ready to execute 06-04
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md

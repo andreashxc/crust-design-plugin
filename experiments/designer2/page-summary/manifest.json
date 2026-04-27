@@ -1,0 +1,14 @@
+{
+  "id": "01KQ3A00000000000000000002",
+  "name": "Page summary",
+  "author": "designer2",
+  "description": "Fetches the active ya.ru page title through the Phase 4 fetchPage helper",
+  "scope": {
+    "match": [
+      "*://*.ya.ru/*",
+      "*://ya.ru/*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": []
+}
