@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 6 Plan 06-04 complete; ready to execute 06-05
-last_updated: "2026-04-27T10:36:00+02:00"
-last_activity: 2026-04-27 -- Phase 6 Plan 06-04 added Chrome/Yandex manual smoke checklist
+status: complete
+stopped_at: Phase 6 complete; manual Chrome/Yandex smoke and GitHub push pending
+last_updated: "2026-04-27T10:41:00+02:00"
+last_activity: 2026-04-27 -- Phase 6 Plan 06-05 completed final automated validation and acceptance report
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 39
-  completed_plans: 38
-  percent: 97
+  completed_plans: 39
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** Phase 6 — Distribution & Acceptance execution
+**Current focus:** v1.0 — automated implementation complete; manual smoke/push pending
 
 ## Current Position
 
-Phase: 6 (Distribution & Acceptance) — IN PROGRESS
+Phase: 6 (Distribution & Acceptance) — COMPLETE + MANUAL SMOKE PENDING
 Plan: 06-05 — Final validation, artifact capture, and acceptance report
-Status: Plan 06-04 complete; execute 06-05 next
-Last activity: 2026-04-27 -- Phase 6 Plan 06-04 added Chrome/Yandex manual smoke checklist
+Status: all Phase 6 plans complete locally; Chrome/Yandex manual smoke and GitHub push remain external follow-up
+Last activity: 2026-04-27 -- Phase 6 Plan 06-05 completed final automated validation and acceptance report
 
-Progress: [▓▓▓▓▓▓▓▓▓▓] 97%
+Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
 ## Performance Metrics
 
@@ -105,10 +105,12 @@ Recent decisions affecting current work:
 - Plan 06-02 execution: added `corepack pnpm fork-experiment`, popup copy-fork command, and authoring docs; CLI smoke confirmed copied files, `manifest.author` rewrite, and empty `manifest.id` for the next build stamp.
 - Plan 06-03 execution: added `designer1`, `designer2`, and `designer3` acceptance fixtures covering multi-tweak controls, `helpers.fetchPage`, and `helpers.llm`; build output includes all three fixture chunks.
 - Plan 06-04 execution: added `06-MANUAL-SMOKE.md` with Chrome and Yandex Browser load-unpacked paths, release artifact checks, fork/composition/LLM/fetchPage rows, and `<15 minutes` onboarding acceptance.
+- Plan 06-05 execution: final gates passed (`test -- --run`, typecheck, lint, check-csp, build, package:chrome); `06-ACCEPTANCE.md` records artifact sizes, requirement evidence, manual smoke status, and release-readiness caveats.
 
 ### Pending Todos
 
-None yet.
+- Chrome/Yandex manual smoke in `06-MANUAL-SMOKE.md` remains pending operator execution.
+- `git push origin main` is blocked by local GitHub SSH auth: `Permission denied (publickey)`.
 
 ### Blockers/Concerns
 
@@ -120,6 +122,7 @@ None yet.
 - **Phase 4 manual helper smoke:** PASSED by Andrew on 2026-04-26 with a real OpenAI key. The only deferred item is a real >30s provider streaming smoke; automated port protocol tests pass.
 - **Phase 5 manual smoke:** automated validation passed; local Chrome checklist is recorded in `.planning/phases/05-dx-spa-composition-sharing/05-MANUAL-SMOKE.md` and remains pending operator execution.
 - **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
+- **GitHub push blocked**: local commits are complete, but `git push origin main` fails with `git@github.com: Permission denied (publickey)`. Fix local SSH key/account access before publishing.
 
 ## Deferred Items
 
@@ -131,6 +134,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T10:36:00+02:00
-Stopped at: Phase 6 Plan 06-04 complete; ready to execute 06-05
+Last session: 2026-04-27T10:41:00+02:00
+Stopped at: Phase 6 complete; manual Chrome/Yandex smoke and GitHub push pending
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md
