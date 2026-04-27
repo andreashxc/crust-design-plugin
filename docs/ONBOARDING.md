@@ -1,8 +1,8 @@
 # Crust Onboarding
 
-Crust is a local browser extension for running small design experiments on real websites. It is meant to be used with AI coding tools like Cursor, Codex, and Claude Code: you describe the experiment, the agent edits files in `experiments/<your-name>/<experiment-name>/`, and Crust lets you turn that experiment on in the browser popup.
+Crust is a local browser extension for running design experiments on real websites. It is meant to be used with AI coding tools like Cursor, Codex, and Claude Code: you describe the experiment, the agent edits files in `experiments/<your-name>/<experiment-name>/`, and Crust lets you turn that experiment on in the browser popup.
 
-You do not need to understand the whole codebase to start. The usual workflow is: install once, keep dev mode running, ask your coding agent to create or edit an experiment, then test it on the target page.
+You do not need to understand the whole codebase to start. The usual workflow is: install once, keep dev mode running, ask your coding agent to create an experiment from your description, then test it on the target page.
 
 ## Quick Start For AI Coding Tools
 
@@ -44,14 +44,14 @@ When dev mode is running, load the extension:
 
 Keep `corepack pnpm dev` running while you work. Crust watches `experiments/**`, refreshes the dev registry, and reapplies enabled experiments without a full extension reload.
 
-## Create Or Change An Experiment
+## Create An Experiment
 
-Describe the experiment in normal language. You do not need to invent an experiment ID, folder name, or display name. The coding agent should choose those, create the files, and explain what it did. If the agent cannot safely infer something important, it should ask a product question before coding.
+Describe the experiment in normal language. Focus on what should happen, where it should happen, and what the user should see or do. You do not need to invent an experiment ID, folder name, display name, or implementation plan. The coding agent should choose those and explain what it did.
 
 Paste a prompt like this:
 
 ```text
-Create or update a Crust experiment.
+Create a Crust experiment.
 
 What I want:
 <describe the experiment behavior and visual result>
@@ -62,19 +62,17 @@ Where it should work:
 How it should work:
 <describe when it appears, what it changes, what should happen on click/hover/scroll, and any states or variants>
 
-Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
-Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
-Create a new experiment by default.
-Only update an existing experiment if I explicitly ask you to change that experiment.
+Please choose the author folder, experiment folder name, display name, manifest scope, file structure, and reasonable implementation details yourself.
+Ask only product or design questions that block the result.
 
-Keep it small and reversible. Add tweak controls only when they would help me test variants in the popup.
-After editing, run the relevant checks and tell me exactly what to reload or test in the browser.
+Add tweak controls if they would help compare variants in the popup.
+After implementation, run the relevant checks and tell me exactly what to reload or test in the browser.
 ```
 
 Example prompt:
 
 ```text
-Create or update a Crust experiment.
+Create a Crust experiment.
 
 What I want:
 On ya.ru, show a compact floating promo card near the search box. It should look native to the page, not like a developer demo.
@@ -85,15 +83,14 @@ https://ya.ru/
 How it should work:
 The card appears after the page loads. It has a short headline, a small close button, and a CTA button. Closing it hides it until the experiment is toggled off and on again. Add tweaks for headline text, accent color, and card position.
 
-Please choose the author folder, experiment folder name, display name, manifest scope, and sensible defaults yourself.
-Infer the author folder from my local setup when possible; ask only if you truly cannot infer it.
-Create a new experiment by default.
-Only update an existing experiment if I explicitly ask you to change that experiment.
+Please choose the author folder, experiment folder name, display name, manifest scope, file structure, and reasonable implementation details yourself.
+Ask only product or design questions that block the result.
 
-Keep it small and reversible. After editing, run checks and tell me what to test.
+Add tweak controls if they would help compare variants in the popup.
+After implementation, run checks and tell me what to test.
 ```
 
-The agent will usually create or edit:
+The agent will usually create:
 
 ```text
 experiments/<author>/<folder>/
@@ -104,6 +101,8 @@ experiments/<author>/<folder>/
 ```
 
 Fresh public forks include only examples in `experiments/examples/**`. Your own folders like `experiments/andrew/**` are local by default and ignored by git, so private experiments are not accidentally published.
+
+If you want to change an existing experiment later, say that explicitly and name it, for example: `Edit experiments/andrew/search-banner: change the CTA copy and add a position tweak.`
 
 Then test in the browser:
 
@@ -184,9 +183,9 @@ Crust does not currently publish a signed `.crx`; use the unpacked zip for sidel
 
 # Crust Onboarding На Русском
 
-Crust это локальное расширение для браузера, чтобы запускать небольшие дизайн-эксперименты на настоящих сайтах. Оно рассчитано не только на разработчиков, а на работу через AI-инструменты: Cursor, Codex, Claude Code. Ты описываешь, что хочешь поменять на странице, AI-агент редактирует файлы эксперимента, а ты включаешь эксперимент в popup расширения.
+Crust это локальное расширение для браузера, чтобы запускать дизайн-эксперименты на настоящих сайтах. Оно рассчитано не только на разработчиков, а на работу через AI-инструменты: Cursor, Codex, Claude Code. Ты описываешь, что хочешь поменять на странице, AI-агент редактирует файлы эксперимента, а ты включаешь эксперимент в popup расширения.
 
-Тебе не нужно сразу понимать весь проект. Базовый сценарий такой: один раз настроить проект, держать dev mode включенным, просить AI-агента создавать или менять эксперименты, потом проверять результат в браузере.
+Тебе не нужно сразу понимать весь проект. Базовый сценарий такой: один раз настроить проект, держать dev mode включенным, просить AI-агента создать эксперимент по твоему описанию, потом проверять результат в браузере.
 
 ## Быстрый Старт Для Cursor, Codex, Claude Code
 
@@ -228,14 +227,14 @@ corepack pnpm dev
 
 Пока работаешь, оставляй `corepack pnpm dev` запущенным. Crust следит за `experiments/**`, обновляет список экспериментов и заново применяет включенные эксперименты без полной перезагрузки расширения.
 
-## Создать Или Изменить Эксперимент
+## Создать Эксперимент
 
-Опиши эксперимент обычным языком. Не нужно придумывать ID, имя папки или красивое название. AI-агент должен сам выбрать название, создать файлы и объяснить, что сделал. Если ему не хватает важной продуктовой информации, он должен сначала задать вопрос.
+Опиши эксперимент обычным языком. Сфокусируйся на том, что должно произойти, на каких страницах и что пользователь должен увидеть или сделать. Не нужно придумывать ID, имя папки, красивое название или технический план. AI-агент должен сам выбрать это и объяснить, что сделал.
 
 Вставь примерно такой запрос:
 
 ```text
-Создай или измени Crust experiment.
+Создай Crust experiment.
 
 Что я хочу:
 <опиши поведение эксперимента и визуальный результат>
@@ -246,19 +245,17 @@ corepack pnpm dev
 Как это должно работать:
 <опиши когда появляется, что меняет, что происходит при клике/hover/scroll, какие есть состояния или варианты>
 
-Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
-Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
-По умолчанию создай новый эксперимент.
-Изменяй существующий эксперимент только если я прямо попросил изменить именно его.
+Сам выбери author-папку, имя папки эксперимента, display name, manifest scope, структуру файлов и разумные технические детали.
+Задавай только продуктовые или дизайн-вопросы, без которых нельзя сделать результат.
 
-Сделай эксперимент маленьким и обратимым. Добавляй tweak controls только если они помогут тестировать варианты в popup.
-После изменений запусти нужные проверки и скажи, что именно мне перезагрузить или проверить в браузере.
+Добавь tweak controls, если они помогут сравнивать варианты в popup.
+После реализации запусти нужные проверки и скажи, что именно мне перезагрузить или проверить в браузере.
 ```
 
 Пример запроса:
 
 ```text
-Создай или измени Crust experiment.
+Создай Crust experiment.
 
 Что я хочу:
 На ya.ru покажи компактную floating promo-карточку рядом с поиском. Она должна выглядеть нативно для страницы, не как developer demo.
@@ -269,15 +266,14 @@ https://ya.ru/
 Как это должно работать:
 Карточка появляется после загрузки страницы. В ней короткий заголовок, маленькая кнопка закрытия и CTA-кнопка. Закрытие скрывает карточку до выключения и повторного включения эксперимента. Добавь твики для текста заголовка, accent color и позиции карточки.
 
-Сам выбери author-папку, имя папки эксперимента, display name, manifest scope и разумные дефолты.
-Author-папку определи по моему локальному окружению, если это возможно; спрашивай только если правда не можешь определить.
-По умолчанию создай новый эксперимент.
-Изменяй существующий эксперимент только если я прямо попросил изменить именно его.
+Сам выбери author-папку, имя папки эксперимента, display name, manifest scope, структуру файлов и разумные технические детали.
+Задавай только продуктовые или дизайн-вопросы, без которых нельзя сделать результат.
 
-Сделай эксперимент маленьким и обратимым. После изменений запусти проверки и скажи, что мне тестировать.
+Добавь tweak controls, если они помогут сравнивать варианты в popup.
+После реализации запусти проверки и скажи, что мне тестировать.
 ```
 
-Обычно агент создаст или изменит:
+Обычно агент создаст:
 
 ```text
 experiments/<author>/<folder>/
@@ -288,6 +284,8 @@ experiments/<author>/<folder>/
 ```
 
 В публичном GitHub лежат только примеры в `experiments/examples/**`. Твои личные папки вроде `experiments/andrew/**` по умолчанию локальные и игнорируются git, чтобы случайно не запушить приватные эксперименты.
+
+Если позже нужно изменить существующий эксперимент, скажи это явно и назови его, например: `Измени experiments/andrew/search-banner: поменяй текст CTA и добавь твик позиции.`
 
 Потом проверь в браузере:
 
