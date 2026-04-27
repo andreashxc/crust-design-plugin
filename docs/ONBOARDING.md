@@ -6,15 +6,19 @@ You do not need to understand the whole codebase to start. The usual workflow is
 
 ## Quick Start For AI Coding Tools
 
-First, get the project onto your computer. Open Terminal and run:
+First, get the project onto your computer.
+
+Pick a place where the project folder should live. If you are not sure, use `Desktop` so you can easily find it in Finder. Open Terminal and run:
 
 ```sh
-cd ~/Code
+cd ~/Desktop
 git clone https://github.com/andreashxc/overlay-plugin.git
 cd overlay-plugin
 ```
 
-If you keep projects somewhere else, replace `~/Code` with your own folder. If `git` is missing, install GitHub Desktop or Xcode Command Line Tools first, then try again.
+This creates a new folder at `Desktop/overlay-plugin`. That folder is the Crust project. If you prefer a different location, open that folder in Finder, drag it into Terminal after typing `cd `, press Enter, and then run the `git clone` command.
+
+If `git` is missing, install GitHub Desktop or Xcode Command Line Tools first, then try again.
 
 After that, open the `overlay-plugin` folder in Cursor, Codex, or Claude Code and paste this prompt:
 
@@ -182,15 +186,19 @@ Crust это локальное расширение для браузера, ч
 
 ## Быстрый Старт Для Cursor, Codex, Claude Code
 
-Сначала нужно скачать проект на компьютер. Открой Terminal и запусти:
+Сначала нужно скачать проект на компьютер.
+
+Выбери место, где будет лежать папка проекта. Если не уверен, используй `Desktop`, чтобы папку было легко найти через Finder. Открой Terminal и запусти:
 
 ```sh
-cd ~/Code
+cd ~/Desktop
 git clone https://github.com/andreashxc/overlay-plugin.git
 cd overlay-plugin
 ```
 
-Если ты хранишь проекты в другой папке, замени `~/Code` на свою папку. Если команда `git` не работает, сначала установи GitHub Desktop или Xcode Command Line Tools, потом повтори команды.
+После этого на рабочем столе появится папка `overlay-plugin`. Это и есть проект Crust. Если хочешь положить проект в другое место, открой нужную папку в Finder, напиши в Terminal `cd `, перетащи папку в Terminal, нажми Enter, а потом запусти команду `git clone`.
+
+Если команда `git` не работает, сначала установи GitHub Desktop или Xcode Command Line Tools, потом повтори команды.
 
 После этого открой папку `overlay-plugin` в Cursor, Codex или Claude Code и вставь AI-агенту такой запрос:
 
