@@ -39,6 +39,7 @@ function resetStore(entryOrRegistry: RegistryEntry | RegistryEntry[] = makeEntry
     publicLlmConfig: null,
     lastLlmError: undefined,
     experimentOrder: [],
+    authorGroupOrder: [],
     authorGroupOpen: {},
     updateState: null,
     activeTabId: 7,
@@ -101,6 +102,49 @@ describe('popup App', () => {
 
     expect(screen.getByText('Andrew demo')).toBeTruthy();
     expect(screen.queryByText('Beth demo')).toBeNull();
+  });
+
+  it('renders author groups in persisted order', () => {
+    resetStore([
+      makeEntry({ id: 'A', author: 'andrew', name: 'Andrew demo' }),
+      makeEntry({ id: 'B', author: 'beth', name: 'Beth demo' }),
+    ]);
+    useStore.setState({ authorGroupOrder: ['beth', 'andrew'] });
+
+    render(<App />);
+
+    expect(screen.getAllByText(/^(andrew|beth)$/).map((node) => node.textContent)).toEqual([
+      'beth',
+      'andrew',
+    ]);
+  });
+
+  it('persists author group drag reorder', async () => {
+    resetStore([
+      makeEntry({ id: 'A', author: 'andrew', name: 'Andrew demo' }),
+      makeEntry({ id: 'B', author: 'beth', name: 'Beth demo' }),
+    ]);
+    const transfer = new Map<string, string>();
+    const dataTransfer = {
+      effectAllowed: 'move',
+      dropEffect: 'move',
+      setData: (type: string, value: string) => transfer.set(type, value),
+      getData: (type: string) => transfer.get(type) ?? '',
+    };
+
+    render(<App />);
+    const source = screen.getByText('andrew').closest('[draggable="true"]');
+    const target = screen.getByText('beth').closest('[draggable="true"]');
+    if (!source || !target) throw new Error('Expected draggable author groups');
+    fireEvent.dragStart(source, { dataTransfer });
+    fireEvent.dragOver(target, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+
+    await waitFor(() => {
+      expect(chromeMock().storage.local.set).toHaveBeenCalledWith({
+        'popup:author_group_order': ['beth', 'andrew'],
+      });
+    });
   });
 
   it('renders an enabled switch when the experiment is on', () => {

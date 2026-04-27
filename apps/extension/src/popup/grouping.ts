@@ -44,6 +44,19 @@ export function filterRegistryBySearch(registry: Registry, query: string): Regis
   );
 }
 
+export function sortAuthorGroupsByOrder(groups: AuthorGroup[], order: string[]): AuthorGroup[] {
+  const orderIndex = new Map(order.map((author, index) => [author, index]));
+  return groups
+    .map((group, index) => ({ group, index, order: orderIndex.get(group.author) }))
+    .sort((left, right) => {
+      if (left.order != null && right.order != null) return left.order - right.order;
+      if (left.order != null) return -1;
+      if (right.order != null) return 1;
+      return left.index - right.index;
+    })
+    .map(({ group }) => group);
+}
+
 export function reorderIds(ids: string[], activeId: string, overId: string): string[] {
   if (activeId === overId) return ids;
   const from = ids.indexOf(activeId);

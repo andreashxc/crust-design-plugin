@@ -28,6 +28,7 @@ const KEY_LLM_SETTINGS = 'llm:settings';
 const KEY_LLM_LAST_ERROR = 'llm:last_error';
 const KEY_LLM_SESSION = 'llm:session';
 const KEY_EXPERIMENT_ORDER = 'experiment_order';
+const KEY_AUTHOR_GROUP_ORDER = 'popup:author_group_order';
 const KEY_AUTHOR_GROUP_OPEN = 'popup:author_group_open';
 const KEY_UPDATE_STATE = 'update:state';
 const TWEAKS_PREFIX = 'tweaks:';
@@ -274,6 +275,19 @@ export async function appendExperimentOrder(id: string): Promise<void> {
   const current = await getExperimentOrder();
   if (current.includes(id)) return;
   await setExperimentOrder([...current, id]);
+}
+
+// ===== Popup UI state — author group order =====
+
+export async function getAuthorGroupOrder(): Promise<string[]> {
+  const result = await chrome.storage.local.get(KEY_AUTHOR_GROUP_ORDER);
+  const value = result[KEY_AUTHOR_GROUP_ORDER];
+  if (!Array.isArray(value)) return [];
+  return uniqueStrings(value.filter((author): author is string => typeof author === 'string'));
+}
+
+export async function setAuthorGroupOrder(authors: string[]): Promise<void> {
+  await chrome.storage.local.set({ [KEY_AUTHOR_GROUP_ORDER]: uniqueStrings(authors) });
 }
 
 // ===== Popup UI state — author group expansion =====

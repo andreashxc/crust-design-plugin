@@ -3,11 +3,16 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { filterRegistryBySearch, groupByAuthor } from '@/popup/grouping';
+import {
+  filterRegistryBySearch,
+  groupByAuthor,
+  reorderIds,
+  sortAuthorGroupsByOrder,
+} from '@/popup/grouping';
 import { hydratePopupStore } from '@/popup/registry-refresh';
 import { useStore } from '@/popup/store';
 import { sendMessage } from '@/shared/messages';
-import { sortRegistryByOrder } from '@/shared/storage';
+import { setAuthorGroupOrder, sortRegistryByOrder } from '@/shared/storage';
 import { matchesScope } from '@/shared/url-match';
 import { AuthorGroup } from './components/AuthorGroup';
 import { EmptyState } from './components/EmptyState';
@@ -18,7 +23,9 @@ export function App() {
   const bootstrapped = useStore((state) => state.bootstrapped);
   const llmSession = useStore((state) => state.llmSession);
   const experimentOrder = useStore((state) => state.experimentOrder);
+  const authorGroupOrder = useStore((state) => state.authorGroupOrder);
   const updateState = useStore((state) => state.updateState);
+  const setStoreAuthorGroupOrder = useStore((state) => state.setAuthorGroupOrder);
   const setUpdateState = useStore((state) => state.setUpdateState);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
@@ -28,7 +35,11 @@ export function App() {
     : orderedRegistry;
   const filteredRegistry = filterRegistryBySearch(scopedRegistry, query);
   const visibleIds = filteredRegistry.map((entry) => entry.id);
-  const groups = groupByAuthor(filteredRegistry, { activeTabUrl, matchesScope });
+  const groups = sortAuthorGroupsByOrder(
+    groupByAuthor(filteredRegistry, { activeTabUrl, matchesScope }),
+    authorGroupOrder,
+  );
+  const visibleAuthors = groups.map((group) => group.author);
   const llmLabel =
     llmSession && llmSession.calls > 0
       ? `LLM ${llmSession.calls} ${llmSession.calls === 1 ? 'call' : 'calls'}${
@@ -43,6 +54,16 @@ export function App() {
       if (result?.state) setUpdateState(result.state);
     });
   }, [bootstrapped, setUpdateState]);
+
+  async function persistVisibleAuthorOrder(nextVisibleAuthors: string[]) {
+    const visibleSet = new Set(nextVisibleAuthors);
+    const nextOrder = [
+      ...nextVisibleAuthors,
+      ...authorGroupOrder.filter((author) => !visibleSet.has(author)),
+    ];
+    setStoreAuthorGroupOrder(nextOrder);
+    await setAuthorGroupOrder(nextOrder);
+  }
 
   return (
     <div className="flex min-h-0 flex-col">
@@ -143,7 +164,16 @@ export function App() {
             </div>
           ) : null}
           {groups.map((group) => (
-            <AuthorGroup key={group.author} group={group} visibleIds={visibleIds} />
+            <AuthorGroup
+              key={group.author}
+              group={group}
+              visibleIds={visibleIds}
+              onMoveAuthor={(draggedAuthor) =>
+                void persistVisibleAuthorOrder(
+                  reorderIds(visibleAuthors, draggedAuthor, group.author),
+                )
+              }
+            />
           ))}
         </div>
       </ScrollArea>

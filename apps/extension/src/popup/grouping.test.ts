@@ -1,6 +1,11 @@
 import type { Registry, RegistryEntry } from '@platform/experiment-sdk';
 import { describe, expect, it } from 'vitest';
-import { filterRegistryBySearch, groupByAuthor, reorderIds } from './grouping';
+import {
+  filterRegistryBySearch,
+  groupByAuthor,
+  reorderIds,
+  sortAuthorGroupsByOrder,
+} from './grouping';
 
 function makeEntry(author: string, id: string, match = ['*://ya.ru/*']): RegistryEntry {
   return {
@@ -106,5 +111,16 @@ describe('popup filtering and reorder helpers', () => {
   it('reorders ids by active and target ids', () => {
     expect(reorderIds(['A', 'B', 'C'], 'A', 'C')).toEqual(['B', 'C', 'A']);
     expect(reorderIds(['A', 'B', 'C'], 'C', 'A')).toEqual(['C', 'A', 'B']);
+  });
+
+  it('sorts author groups by persisted author order and keeps unknown groups stable', () => {
+    const groups = groupByAuthor(
+      [makeEntry('andrew', 'A'), makeEntry('beth', 'B'), makeEntry('zoe', 'C')],
+      { matchesScope: stubMatchesScope },
+    );
+
+    expect(
+      sortAuthorGroupsByOrder(groups, ['beth', 'andrew']).map((group) => group.author),
+    ).toEqual(['beth', 'andrew', 'zoe']);
   });
 });

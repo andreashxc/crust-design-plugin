@@ -19,6 +19,7 @@ import {
   defaultLlmSettings,
   getAppliedInTab,
   getAuthorGroupOpenState,
+  getAuthorGroupOrder,
   getAutoDisabled,
   getEnabledExperiments,
   getErrorWindow,
@@ -39,6 +40,7 @@ import {
   runStartupMigration,
   setAppliedInTab,
   setAuthorGroupOpenState,
+  setAuthorGroupOrder,
   setAutoDisable,
   setEnabledExperiment,
   setErrorWindow,
@@ -100,6 +102,17 @@ describe('storage adapter (D-12 stateless)', () => {
 });
 
 describe('storage adapter — popup author group state', () => {
+  it('round-trips author group order and drops malformed values', async () => {
+    await chrome.storage.local.set({
+      'popup:author_group_order': ['beth', 'andrew', 'beth', '', 42],
+    });
+
+    await expect(getAuthorGroupOrder()).resolves.toEqual(['beth', 'andrew']);
+
+    await setAuthorGroupOrder(['zoe', 'andrew', 'zoe', '']);
+    await expect(getAuthorGroupOrder()).resolves.toEqual(['zoe', 'andrew']);
+  });
+
   it('round-trips author group open state and drops malformed values', async () => {
     await chrome.storage.local.set({
       'popup:author_group_open': {
