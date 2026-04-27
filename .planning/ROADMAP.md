@@ -143,10 +143,14 @@ Plans:
   3. The fork scenario passes end-to-end: from designer2's popup, clicking "Fork to my folder" on a designer1 experiment shows a clipboard-ready shell command; running it copies the experiment to `experiments/designer2/<forked-id>/` and after rebuild the fork appears in designer2's popup
   4. The composition scenario passes: designer1 enables their own experiment + designer2's experiment on the same ya.ru tab, reorders them via drag-and-drop, and observes correct re-apply behavior with no DOM duplication or apply-order regressions
   5. Sideload installation succeeds in both Chrome and Yandex Browser following the documented onboarding procedure (clone → `pnpm dev` → load unpacked); a brand-new user reaches "first experiment running" in under 15 minutes
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 06-01: TBD (planned during `/gsd-plan-phase 6`)
+- [ ] 06-01: Packaging scripts and GitHub release workflow
+- [ ] 06-02: Fork-to-my-folder CLI and popup copy command
+- [ ] 06-03: Three-designer acceptance fixture experiments
+- [ ] 06-04: Chrome/Yandex sideload manual smoke checklist
+- [ ] 06-05: Final validation, artifact capture, and acceptance report
 
 **UI hint**: yes
 
@@ -162,4 +166,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
 | 5. DX, SPA Composition & Sharing | 7/7 | Complete + manual smoke pending | 2026-04-26 |
-| 6. Distribution & Acceptance | 0/TBD | Not started | - |
+| 6. Distribution & Acceptance | 0/5 | Planned | - |

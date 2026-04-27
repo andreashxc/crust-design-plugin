@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 complete; Phase 6 planning is next after optional Phase 5 manual smoke
-last_updated: "2026-04-26T23:59:00+02:00"
-last_activity: 2026-04-26 -- Phase 5 Plan 05-07 completed automated validation and smoke checklist
+stopped_at: Phase 6 planned; ready to execute 06-01
+last_updated: "2026-04-27T00:12:00+02:00"
+last_activity: 2026-04-27 -- Phase 6 planned into 5 executable plans
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 34
+  total_plans: 39
   completed_plans: 34
   percent: 100
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 6 (Distribution & Acceptance) — READY TO PLAN
-Plan: 06-01 — TBD via Phase 6 planning
-Status: Phase 5 complete with automated validation passed; Phase 5 manual smoke checklist recorded and pending Andrew/browser verification
-Last activity: 2026-04-26 -- Phase 5 Plan 05-07 completed automated validation and smoke checklist
+Phase: 6 (Distribution & Acceptance) — READY TO EXECUTE
+Plan: 06-01 — Packaging scripts and GitHub release workflow
+Status: Phase 6 planned into executable plans; execute 06-01 next
+Last activity: 2026-04-27 -- Phase 6 planned into 5 executable plans
 
 Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
@@ -100,6 +100,7 @@ Recent decisions affecting current work:
 - Plan 05-05 execution: popup can load validated tweak presets, copy a truthful `corepack pnpm save-preset` command for repo writes, and warn on missing/stale generated descriptions; CLI scripts now save presets and generate deterministic `description.md` files without overwriting manual docs.
 - Plan 05-06 execution: `docs/ONBOARDING.md` and `docs/EXPERIMENT_AUTHORING.md` now cover self-service setup, authoring, helpers, presets, and troubleshooting; popup empty states distinguish no registry, scope mismatch, and search mismatch; background update check caches GitHub compare results and the popup shows a quiet banner only when the sideload commit is behind `main`.
 - Plan 05-07 execution: full automated Phase 5 gates passed (`test -- --run`, typecheck, lint, check-csp, build); production manifest keeps GitHub update permission scoped to `https://api.github.com/repos/andreashxc/overlay-plugin/compare/*`; built registry includes `sourceSignature`, `presets`, and `descriptionStatus`; `05-MANUAL-SMOKE.md` records the 10 browser checks for Andrew.
+- Phase 6 planning: created `06-CONTEXT.md`, `06-RESEARCH.md`, `06-PATTERNS.md`, `06-VALIDATION.md`, and 5 executable plans covering packaging/release workflow, fork command/UI, three-designer fixtures, Chrome/Yandex smoke checklist, and final acceptance closeout.
 
 ### Pending Todos
 
@@ -126,6 +127,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-26T23:59:00+02:00
-Stopped at: Phase 5 complete; Phase 6 planning is next
+Last session: 2026-04-27T00:12:00+02:00
+Stopped at: Phase 6 planned; ready to execute 06-01
 Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md
