@@ -214,7 +214,7 @@ export function TweakControls({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <div className="text-xs font-medium">Tweaks</div>
         <Button
@@ -230,7 +230,7 @@ export function TweakControls({
       </div>
 
       {hasPresets || canCopyPresetCommand ? (
-        <div className="border-border/70 bg-muted/20 grid gap-1.5 rounded-sm border p-2">
+        <div className="bg-background/70 grid gap-1.5 rounded-lg p-2">
           {hasPresets ? (
             <div className="grid gap-1">
               <div className="flex items-center justify-between gap-2">
@@ -287,7 +287,7 @@ export function TweakControls({
         </div>
       ) : null}
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {tweaks.map((tweak) => {
           const controlErrors = errorsFor(errors, tweak);
           const controlId = `tweak-${tweak.key}`;

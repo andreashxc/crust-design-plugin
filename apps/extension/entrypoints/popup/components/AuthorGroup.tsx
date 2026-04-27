@@ -57,7 +57,7 @@ export function AuthorGroup({
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className="border-border/80 bg-muted/35 hover:bg-muted/60 group flex h-7 w-full cursor-grab items-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors active:cursor-grabbing"
+        className="bg-muted hover:bg-accent group flex h-7 w-full cursor-grab items-center gap-1 rounded-lg border border-transparent px-2 text-xs font-semibold transition-colors active:cursor-grabbing"
       >
         <ChevronRight className="size-3 group-data-[state=open]:hidden" aria-hidden="true" />
         <ChevronDown className="hidden size-3 group-data-[state=open]:inline" aria-hidden="true" />

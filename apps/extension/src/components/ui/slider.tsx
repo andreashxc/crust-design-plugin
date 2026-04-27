@@ -20,7 +20,7 @@ function Slider({ className, value, defaultValue, onValueChange, ...props }: Sli
       onChange={(event) => onValueChange?.(event.currentTarget.valueAsNumber)}
       className={cn(
         'accent-primary h-5 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-50',
-        'focus-visible:outline-ring rounded-md focus-visible:outline-2 focus-visible:outline-offset-2',
+        'focus-visible:outline-ring rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2',
         className,
       )}
       {...props}

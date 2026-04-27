@@ -136,7 +136,7 @@ export function App() {
         </div>
       </header>
       {updateUrl ? (
-        <div className="border-border/80 bg-muted/35 mt-2 flex items-center justify-between gap-2 rounded-md border px-2 py-1 text-xs">
+        <div className="bg-muted mt-2 flex items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs">
           <span className="text-muted-foreground">Update available</span>
           <Button
             type="button"

@@ -250,7 +250,7 @@ export function ExperimentRow({
 
   return (
     <Card
-      className="border-border/80 bg-card/95 gap-2 rounded-md p-2.5 shadow-none"
+      className="gap-2 rounded-xl border-transparent bg-card p-2.5 shadow-none"
       draggable
       onDragStart={(event) => {
         event.dataTransfer.setData('text/plain', entry.id);
@@ -266,7 +266,7 @@ export function ExperimentRow({
       <div
         className={cn(
           'relative',
-          canToggleTweaks && (tweaksOpen ? 'border-border/80 border-b pb-8' : 'pb-0'),
+          canToggleTweaks && (tweaksOpen ? 'border-border/70 border-b pb-8' : 'pb-0'),
         )}
       >
         <div className="flex items-start justify-between gap-2">
@@ -319,7 +319,7 @@ export function ExperimentRow({
             }
             aria-expanded={tweaksOpen}
             className={cn(
-              'text-muted-foreground hover:text-foreground absolute right-1 size-5 rounded-sm',
+              'text-muted-foreground hover:text-foreground hover:bg-accent absolute right-1 size-5 rounded-lg',
               tweaksOpen ? 'bottom-1' : 'bottom-0',
             )}
             onClick={() => setTweaksOpen((current) => !current)}
@@ -347,7 +347,7 @@ export function ExperimentRow({
       {forkStatus ? <div className="text-muted-foreground text-xs">{forkStatus}</div> : null}
 
       {missingLlmKey ? (
-        <div className="text-muted-foreground border-border/80 bg-muted/40 mt-1 flex items-center justify-between gap-2 rounded-sm border px-2 py-1 text-xs">
+        <div className="text-muted-foreground bg-background/70 mt-1 flex items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs">
           <span>
             LLM key missing for {lastLlmError.provider ?? publicLlmConfig.defaultProvider}
           </span>
@@ -384,7 +384,7 @@ export function ExperimentRow({
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <pre className="bg-muted text-muted-foreground mt-1 max-h-40 overflow-auto rounded-md p-2 font-mono text-[11px] whitespace-pre-wrap">
+                <pre className="bg-background/70 text-muted-foreground mt-1 max-h-40 overflow-auto rounded-lg p-2 font-mono text-[11px] whitespace-pre-wrap">
                   {lastError.stack}
                 </pre>
               </CollapsibleContent>
