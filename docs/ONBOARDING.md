@@ -6,7 +6,17 @@ You do not need to understand the whole codebase to start. The usual workflow is
 
 ## Quick Start For AI Coding Tools
 
-Paste this into Cursor, Codex, or Claude Code after cloning the repo:
+First, get the project onto your computer. Open Terminal and run:
+
+```sh
+cd ~/Code
+git clone https://github.com/andreashxc/overlay-plugin.git
+cd overlay-plugin
+```
+
+If you keep projects somewhere else, replace `~/Code` with your own folder. If `git` is missing, install GitHub Desktop or Xcode Command Line Tools first, then try again.
+
+After that, open the `overlay-plugin` folder in Cursor, Codex, or Claude Code and paste this prompt:
 
 ```text
 Set up this Crust repo for local experiment development.
@@ -172,7 +182,17 @@ Crust это локальное расширение для браузера, ч
 
 ## Быстрый Старт Для Cursor, Codex, Claude Code
 
-После клонирования репозитория вставь AI-агенту такой запрос:
+Сначала нужно скачать проект на компьютер. Открой Terminal и запусти:
+
+```sh
+cd ~/Code
+git clone https://github.com/andreashxc/overlay-plugin.git
+cd overlay-plugin
+```
+
+Если ты хранишь проекты в другой папке, замени `~/Code` на свою папку. Если команда `git` не работает, сначала установи GitHub Desktop или Xcode Command Line Tools, потом повтори команды.
+
+После этого открой папку `overlay-plugin` в Cursor, Codex или Claude Code и вставь AI-агенту такой запрос:
 
 ```text
 Подготовь этот Crust repo для локальной разработки экспериментов.
