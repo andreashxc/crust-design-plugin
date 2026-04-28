@@ -68,6 +68,16 @@ describe('ProtocolMap (D-05)', () => {
       url: string;
       selector?: string;
     }>();
+    expectTypeOf<Parameters<ProtocolMap['CHATGPT_POPUP_RUN']>[0]>().toMatchTypeOf<{
+      experimentId: string;
+      prompt: string;
+    }>();
+    expectTypeOf<ReturnType<ProtocolMap['CHATGPT_POPUP_RUN']>>().toEqualTypeOf<
+      { ok: true; text: string } | { ok: false; error: string }
+    >();
+    expectTypeOf<Parameters<ProtocolMap['CHATGPT_PAGE_RUN']>[0]>().toEqualTypeOf<{
+      prompt: string;
+    }>();
   });
 
   it('ICON_THEME_CHANGED carries a light/dark theme', () => {

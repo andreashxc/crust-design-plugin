@@ -9,6 +9,8 @@ type ChangeListener = (
   areaName: 'local' | 'session' | 'managed' | 'sync',
 ) => void;
 
+type TabUpdatedListener = (tabId: number, changeInfo: { status?: string }) => void;
+
 export type StorageAreaMock = {
   get: Mock;
   set: Mock;
@@ -41,8 +43,16 @@ export type ChromeMock = {
   tabs: {
     query: Mock;
     create: Mock;
+    get: Mock;
+    update: Mock;
     sendMessage: Mock;
+    onUpdated: { addListener: Mock; removeListener: Mock; hasListener: Mock };
     onRemoved: { addListener: Mock; removeListener: Mock; hasListener: Mock };
+  };
+  windows: {
+    create: Mock;
+    remove: Mock;
+    update: Mock;
   };
   action: {
     setIcon: Mock;
@@ -54,6 +64,7 @@ export function makeChromeMock(): ChromeMock {
   // Per-mock listener registry. Fresh registry every beforeEach (since the whole
   // mock instance is rebuilt) so tests can't leak listeners across the suite.
   const changeListeners: ChangeListener[] = [];
+  const tabUpdatedListeners: TabUpdatedListener[] = [];
 
   function fireChange(changes: ChangeMap, areaName: 'local' | 'session'): void {
     for (const l of changeListeners) l(changes, areaName);
@@ -138,8 +149,25 @@ export function makeChromeMock(): ChromeMock {
     tabs: {
       query: vi.fn(async () => [] as chrome.tabs.Tab[]),
       create: vi.fn(async () => ({}) as chrome.tabs.Tab),
+      get: vi.fn(async (id: number) => ({ id, status: 'complete' }) as chrome.tabs.Tab),
+      update: vi.fn(async (id: number, props: chrome.tabs.UpdateProperties) => ({ id, ...props })),
       sendMessage: vi.fn(),
+      onUpdated: {
+        addListener: vi.fn((l: TabUpdatedListener) => {
+          tabUpdatedListeners.push(l);
+        }),
+        removeListener: vi.fn((l: TabUpdatedListener) => {
+          const index = tabUpdatedListeners.indexOf(l);
+          if (index >= 0) tabUpdatedListeners.splice(index, 1);
+        }),
+        hasListener: vi.fn((l: TabUpdatedListener) => tabUpdatedListeners.includes(l)),
+      },
       onRemoved: { addListener: vi.fn(), removeListener: vi.fn(), hasListener: vi.fn() },
+    },
+    windows: {
+      create: vi.fn(async () => ({ id: 1, tabs: [{ id: 2, status: 'complete' }] })),
+      remove: vi.fn(async () => {}),
+      update: vi.fn(async (id: number, props: chrome.windows.UpdateInfo) => ({ id, ...props })),
     },
     action: {
       setIcon: vi.fn(async () => {}),

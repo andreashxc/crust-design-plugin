@@ -199,6 +199,25 @@ export type FetchPageResult =
       message: string;
     };
 
+export type ChatGptPopupOptions = {
+  width?: number;
+  height?: number;
+  top?: number;
+  left?: number;
+  loadTimeoutMs?: number;
+  messageTimeoutMs?: number;
+};
+
+export type ChatGptPopupResult =
+  | {
+      ok: true;
+      text: string;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
 export type InjectStyleOptions = {
   id?: string;
   target?: 'head' | 'body';
@@ -226,6 +245,7 @@ export type Helpers = {
     (prompt: string, options: LlmStreamOptions): Promise<LlmResult>;
   };
   fetchPage: (url: string, selector?: string) => Promise<FetchPageResult>;
+  chatgptPopup: (prompt: string, options?: ChatGptPopupOptions) => Promise<ChatGptPopupResult>;
   injectStyle: (css: string, options?: InjectStyleOptions) => HTMLStyleElement;
   injectNode: <TNode extends Node>(
     node: TNode,

@@ -18,6 +18,25 @@ The `author` in `manifest.json` must match the folder name under `experiments/`.
 
 For local work, use your own author folder, for example `experiments/andrew/search-banner/`. Do not put private work under `experiments/examples/`; that folder is intentionally public.
 
+## Keep Experiments Self-Contained
+
+Prefer putting experiment-specific logic inside the experiment folder. This makes experiments easier to share, fork, delete, and review without shaking core Crust behavior.
+
+Good experiment-local files:
+
+```text
+experiments/<author>/<folder>/
+  experiment.ts
+  dom.ts
+  renderer.ts
+  prompt.ts
+  styles.ts
+  manifest.json
+  description.md
+```
+
+Only change shared extension/core code when the experiment needs a real platform capability that cannot live in a content-script bundle, such as browser window/tab APIs, new host permissions, storage migrations, or a reusable helper boundary. Keep that shared surface small and generic; keep product heuristics, UI states, parsing, prompts, and visual styling in the experiment folder.
+
 ## Manifest
 
 `manifest.json` declares identity, scope, execution world, and tweak controls:

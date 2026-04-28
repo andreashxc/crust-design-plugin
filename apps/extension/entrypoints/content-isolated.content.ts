@@ -7,6 +7,7 @@ import {
   validateTweakValues,
 } from '@platform/experiment-sdk';
 import { defineContentScript } from 'wxt/utils/define-content-script';
+import { registerChatGptPageBridge } from '@/content/chatgpt-page-bridge';
 import { startDevRegistryRefresh } from '@/content/dev-refresh';
 import { createDomChangeScheduler } from '@/content/dom-observer';
 import {
@@ -60,9 +61,14 @@ function omitUnknownTweakValues(
 }
 
 export default defineContentScript({
-  matches: ['*://*.ya.ru/*', '*://ya.ru/*'],
+  matches: ['*://*.ya.ru/*', '*://ya.ru/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
   runAt: 'document_start',
   main: () => {
+    if (isChatGptBridgePage(location.href)) {
+      registerChatGptPageBridge();
+      return;
+    }
+
     ensureHeaderNavSwapEarlyGuard();
     syncActionIconWithColorScheme();
     void bootstrap().catch((err) => {
@@ -71,6 +77,15 @@ export default defineContentScript({
     });
   },
 });
+
+function isChatGptBridgePage(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'chatgpt.com' || host === 'chat.openai.com';
+  } catch {
+    return false;
+  }
+}
 
 async function bootstrap(): Promise<void> {
   const { tabId } = await sendMessage('WHO_AM_I', undefined);

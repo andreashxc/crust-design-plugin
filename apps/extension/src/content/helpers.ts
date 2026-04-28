@@ -1,4 +1,6 @@
 import type {
+  ChatGptPopupOptions,
+  ChatGptPopupResult,
   CleanupFn,
   FetchPageResult,
   Helpers,
@@ -57,6 +59,12 @@ export function createHelperContext(args: HelperFactoryArgs): {
       llm,
       fetchPage: (url: string, selector?: string): Promise<FetchPageResult> =>
         sendMessage('FETCH_PAGE', { url, selector }),
+      chatgptPopup: (prompt: string, options?: ChatGptPopupOptions): Promise<ChatGptPopupResult> =>
+        sendMessage('CHATGPT_POPUP_RUN', {
+          experimentId: args.experimentId,
+          prompt,
+          options,
+        }),
       injectStyle: (css: string, options?: InjectStyleOptions) => {
         const doc = globalThis.document;
         if (!doc) throw new Error('injectStyle requires a document');

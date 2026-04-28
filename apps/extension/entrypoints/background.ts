@@ -25,6 +25,7 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { setActionIconTheme, setAppliedCountBadge } from '@/background/action-icon';
 import { broadcastStateChanged } from '@/background/broadcast';
+import { handleChatGptPopupRun } from '@/background/handlers/chatgpt-popup';
 import { handleExperimentError } from '@/background/handlers/experiment-error';
 import { handleExperimentToggle } from '@/background/handlers/experiment-toggle';
 import { handleFetchPage } from '@/background/handlers/fetch-page';
@@ -59,6 +60,7 @@ onMessage('TWEAKS_CHANGED', async () => {
 });
 onMessage('EXPERIMENT_ERROR', ({ data }) => handleExperimentError(data));
 onMessage('LLM_COMPLETE', ({ data }) => handleLlmComplete(data));
+onMessage('CHATGPT_POPUP_RUN', (message) => handleChatGptPopupRun(message.data, message.sender));
 onMessage('PROVIDER_TEST', ({ data }) => handleProviderTest(data));
 onMessage('LLM_CLEAR_CACHE', () => handleLlmClearCache());
 onMessage('LLM_RESET_SESSION', () => handleLlmResetSession());
