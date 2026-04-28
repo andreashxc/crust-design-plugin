@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: complete
-stopped_at: Phase 7 complete; ready to decide next roadmap item
-last_updated: "2026-04-28T14:25:00+02:00"
-last_activity: 2026-04-28 -- Completed Phase 7 local DESIGN.md site context support
+milestone: v1.1
+milestone_name: Crust v1.1
+status: milestone_complete
+stopped_at: v1.1 milestone archived; ready for $gsd-new-milestone
+last_updated: "2026-04-28T14:35:00+02:00"
+last_activity: 2026-04-28 -- Archived Crust v1.1 milestone
 progress:
   total_phases: 7
   completed_phases: 7
@@ -18,17 +18,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-25)
+See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** v1.1 DESIGN.md site context support is complete; ready to choose the next roadmap item
+**Current focus:** Crust v1.1 is shipped and archived; next work should start with a fresh milestone.
 
 ## Current Position
 
-Phase: 7 (DESIGN.md Site Context Support) — COMPLETE
-Plan: 07-05 — Validation, large-file smoke, privacy audit, and manual workflow checklist
-Status: v1 and v1.1 automated implementation are complete; next work should be planned as a new phase or backlog item
-Last activity: 2026-04-28 -- Completed Phase 7 local DESIGN.md site context support
+Phase: none active
+Plan: none active
+Status: v1.1 archived in `.planning/milestones/`; `.planning/REQUIREMENTS.md` was intentionally removed so the next milestone can define fresh requirements
+Last activity: 2026-04-28 -- Archived Crust v1.1 milestone
 
 Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
@@ -115,7 +115,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Choose the next roadmap item. No active Phase 7 blockers.
+- Start the next milestone with `$gsd-new-milestone` when the next product slice is chosen.
 
 ### Blockers/Concerns
 
@@ -140,5 +140,5 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-04-28T14:25:00+02:00
-Stopped at: Phase 7 complete; ready to decide next roadmap item
+Stopped at: v1.1 milestone archived; ready for `$gsd-new-milestone`
 Resume file: .planning/STATE.md

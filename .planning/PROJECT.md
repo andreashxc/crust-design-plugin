@@ -1,39 +1,37 @@
-# Designer Experiment Platform
+# Crust
 
 ## What This Is
 
-Браузерное расширение (Chromium-only, MV3) + git-репозиторий, в котором дизайнеры и другие члены команды держат свои "эксперименты" — JS-модули, которые применяют любые правки к чужим сайтам (CSS, JS, добавление блоков, AI-генерация контента). Эксперименты разложены по личным папкам авторов, расшариваются через git, включаются и настраиваются через UI плагина с твиками. Целевая аудитория — закрытая команда; онбординг — "склонировал репо, завёл папку под своим именем, поехал".
+Crust — браузерное расширение (Chromium-only, MV3) + git-репозиторий, в котором дизайнеры и другие члены команды держат свои "эксперименты" — JS-модули, которые применяют любые правки к чужим сайтам (CSS, JS, добавление блоков, AI-генерация контента). Эксперименты разложены по личным папкам авторов, расшариваются через git, включаются и настраиваются через UI плагина с твиками. Целевая аудитория — закрытая команда; онбординг — "склонировал репо, завёл папку под своим именем, поехал".
 
 ## Core Value
 
 Дизайнер может в Cursor/Claude собрать любую правку чужого сайта (включая динамический AI-контент), запустить её у себя в браузере, и одной командой `git push` поделиться с коллегами — без согласований с разработчиками целевых сайтов и без своей бэкенд-инфраструктуры.
 
+## Current State
+
+Crust v1.1 shipped on 2026-04-28. The project now has a working Chromium MV3 extension with experiment discovery/build, popup/options UI, tweak controls, helper APIs (`llm`, `fetchPage`, side-effect helpers), dev hot-reapply, SPA/multi-experiment ordering, presets, fork/onboarding/distribution flows, Chrome/Yandex sideload acceptance, and git-private DESIGN.md site context support for AI-assisted authoring.
+
+## Next Milestone Goals
+
+No active milestone is defined yet. Use `$gsd-new-milestone` to choose the next product slice and create fresh requirements.
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Chromium MV3 extension for Chrome/Edge/Brave/Yandex Browser — v1.1
+- ✓ Git-native experiment structure under `experiments/<username>/<experiment-id>/` — v1.1
+- ✓ Build-time experiment discovery, manifest validation, registry generation, and code-split chunks — v1.1
+- ✓ Popup/options UI with grouped experiments, URL filtering, search, toggles, status/errors, theme support, and toolbar badge — v1.1
+- ✓ Six manifest-driven tweak types with validation, persistence, reset, presets, and cleanup/apply re-run — v1.1
+- ✓ Helpers for `llm()`, `fetchPage()`, side-effect cleanup, rate limiting, and LLM cost visibility — v1.1
+- ✓ Dev and sharing workflows: hot-reapply, SPA reconciliation, multi-experiment ordering, Open in Cursor, fork command, onboarding, and release packaging — v1.1
+- ✓ Local DESIGN.md/site context workflow for AI agents, private by default and excluded from extension runtime artifacts — v1.1
 
 ### Active
 
-- Расширение для Chromium-based браузеров (Chrome, Edge, Brave, Yandex Browser) на MV3
-- Эксперимент = `manifest.json` (scope URL-паттерны, описание, твики) + `experiment.js` (модуль с `apply({tweaks, ...})`)
-- Эксперименты бандлятся внутрь сборки плагина — никакого runtime-fetch JS из git (несовместимо с MV3)
-- Структура репо: `experiments/<username>/<experiment-id>/` — пользователи самоонбордятся, заводя свою папку
-- URL-scoping через glob/regex-паттерны в манифесте эксперимента
-- Несколько экспериментов на одной странице — применяются в порядке включения дизайнером
-- Твики эксперимента (полный набор v1): toggle, select, text input, number slider, color picker, multi-select
-- UI плагина авто-рендерит контролы твиков по манифесту (shadcn/ui компоненты)
-- Значения твиков сохраняются локально (chrome.storage.local), per-user
-- Возможность сохранить выбранные значения твиков как "пресет" в репо (для шаринга "вот как я задумывал")
-- Helper `await llm(prompt)` в плагине — proxy на OpenAI/Anthropic, API-ключ в настройках плагина (per-user)
-- Helper `await fetchPage(url, selector?)` — fetch из service worker + DOMParser, без headless-рендера
-- Описание эксперимента (`description.md`) генерируется Cursor/Claude при сборке эксперимента — читает код, заполняет автоматически; дизайнер может править
-- Локальные `DESIGN.md` / design context файлы для целевых сайтов используются как authoring-time контекст для AI-агентов; по умолчанию не публикуются в git и не попадают в runtime extension
-- Hot-reload dev-режим: дизайнер меняет JS — плагин подхватывает без полной пересборки/reload extension
-- UI плагина: список доступных экспериментов, сгруппированных по авторам; включение/выключение; настройка твиков
-- Возможность форкнуть чужой эксперимент в свою папку прямо из UI плагина
-- Конечный сценарий: 3 пользователя (designer1/2/3), у каждого ≥1 эксперимент, минимум один эксперимент использует `llm()`/`fetchPage()`, форк чужого эксперимента работает end-to-end
+(None — next milestone not defined yet)
 
 ### Out of Scope
 
@@ -81,17 +79,17 @@
 
 | Decision                                                         | Rationale                                                                                            | Outcome   |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------- |
-| Bundle-all + rebuild plugin (вместо runtime-fetch экспериментов) | MV3 запрещает исполнение remote JS; "Refresh button" несовместима с "чистый JS-модуль" подходом      | — Pending |
-| Чистые JS-модули (вместо декларативного манифеста или гибрида)   | Закрытая команда → доверие к авторам есть; максимальная гибкость; один движок исполнения вместо двух | — Pending |
-| Chromium-only в v1                                               | 95%+ покрытие; одна кодовая база MV3; Firefox — отдельный manifest и polyfill                        | — Pending |
-| Self-service папка пользователя в `experiments/<username>/`      | Нулевой friction онбординга; не требует моих админских действий; естественная git-изоляция           | — Pending |
-| LLM helpers в плагине (`llm()`, `fetchPage()`), а не "AI-движок" | Покрывает заявленные кейсы; stateless и простые в реализации; избегаем рабит-холла полного crawl-а   | — Pending |
-| API-ключи LLM per-user в настройках плагина                      | Нет центральной инфры → нет бэкенда v1; ответственность за биллинг на пользователе                   | — Pending |
-| Описание эксперимента генерится Cursor при сборке                | Дизайнер не пишет рутину; описание актуально коду; правки опциональны                                | — Pending |
+| Bundle-all + rebuild plugin (вместо runtime-fetch экспериментов) | MV3 запрещает исполнение remote JS; "Refresh button" несовместима с "чистый JS-модуль" подходом      | v1.1 — Complete |
+| Чистые JS-модули (вместо декларативного манифеста или гибрида)   | Закрытая команда → доверие к авторам есть; максимальная гибкость; один движок исполнения вместо двух | v1.1 — Complete |
+| Chromium-only в v1                                               | 95%+ покрытие; одна кодовая база MV3; Firefox — отдельный manifest и polyfill                        | v1.1 — Complete |
+| Self-service папка пользователя в `experiments/<username>/`      | Нулевой friction онбординга; не требует моих админских действий; естественная git-изоляция           | v1.1 — Complete |
+| LLM helpers в плагине (`llm()`, `fetchPage()`), а не "AI-движок" | Покрывает заявленные кейсы; stateless и простые в реализации; избегаем рабит-холла полного crawl-а   | v1.1 — Complete |
+| API-ключи LLM per-user в настройках плагина                      | Нет центральной инфры → нет бэкенда v1; ответственность за биллинг на пользователе                   | v1.1 — Complete |
+| Описание эксперимента генерится Cursor при сборке                | Дизайнер не пишет рутину; описание актуально коду; правки опциональны                                | v1.1 — Complete |
 | DESIGN.md/site context локальны по умолчанию                     | Контекст сайта может содержать reverse-engineered DOM, client notes и скриншоты; это помогает агенту, но не должно утекать в публичный git | Phase 7 — Complete |
-| URL-scoping в манифесте через glob/regex                         | Стандарт для browser extensions; декларативно; видно scope при ревью                                 | — Pending |
-| Несколько экспериментов на странице → по порядку включения       | Самое простое предсказуемое поведение; конфликты — на совести дизайнера                              | — Pending |
-| Твики персистятся локально + опциональный пресет в репо          | Локально — не засоряет репо; пресет — для шаринга "вот мой recommended setup"                        | — Pending |
+| URL-scoping в манифесте через glob/regex                         | Стандарт для browser extensions; декларативно; видно scope при ревью                                 | v1.1 — Complete |
+| Несколько экспериментов на странице → по порядку включения       | Самое простое предсказуемое поведение; конфликты — на совести дизайнера                              | v1.1 — Complete |
+| Твики персистятся локально + опциональный пресет в репо          | Локально — не засоряет репо; пресет — для шаринга "вот мой recommended setup"                        | v1.1 — Complete |
 
 
 ## Evolution
@@ -115,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-04-28 after Phase 7 completion (local DESIGN.md/site context support, private-by-default context paths, parser/indexer, create/fork workflow hints, and privacy audit).*
+*Last updated: 2026-04-28 after v1.1 milestone close.*
