@@ -482,6 +482,7 @@ describe('popup App', () => {
     });
 
     render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Load preset' }), {
       target: { value: 'Compact' },
     });
@@ -517,6 +518,7 @@ describe('popup App', () => {
     });
 
     render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Load preset' }), {
       target: { value: 'Broken' },
     });
@@ -549,6 +551,7 @@ describe('popup App', () => {
     });
 
     render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Preset name' }), {
       target: { value: 'Compact' },
     });

@@ -1,6 +1,6 @@
 import type { TweakDefinition, TweakValue, TweakValueMap } from '@platform/experiment-sdk';
 import { ColorControl, Slider as DialSlider, SelectControl, TextControl, Toggle } from 'dialkit';
-import { Copy, RotateCcw } from 'lucide-react';
+import { Copy, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,6 +118,7 @@ export function TweakControls({
   onCopyPresetCommand,
 }: TweakControlsProps) {
   const [draftValues, setDraftValues] = useState<TweakValueMap>(values);
+  const [presetsOpen, setPresetsOpen] = useState(false);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
@@ -135,6 +136,7 @@ export function TweakControls({
   if (tweaks.length === 0) return null;
   const hasPresets = presets.length > 0;
   const canCopyPresetCommand = Boolean(onCopyPresetCommand);
+  const hasPresetTools = hasPresets || canCopyPresetCommand;
 
   function commitValue(tweak: TweakDefinition, value: TweakValue) {
     const writeMode = controlWriteMode(tweak);
@@ -286,19 +288,34 @@ export function TweakControls({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <div className="text-xs font-medium">Tweaks</div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-6 px-1.5 text-xs"
-          onClick={onReset}
-        >
-          <RotateCcw className="size-3" aria-hidden="true" />
-          Reset
-        </Button>
+        <div className="flex items-center gap-1">
+          {hasPresetTools ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-1.5 text-xs"
+              aria-expanded={presetsOpen}
+              onClick={() => setPresetsOpen((current) => !current)}
+            >
+              <SlidersHorizontal className="size-3" aria-hidden="true" />
+              Presets
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-1.5 text-xs"
+            onClick={onReset}
+          >
+            <RotateCcw className="size-3" aria-hidden="true" />
+            Reset
+          </Button>
+        </div>
       </div>
 
-      {hasPresets || canCopyPresetCommand ? (
+      {hasPresetTools && presetsOpen ? (
         <div className="bg-background/70 grid gap-1.5 rounded-lg p-2">
           {hasPresets ? (
             <div className="grid gap-1">

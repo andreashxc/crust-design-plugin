@@ -45,9 +45,7 @@ type AppliedExperiment = {
 
 const HEADER_NAV_SWAP_AUTHOR = 'andrew';
 const HEADER_NAV_SWAP_FOLDER = 'ya-header-nav-swap';
-const HEADER_NAV_SWAP_READY_ATTR = 'data-crust-ya-header-nav-swap-ready';
 const HEADER_NAV_SWAP_EARLY_STYLE_ID = 'crust-ya-header-nav-swap-early-anti-flicker';
-let headerNavSwapEarlyReleaseTimer: ReturnType<typeof setTimeout> | undefined;
 
 const cleanups = new Map<string, AppliedExperiment>();
 const lastApplyAt = new Map<string, number>();
@@ -175,30 +173,27 @@ async function reconcile(tabId: number): Promise<void> {
 function installHeaderNavSwapEarlyGuard(): void {
   if (!isHeaderNavSwapTargetPage(location.href)) return;
 
-  document.documentElement.setAttribute(HEADER_NAV_SWAP_READY_ATTR, 'false');
   document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
 
   const style = document.createElement('style');
   style.id = HEADER_NAV_SWAP_EARLY_STYLE_ID;
   style.textContent = `
-    [data-tid="alice_chat"],
-    a[href*="//ya.ru/alice?"],
-    a[href*="/alice/chat"] {
+    .HeaderNav-Tab[data-tid="alice_chat"],
+    a.HeaderNav-Tab[href*="//ya.ru/alice?"],
+    a.HeaderNav-Tab[href*="/alice/chat"] {
       order: -2 !important;
       transition: none !important;
       animation: none !important;
     }
-    [data-tid="www"],
-    a[href^="//ya.ru?source=tabbar"],
-    a[href*="/search/"] {
+    .HeaderNav-Tab[data-tid="www"],
+    a.HeaderNav-Tab[href^="//ya.ru?source=tabbar"],
+    a.HeaderNav-Tab[href*="/search/"] {
       order: -1 !important;
       transition: none !important;
       animation: none !important;
     }
   `;
   (document.head ?? document.documentElement).append(style);
-
-  headerNavSwapEarlyReleaseTimer = setTimeout(releaseHeaderNavSwapEarlyGuard, 2500);
 }
 
 function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
@@ -215,11 +210,6 @@ function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
 
 function releaseHeaderNavSwapEarlyGuard(): void {
   document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
-  document.documentElement.setAttribute(HEADER_NAV_SWAP_READY_ATTR, 'true');
-  if (headerNavSwapEarlyReleaseTimer) {
-    clearTimeout(headerNavSwapEarlyReleaseTimer);
-    headerNavSwapEarlyReleaseTimer = undefined;
-  }
 }
 
 function isHeaderNavSwapTargetPage(url: string): boolean {

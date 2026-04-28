@@ -69,6 +69,32 @@ describe('TweakControls', () => {
     expect(screen.getByRole('button', { name: /Reset/ })).toBeTruthy();
   });
 
+  it('keeps preset tools collapsed until the presets button is clicked', () => {
+    render(
+      <TweakControls
+        tweaks={tweaks}
+        values={values}
+        errors={[]}
+        presets={[{ name: 'Compact', values: { headline: 'Short' } }]}
+        presetSaveName="custom-preset"
+        onChange={vi.fn()}
+        onReset={vi.fn()}
+        onPresetLoad={vi.fn()}
+        onPresetSaveNameChange={vi.fn()}
+        onCopyPresetCommand={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('combobox', { name: 'Load preset' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Preset name' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
+
+    expect(screen.getByRole('combobox', { name: 'Load preset' })).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Preset name' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Copy command/ })).toBeTruthy();
+  });
+
   it('writes immediate control changes', () => {
     const onChange = vi.fn();
     render(
