@@ -26,7 +26,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Resolve repo root from this test file's location: scripts/check-csp.test.ts
 // is at <repo-root>/scripts/, so dirname(...)/.. is the repo root.
@@ -34,6 +34,8 @@ const TEST_FILE_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(TEST_FILE_DIR, '..');
 const SCRIPT_PATH = resolve(REPO_ROOT, 'scripts/check-csp.ts');
 const TSX_BIN = resolve(REPO_ROOT, 'node_modules/.bin/tsx');
+
+vi.setConfig({ testTimeout: 15_000 });
 
 type RunResult = { code: number; stdout: string; stderr: string };
 

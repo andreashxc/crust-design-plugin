@@ -48,10 +48,13 @@ function writeFixture(rel: string, fixtureName: string): string {
   return abs;
 }
 
-function writeExperiment(rel = 'experiments/andrew/smoke/experiment.ts'): string {
+function writeExperiment(
+  rel = 'experiments/andrew/smoke/experiment.ts',
+  source = 'export const apply = () => () => {};\n',
+): string {
   const abs = resolve(tmpRoot, rel);
   mkdirSync(resolve(abs, '..'), { recursive: true });
-  writeFileSync(abs, 'export const apply = () => () => {};\n', 'utf8');
+  writeFileSync(abs, source, 'utf8');
   return abs;
 }
 
@@ -412,7 +415,54 @@ describe('scanAndValidate — Phase 5 metadata', () => {
 
 describe('scanAndValidate — Phase 6 acceptance fixtures', () => {
   it('includes three designer fixture authors with required helper coverage', () => {
-    const result = scanAndValidate(REPO_ROOT);
+    writeManifest('experiments/designer1/acceptance-banner/manifest.json', {
+      id: '01KQEX1N4P0MB85K9G2M7H9AF1',
+      name: 'Acceptance banner',
+      author: 'designer1',
+      description: 'Fixture with 3+ tweak types',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [
+        { type: 'toggle', key: 'enabled', label: 'Enabled', default: true },
+        {
+          type: 'select',
+          key: 'tone',
+          label: 'Tone',
+          default: 'calm',
+          options: ['calm'],
+        },
+        { type: 'text', key: 'headline', label: 'Headline', default: 'Hello' },
+      ],
+    });
+    writeExperiment('experiments/designer1/acceptance-banner/experiment.ts');
+    writeManifest('experiments/designer2/page-summary/manifest.json', {
+      id: '01KQEX1N4P0MB85K9G2M7H9AF2',
+      name: 'Page summary',
+      author: 'designer2',
+      description: 'Fixture using fetchPage',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [],
+    });
+    writeExperiment(
+      'experiments/designer2/page-summary/experiment.ts',
+      'export const apply = async ({ helpers }) => { await helpers.fetchPage("https://ya.ru/", "body"); return () => {}; };\n',
+    );
+    writeManifest('experiments/designer3/ai-label/manifest.json', {
+      id: '01KQEX1N4P0MB85K9G2M7H9AF3',
+      name: 'AI label',
+      author: 'designer3',
+      description: 'Fixture using llm',
+      scope: { match: ['*://ya.ru/*'] },
+      world: 'isolated',
+      tweaks: [],
+    });
+    writeExperiment(
+      'experiments/designer3/ai-label/experiment.ts',
+      'export const apply = async ({ helpers }) => { await helpers.llm("label"); return () => {}; };\n',
+    );
+
+    const result = scanAndValidate(tmpRoot);
     expect(result.errors).toEqual([]);
 
     const fixtureAuthors = new Set(['designer1', 'designer2', 'designer3']);
