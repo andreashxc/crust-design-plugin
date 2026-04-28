@@ -188,6 +188,12 @@ Recommended manual install:
 
 Crust does not currently publish a signed `.crx`; use the unpacked zip for sideload testing.
 
+## License And Brand
+
+Crust source code is distributed under the GNU General Public License v3.0 only. You can use, study, modify, and share the code under the terms in `LICENSE`, but distributed modified versions must keep the same GPLv3 freedoms and source availability.
+
+The `Crust` name, logo, and project identity are brand assets of this project. Forks and modified builds should not present themselves as the official Crust project unless they are released by the project owner.
+
 ## Troubleshooting
 
 - Popup says no experiments yet: run `corepack pnpm dev` or `corepack pnpm build`.
@@ -387,6 +393,12 @@ git push
 6. Выбери распакованную папку `chrome-mv3`.
 
 Сейчас Crust не публикует подписанный `.crx`, поэтому для ручного тестирования используй unpacked zip.
+
+## Лицензия И Бренд
+
+Исходный код Crust распространяется под GNU General Public License v3.0 only. Код можно использовать, изучать, изменять и распространять на условиях из `LICENSE`, но распространяемые изменённые версии должны сохранять те же GPLv3-свободы и доступность исходников.
+
+Название `Crust`, логотип и идентичность проекта считаются брендовыми материалами этого проекта. Форки и изменённые сборки не должны выдавать себя за официальный Crust, если они не выпущены владельцем проекта.
 
 ## Если Что-то Не Работает
 

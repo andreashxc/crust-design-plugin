@@ -2,6 +2,7 @@
   "name": "@platform/build-tools",
   "version": "0.0.0",
   "private": true,
+  "license": "GPL-3.0-only",
   "type": "module",
   "exports": {
     "./build-experiments": "./build-experiments.ts"

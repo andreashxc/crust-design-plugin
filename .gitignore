@@ -20,5 +20,7 @@ experiments/*
 # Site design context can contain reverse-engineered/client-specific details.
 # Keep local DESIGN.md files private unless intentionally force-added.
 DESIGN.md
-design-context/
+design-context/*
+!design-context/
+!design-context/README.md
 .crust/design-context/
