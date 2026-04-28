@@ -16,7 +16,7 @@ describe('handleUpdateCheck', () => {
       response({
         status: 'behind',
         behind_by: 2,
-        html_url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+        html_url: 'https://github.com/andreashxc/crust-design-plugin/compare/abc...main',
         commits: [{ sha: 'def' }],
       }),
     );

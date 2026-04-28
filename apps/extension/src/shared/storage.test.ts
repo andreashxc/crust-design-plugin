@@ -265,7 +265,7 @@ describe('storage adapter (Phase 5 update state)', () => {
       remoteCommit: 'def',
       available: true,
       checkedAt: 123,
-      url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+      url: 'https://github.com/andreashxc/crust-design-plugin/compare/abc...main',
     });
 
     await expect(getUpdateState()).resolves.toMatchObject({

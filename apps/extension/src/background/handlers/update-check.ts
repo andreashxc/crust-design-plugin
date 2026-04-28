@@ -2,7 +2,7 @@ import type { UpdateCheckResult } from '@/shared/messages';
 import { getUpdateState, setUpdateState, type UpdateState } from '@/shared/storage';
 
 export const UPDATE_CHECK_TTL_MS = 30 * 60 * 1000;
-const REPO = 'andreashxc/overlay-plugin';
+const REPO = 'andreashxc/crust-design-plugin';
 const DEFAULT_BRANCH = 'main';
 
 type CompareResponse = {

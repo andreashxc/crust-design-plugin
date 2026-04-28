@@ -326,7 +326,7 @@ describe('popup App', () => {
         remoteCommit: 'def',
         available: true,
         checkedAt: 1,
-        url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+        url: 'https://github.com/andreashxc/crust-design-plugin/compare/abc...main',
       },
     });
 
@@ -334,7 +334,7 @@ describe('popup App', () => {
     expect(screen.getByText('Update available')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'View' }));
     expect(chromeMock().tabs.create).toHaveBeenCalledWith({
-      url: 'https://github.com/andreashxc/overlay-plugin/compare/abc...main',
+      url: 'https://github.com/andreashxc/crust-design-plugin/compare/abc...main',
     });
 
     useStore.setState({

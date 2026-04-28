@@ -12,15 +12,15 @@ Pick a place where the project folder should live. If you are not sure, use `Des
 
 ```sh
 cd ~/Desktop
-git clone https://github.com/andreashxc/overlay-plugin.git
-cd overlay-plugin
+git clone https://github.com/andreashxc/crust-design-plugin.git
+cd crust-design-plugin
 ```
 
-This creates a new folder at `Desktop/overlay-plugin`. That folder is the Crust project. If you prefer a different location, open that folder in Finder, drag it into Terminal after typing `cd `, press Enter, and then run the `git clone` command.
+This creates a new folder at `Desktop/crust-design-plugin`. That folder is the Crust project. If you prefer a different location, open that folder in Finder, drag it into Terminal after typing `cd `, press Enter, and then run the `git clone` command.
 
 If `git` is missing, install GitHub Desktop or Xcode Command Line Tools first, then try again.
 
-After that, open the `overlay-plugin` folder in Cursor, Codex, or Claude Code and paste this prompt:
+After that, open the `crust-design-plugin` folder in Cursor, Codex, or Claude Code and paste this prompt:
 
 ```text
 Set up this Crust repo for local experiment development.
@@ -212,15 +212,15 @@ Crust это локальное расширение для браузера, ч
 
 ```sh
 cd ~/Desktop
-git clone https://github.com/andreashxc/overlay-plugin.git
-cd overlay-plugin
+git clone https://github.com/andreashxc/crust-design-plugin.git
+cd crust-design-plugin
 ```
 
-После этого на рабочем столе появится папка `overlay-plugin`. Это и есть проект Crust. Если хочешь положить проект в другое место, открой нужную папку в Finder, напиши в Terminal `cd `, перетащи папку в Terminal, нажми Enter, а потом запусти команду `git clone`.
+После этого на рабочем столе появится папка `crust-design-plugin`. Это и есть проект Crust. Если хочешь положить проект в другое место, открой нужную папку в Finder, напиши в Terminal `cd `, перетащи папку в Terminal, нажми Enter, а потом запусти команду `git clone`.
 
 Если команда `git` не работает, сначала установи GitHub Desktop или Xcode Command Line Tools, потом повтори команды.
 
-После этого открой папку `overlay-plugin` в Cursor, Codex или Claude Code и вставь AI-агенту такой запрос:
+После этого открой папку `crust-design-plugin` в Cursor, Codex или Claude Code и вставь AI-агенту такой запрос:
 
 ```text
 Подготовь этот Crust repo для локальной разработки экспериментов.

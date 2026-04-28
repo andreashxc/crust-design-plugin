@@ -38,7 +38,7 @@ export default defineConfig({
       '*://*.ya.ru/*',
       'https://weather.yandex.ru/*',
       'https://yandex.ru/pogoda/*',
-      'https://api.github.com/repos/andreashxc/overlay-plugin/compare/*',
+      'https://api.github.com/repos/andreashxc/crust-design-plugin/compare/*',
     ],
     web_accessible_resources: [
       {
