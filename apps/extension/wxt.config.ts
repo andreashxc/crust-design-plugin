@@ -36,6 +36,8 @@ export default defineConfig({
     host_permissions: [
       '*://ya.ru/*',
       '*://*.ya.ru/*',
+      'https://weather.yandex.ru/*',
+      'https://yandex.ru/pogoda/*',
       'https://api.github.com/repos/andreashxc/overlay-plugin/compare/*',
     ],
     web_accessible_resources: [

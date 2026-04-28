@@ -43,6 +43,12 @@ type AppliedExperiment = {
   moduleKey: string;
 };
 
+const HEADER_NAV_SWAP_AUTHOR = 'andrew';
+const HEADER_NAV_SWAP_FOLDER = 'ya-header-nav-swap';
+const HEADER_NAV_SWAP_READY_ATTR = 'data-crust-ya-header-nav-swap-ready';
+const HEADER_NAV_SWAP_EARLY_STYLE_ID = 'crust-ya-header-nav-swap-early-anti-flicker';
+let headerNavSwapEarlyReleaseTimer: ReturnType<typeof setTimeout> | undefined;
+
 const cleanups = new Map<string, AppliedExperiment>();
 const lastApplyAt = new Map<string, number>();
 
@@ -56,8 +62,9 @@ function omitUnknownTweakValues(
 
 export default defineContentScript({
   matches: ['*://*.ya.ru/*', '*://ya.ru/*'],
-  runAt: 'document_idle',
+  runAt: 'document_start',
   main: () => {
+    installHeaderNavSwapEarlyGuard();
     syncActionIconWithColorScheme();
     void bootstrap();
   },
@@ -111,6 +118,7 @@ async function reconcile(tabId: number): Promise<void> {
     ),
     order,
   );
+  syncHeaderNavSwapEarlyGuard(wantOn);
   const wantOnIds = new Set(wantOn.map((entry) => entry.id));
 
   for (const [id, applied] of Array.from(cleanups.entries())) {
@@ -162,6 +170,69 @@ async function reconcile(tabId: number): Promise<void> {
   const appliedIds = Array.from(cleanups.keys());
   await setAppliedInTab(tabId, appliedIds);
   await sendMessage('APPLIED_COUNT_CHANGED', { tabId, count: appliedIds.length }).catch(() => {});
+}
+
+function installHeaderNavSwapEarlyGuard(): void {
+  if (!isHeaderNavSwapTargetPage(location.href)) return;
+
+  document.documentElement.setAttribute(HEADER_NAV_SWAP_READY_ATTR, 'false');
+  document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
+
+  const style = document.createElement('style');
+  style.id = HEADER_NAV_SWAP_EARLY_STYLE_ID;
+  style.textContent = `
+    [data-tid="alice_chat"],
+    a[href*="//ya.ru/alice?"],
+    a[href*="/alice/chat"] {
+      order: -2 !important;
+      transition: none !important;
+      animation: none !important;
+    }
+    [data-tid="www"],
+    a[href^="//ya.ru?source=tabbar"],
+    a[href*="/search/"] {
+      order: -1 !important;
+      transition: none !important;
+      animation: none !important;
+    }
+  `;
+  (document.head ?? document.documentElement).append(style);
+
+  headerNavSwapEarlyReleaseTimer = setTimeout(releaseHeaderNavSwapEarlyGuard, 2500);
+}
+
+function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
+  if (!isHeaderNavSwapTargetPage(location.href)) {
+    releaseHeaderNavSwapEarlyGuard();
+    return;
+  }
+
+  const wantsHeaderNavSwap = wantOn.some(
+    (entry) => entry.author === HEADER_NAV_SWAP_AUTHOR && entry.folder === HEADER_NAV_SWAP_FOLDER,
+  );
+  if (!wantsHeaderNavSwap) releaseHeaderNavSwapEarlyGuard();
+}
+
+function releaseHeaderNavSwapEarlyGuard(): void {
+  document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
+  document.documentElement.setAttribute(HEADER_NAV_SWAP_READY_ATTR, 'true');
+  if (headerNavSwapEarlyReleaseTimer) {
+    clearTimeout(headerNavSwapEarlyReleaseTimer);
+    headerNavSwapEarlyReleaseTimer = undefined;
+  }
+}
+
+function isHeaderNavSwapTargetPage(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return (
+      pathname === '/search' ||
+      pathname.startsWith('/search/') ||
+      pathname.startsWith('/alice/chat/')
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function canApplyNow(id: string): Promise<boolean> {
