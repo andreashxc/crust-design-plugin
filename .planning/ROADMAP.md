@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Chromium MV3 extension that lets a closed team of designers ship DOM-mutation experiments through a git-native workflow with first-class AI helpers. The roadmap mirrors the strict architectural dependency chain identified in research: a **Foundation Spike** validates the riskiest MV3 unknowns before any feature work; **State + UI shell** establishes the typed message/storage backbone; the **Tweak system** delivers the platform's primary designer-facing value loop; **Helpers** ship the LLM/fetchPage differentiators with mandatory cost guards; **DX, SPA composition, and sharing** smooth the daily designer workflow; and **Distribution + Acceptance** validates the three-designer end-to-end scenario from PROJECT.md. Granularity: standard (6 phases). All 63 v1 requirements map to exactly one phase.
+A Chromium MV3 extension that lets a closed team of designers ship DOM-mutation experiments through a git-native workflow with first-class AI helpers. The roadmap mirrors the strict architectural dependency chain identified in research: a **Foundation Spike** validates the riskiest MV3 unknowns before any feature work; **State + UI shell** establishes the typed message/storage backbone; the **Tweak system** delivers the platform's primary designer-facing value loop; **Helpers** ship the LLM/fetchPage differentiators with mandatory cost guards; **DX, SPA composition, and sharing** smooth the daily designer workflow; **Distribution + Acceptance** validates the three-designer end-to-end scenario from PROJECT.md; and **Design Context** makes AI-authored experiments understand the target site's visual system before writing code. Granularity: standard (7 phases). All 63 v1 requirements map to phases 1-6; v1.1 design-context requirements map to Phase 7.
 
 ## Phases
 
@@ -17,7 +17,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Tweak System** - All 6 tweak types auto-render from manifest, validate, and round-trip through apply/cleanup (completed 2026-04-26)
 - [x] **Phase 4: Helpers & LLM Integration** - `llm()` and `fetchPage()` ship with cost guards, caching, and SPA-shell detection (completed 2026-04-26; manual smoke passed)
 - [x] **Phase 5: DX, SPA Composition & Sharing** - Hot-reload, SPA navigation, multi-experiment ordering, presets, and self-service onboarding (completed 2026-04-26; manual smoke pending)
-- [ ] **Phase 6: Distribution & Acceptance** - `.crx` packaging, fork-from-UI, Yandex Browser smoke test, and full three-designer acceptance scenario
+- [x] **Phase 6: Distribution & Acceptance** - `.crx` packaging, fork-from-UI, Yandex Browser smoke test, and full three-designer acceptance scenario (completed 2026-04-27; manual smoke passed 2026-04-28)
+- [x] **Phase 7: DESIGN.md Site Context Support** - Local, git-private target-site design context files feed AI experiment creation and optional validation (completed 2026-04-28)
 
 ## Phase Details
 
@@ -154,10 +155,34 @@ Plans:
 
 **UI hint**: yes
 
+### Phase 7: DESIGN.md Site Context Support
+**Goal**: Designers and vibe-coders can keep local, git-private `DESIGN.md`-style site context files for target websites (for example ya.ru SERP) and have Crust tooling surface that context when creating or modifying experiments. The context should combine Google DESIGN.md tokens/prose with target-site implementation notes, DOM landmarks, responsive behavior, and extension-specific pitfalls, so agents stop guessing the site's visual/technical patterns.
+**Depends on**: Phase 6
+**Requirements**: DCTX-01, DCTX-02, DCTX-03, DCTX-04, DCTX-05, DCTX-06, DCTX-07, DCTX-08
+**Success Criteria** (what must be TRUE):
+  1. Local design context files are ignored by git by default (`DESIGN.md`, `design-context/`, `.crust/design-context/`), while public example context can still be intentionally committed if explicitly force-added or placed in a documented examples path.
+  2. The repo documents a recommended per-site layout, e.g. `design-context/<site>/DESIGN.md` plus optional supporting notes/screenshots, and explains in Russian and English how a non-developer adds one.
+  3. A parser/indexer discovers DESIGN.md files, validates at least the Google alpha structure (YAML front matter + markdown body, token references, duplicate sections/order warnings), and extracts a compact summary suitable for agent prompts.
+  4. Experiment creation/fork prompts and CLI output can attach the matching site context by URL/scope, so an agent creating an experiment for `ya.ru/search` sees the relevant tokens, components, DOM landmarks, and known extension pitfalls before coding.
+  5. Build/dev tooling never bundles private design context into the extension artifact or `registry.json`; context is for authoring-time agent guidance unless explicitly promoted to a public example.
+  6. The popup/options UI remains clean: no heavy design context editor in the extension; at most a small indicator or source link may show that an experiment was authored with a local context.
+  7. The plan handles large real files like the supplied 1,345-line ya.ru `DESIGN.md` by summarizing/chunking, not blindly injecting the full file into every prompt.
+  8. Manual smoke proves the workflow: add local ya.ru `DESIGN.md`, ask an AI agent to create a new ya.ru experiment, and verify the output uses site-consistent spacing, typography, components, and DOM-safe extension patterns.
+**Plans**: 5 plans
+
+Plans:
+- [x] 07-01: Research DESIGN.md alpha spec, local file privacy model, and target-site context shape
+- [x] 07-02: Design-context storage convention, gitignore/docs updates, and onboarding prompt updates
+- [x] 07-03: DESIGN.md parser/indexer with validation and compact prompt-summary generation
+- [x] 07-04: Experiment authoring integration: create/fork prompts, CLI discovery, and scope-to-context matching
+- [x] 07-05: Validation, large-file smoke with ya.ru DESIGN.md, privacy audit, and manual workflow checklist
+
+**UI hint**: no
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -166,4 +191,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Tweak System | 6/6 | Complete    | 2026-04-26 |
 | 4. Helpers & LLM Integration | 8/8 | Complete + manual smoke passed | 2026-04-26 |
 | 5. DX, SPA Composition & Sharing | 7/7 | Complete + manual smoke pending | 2026-04-26 |
-| 6. Distribution & Acceptance | 5/5 | Complete + manual smoke pending | 2026-04-27 |
+| 6. Distribution & Acceptance | 5/5 | Complete + manual smoke passed | 2026-04-27 |
+| 7. DESIGN.md Site Context Support | 5/5 | Complete | 2026-04-28 |

@@ -218,7 +218,8 @@ function isHeaderNavSwapTargetPage(url: string): boolean {
     return (
       pathname === '/search' ||
       pathname.startsWith('/search/') ||
-      pathname.startsWith('/alice/chat/')
+      pathname === '/alice' ||
+      pathname.startsWith('/alice/')
     );
   } catch {
     return false;

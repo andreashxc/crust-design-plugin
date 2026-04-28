@@ -48,6 +48,21 @@ Keep `corepack pnpm dev` running while you work. Crust watches `experiments/**`,
 
 Describe the experiment in normal language. Focus on what should happen, where it should happen, and what the user should see or do. You do not need to invent an experiment ID, folder name, display name, or implementation plan. The coding agent should choose those and explain what it did.
 
+If you have a local site design context file, put it in one of these places before asking the agent:
+
+```text
+design-context/<site>/DESIGN.md
+.crust/design-context/<site>/DESIGN.md
+```
+
+Example: `design-context/ya.ru/DESIGN.md`. These files are ignored by git by default. They can contain notes about the site's visual style, DOM structure, responsive behavior, and extension pitfalls, so the agent has better context before it writes the experiment.
+
+To check that Crust finds it, ask the agent to run:
+
+```sh
+corepack pnpm design-context --url https://ya.ru/
+```
+
 Paste a prompt like this:
 
 ```text
@@ -65,6 +80,7 @@ How it should work:
 Please choose the author folder, experiment folder name, display name, manifest scope, file structure, and reasonable implementation details yourself.
 Ask only product or design questions that block the result.
 
+If a matching local DESIGN.md site context exists, read its summary first and use it when choosing layout, typography, colors, DOM anchors, and extension-safe implementation details.
 Add tweak controls if they would help compare variants in the popup.
 After implementation, run the relevant checks and tell me exactly what to reload or test in the browser.
 ```
@@ -86,6 +102,7 @@ The card appears after the page loads. It has a short headline, a small close bu
 Please choose the author folder, experiment folder name, display name, manifest scope, file structure, and reasonable implementation details yourself.
 Ask only product or design questions that block the result.
 
+If a matching local DESIGN.md site context exists, read its summary first and use it when choosing layout, typography, colors, DOM anchors, and extension-safe implementation details.
 Add tweak controls if they would help compare variants in the popup.
 After implementation, run checks and tell me what to test.
 ```
@@ -231,6 +248,21 @@ corepack pnpm dev
 
 Опиши эксперимент обычным языком. Сфокусируйся на том, что должно произойти, на каких страницах и что пользователь должен увидеть или сделать. Не нужно придумывать ID, имя папки, красивое название или технический план. AI-агент должен сам выбрать это и объяснить, что сделал.
 
+Если у тебя есть локальный файл с дизайн-контекстом сайта, положи его в одно из этих мест до запроса агенту:
+
+```text
+design-context/<site>/DESIGN.md
+.crust/design-context/<site>/DESIGN.md
+```
+
+Пример: `design-context/ya.ru/DESIGN.md`. Эти файлы по умолчанию игнорируются git. В них можно хранить заметки про визуальный стиль сайта, DOM-структуру, responsive-поведение и ловушки для браузерного расширения, чтобы AI-агент не угадывал всё с нуля.
+
+Чтобы проверить, что Crust видит файл, попроси агента запустить:
+
+```sh
+corepack pnpm design-context --url https://ya.ru/
+```
+
 Вставь примерно такой запрос:
 
 ```text
@@ -248,6 +280,7 @@ corepack pnpm dev
 Сам выбери author-папку, имя папки эксперимента, display name, manifest scope, структуру файлов и разумные технические детали.
 Задавай только продуктовые или дизайн-вопросы, без которых нельзя сделать результат.
 
+Если есть подходящий локальный DESIGN.md site context, сначала прочитай его summary и используй его для layout, typography, colors, DOM anchors и безопасной реализации внутри extension.
 Добавь tweak controls, если они помогут сравнивать варианты в popup.
 После реализации запусти нужные проверки и скажи, что именно мне перезагрузить или проверить в браузере.
 ```
@@ -269,6 +302,7 @@ https://ya.ru/
 Сам выбери author-папку, имя папки эксперимента, display name, manifest scope, структуру файлов и разумные технические детали.
 Задавай только продуктовые или дизайн-вопросы, без которых нельзя сделать результат.
 
+Если есть подходящий локальный DESIGN.md site context, сначала прочитай его summary и используй его для layout, typography, colors, DOM anchors и безопасной реализации внутри extension.
 Добавь tweak controls, если они помогут сравнивать варианты в popup.
 После реализации запусти проверки и скажи, что мне тестировать.
 ```

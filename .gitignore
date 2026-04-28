@@ -16,3 +16,9 @@ experiments/*
 !experiments/.gitkeep
 !experiments/examples/
 !experiments/examples/**
+
+# Site design context can contain reverse-engineered/client-specific details.
+# Keep local DESIGN.md files private unless intentionally force-added.
+DESIGN.md
+design-context/
+.crust/design-context/

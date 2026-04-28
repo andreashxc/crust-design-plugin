@@ -5,7 +5,7 @@
 - Ran final automated validation gates.
 - Captured manifest, registry, and zip artifact evidence.
 - Created `06-ACCEPTANCE.md`.
-- Marked Phase 6 complete locally with manual smoke pending.
+- Marked Phase 6 complete with manual Chrome/Yandex smoke passed.
 
 ## Verification
 
@@ -18,5 +18,5 @@
 
 ## External Follow-Up
 
-- `git push origin main` is blocked by GitHub SSH auth: `Permission denied (publickey)`.
-- Chrome/Yandex manual smoke remains pending in `06-MANUAL-SMOKE.md`.
+- None for Phase 6 acceptance.
+- User confirmed Phase 6 smoke OK on 2026-04-28; `06-MANUAL-SMOKE.md` records the passed result.

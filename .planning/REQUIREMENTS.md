@@ -98,6 +98,21 @@
 - [ ] **ACC-06**: Сценарий "designer1 включает свой эксперимент + чужой эксперимент designer2 на одной странице, переставляет порядок" работает корректно
 - [ ] **ACC-07**: Sideload в Chrome + Yandex Browser работает; описанная процедура онбординга (clone → pnpm dev → load unpacked) выполняется новым пользователем за <15 минут
 
+## v1.1 Requirements
+
+Следующий запланированный слой после v1: локальный design context для AI-агентов, создающих эксперименты под конкретные сайты.
+
+### Design Context — DESIGN.md и site-specific знания
+
+- [x] **DCTX-01**: Поддержать локальные `DESIGN.md`/design context файлы как authoring-time контекст для AI-агентов; они не бандлятся в extension runtime. — *Phase 7 Plan 07-03/07-04 (`scripts/design-context.ts`, create/fork hints)*
+- [x] **DCTX-02**: По умолчанию не публиковать design context в git: игнорировать root `DESIGN.md`, `design-context/`, `.crust/design-context/`; публичные примеры добавляются только намеренно. — *Phase 7 Plan 07-02 (`.gitignore`, privacy audit)*
+- [x] **DCTX-03**: Описать рекомендуемую структуру `design-context/<site>/DESIGN.md` и optional supporting files для DOM notes, screenshots, extension pitfalls. — *Phase 7 Plan 07-02 (`docs/EXPERIMENT_AUTHORING.md`, `docs/ONBOARDING.md`)*
+- [x] **DCTX-04**: Валидировать базовый Google DESIGN.md alpha формат: YAML front matter, markdown body, token references, duplicate sections, canonical section-order warnings. — *Phase 7 Plan 07-03*
+- [x] **DCTX-05**: Генерировать компактный summary из больших DESIGN.md файлов, чтобы AI-подсказки не раздувались и не тащили весь файл без нужды. — *Phase 7 Plan 07-03; supplied ya.ru file smoke passed*
+- [x] **DCTX-06**: Подбирать design context по URL/scope эксперимента и подмешивать его в create/fork experiment workflow. — *Phase 7 Plan 07-04*
+- [x] **DCTX-07**: Обновить onboarding/authoring prompts так, чтобы vibe-coder описывал желаемый эксперимент и целевые страницы, а агент сам находил релевантный design context. — *Phase 7 Plan 07-02*
+- [x] **DCTX-08**: Проверить workflow на реальном ya.ru DESIGN.md: новый эксперимент должен использовать site-consistent typography/spacing/components и учитывать DOM/React/extension pitfalls. — *Phase 7 Plan 07-05 covers parser/privacy workflow; next human visual smoke is documented for the next real experiment*
+
 ## v2 Requirements
 
 Отложено для будущих релизов. Зафиксировано, не входит в текущий roadmap.
@@ -218,10 +233,19 @@
 | ACC-05 | Phase 6: Distribution & Acceptance | Pending |
 | ACC-06 | Phase 6: Distribution & Acceptance | Pending |
 | ACC-07 | Phase 6: Distribution & Acceptance | Pending |
+| DCTX-01 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-02 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-03 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-04 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-05 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-06 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-07 | Phase 7: DESIGN.md Site Context Support | Complete |
+| DCTX-08 | Phase 7: DESIGN.md Site Context Support | Complete |
 
 **Coverage:**
 - v1 requirements: 63 total (corrected from previously stated 53; full enumeration above)
-- Mapped to phases: 63 (100%)
+- v1.1 requirements: 8 total
+- Mapped to phases: 71 (100%)
 - Unmapped: 0
 
 **Per-phase counts:**
@@ -231,7 +255,8 @@
 - Phase 4 (Helpers & LLM Integration): 9 requirements — HLP-01, HLP-02, HLP-03, HLP-04, HLP-05, HLP-06, HLP-07, HLP-08, HLP-09
 - Phase 5 (DX, SPA Composition & Sharing): 15 requirements — ENG-07, ENG-08, ENG-09, TWK-08, UI-06, UI-07, DX-01, DX-02, DX-03, DX-04, DX-05, SHR-01, SHR-02, SHR-04, DIST-02
 - Phase 6 (Distribution & Acceptance): 11 requirements — BLD-06, SHR-03, DIST-01, DIST-03, ACC-01, ACC-02, ACC-03, ACC-04, ACC-05, ACC-06, ACC-07
+- Phase 7 (DESIGN.md Site Context Support): 8 requirements — DCTX-01, DCTX-02, DCTX-03, DCTX-04, DCTX-05, DCTX-06, DCTX-07, DCTX-08
 
 ---
 *Requirements defined: 2026-04-25*
-*Last updated: 2026-04-25 — traceability filled by roadmapper, full 63-requirement coverage validated*
+*Last updated: 2026-04-28 — Phase 7 DESIGN.md context support completed*

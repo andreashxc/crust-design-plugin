@@ -79,6 +79,33 @@ Prefer helpers for page side effects so cleanup stays automatic.
 
 Content scripts never receive provider API keys. If an API key is missing, the popup shows a small warning on the affected LLM experiment.
 
+## Site Design Context
+
+Crust can use local `DESIGN.md` files as authoring context for AI agents. This is for prompts and CLI guidance only; private design context is not bundled into the extension and is ignored by git by default.
+
+Recommended local locations:
+
+```text
+DESIGN.md
+design-context/<site>/DESIGN.md
+.crust/design-context/<site>/DESIGN.md
+```
+
+Use `design-context/<site>/DESIGN.md` when you want a visible local folder. Use `.crust/design-context/<site>/DESIGN.md` when you want the context tucked away. For ya.ru, use `design-context/ya.ru/DESIGN.md` or `.crust/design-context/ya.ru/DESIGN.md`.
+
+Check what Crust can see:
+
+```sh
+corepack pnpm design-context --list
+corepack pnpm design-context --url https://ya.ru/
+```
+
+The command prints a compact summary for the AI agent: token groups, key sections, warnings, and the source path. It does not inject the full file into the browser extension.
+
+When `create-experiment` or `fork-experiment` finds matching context for the experiment scope, it prints a hint telling you which command to run and paste into your AI coding tool.
+
+Do not commit private `DESIGN.md`, `design-context/`, or `.crust/design-context/` files unless you intentionally force-add a sanitized public example.
+
 ## Presets
 
 Presets are shared repo files in `presets/*.json`:

@@ -29,6 +29,7 @@
 - Helper `await llm(prompt)` в плагине — proxy на OpenAI/Anthropic, API-ключ в настройках плагина (per-user)
 - Helper `await fetchPage(url, selector?)` — fetch из service worker + DOMParser, без headless-рендера
 - Описание эксперимента (`description.md`) генерируется Cursor/Claude при сборке эксперимента — читает код, заполняет автоматически; дизайнер может править
+- Локальные `DESIGN.md` / design context файлы для целевых сайтов используются как authoring-time контекст для AI-агентов; по умолчанию не публикуются в git и не попадают в runtime extension
 - Hot-reload dev-режим: дизайнер меняет JS — плагин подхватывает без полной пересборки/reload extension
 - UI плагина: список доступных экспериментов, сгруппированных по авторам; включение/выключение; настройка твиков
 - Возможность форкнуть чужой эксперимент в свою папку прямо из UI плагина
@@ -87,6 +88,7 @@
 | LLM helpers в плагине (`llm()`, `fetchPage()`), а не "AI-движок" | Покрывает заявленные кейсы; stateless и простые в реализации; избегаем рабит-холла полного crawl-а   | — Pending |
 | API-ключи LLM per-user в настройках плагина                      | Нет центральной инфры → нет бэкенда v1; ответственность за биллинг на пользователе                   | — Pending |
 | Описание эксперимента генерится Cursor при сборке                | Дизайнер не пишет рутину; описание актуально коду; правки опциональны                                | — Pending |
+| DESIGN.md/site context локальны по умолчанию                     | Контекст сайта может содержать reverse-engineered DOM, client notes и скриншоты; это помогает агенту, но не должно утекать в публичный git | Phase 7 — Complete |
 | URL-scoping в манифесте через glob/regex                         | Стандарт для browser extensions; декларативно; видно scope при ревью                                 | — Pending |
 | Несколько экспериментов на странице → по порядку включения       | Самое простое предсказуемое поведение; конфликты — на совести дизайнера                              | — Pending |
 | Твики персистятся локально + опциональный пресет в репо          | Локально — не засоряет репо; пресет — для шаринга "вот мой recommended setup"                        | — Pending |
@@ -113,4 +115,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-04-25 after Phase 1 completion (Foundation Spike & Engine Skeleton — pnpm/TS monorepo, WXT 0.20 extension scaffold, two-world content scripts, build-time experiment discovery, smoke experiment, CSP guardrail, MV3 spike report; live-Chrome smoke pending in `01-HUMAN-UAT.md`).*
+*Last updated: 2026-04-28 after Phase 7 completion (local DESIGN.md/site context support, private-by-default context paths, parser/indexer, create/fork workflow hints, and privacy audit).*

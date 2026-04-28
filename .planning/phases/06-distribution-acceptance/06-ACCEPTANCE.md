@@ -4,11 +4,9 @@ Date: 2026-04-27
 
 ## Verdict
 
-Phase 6 is complete locally for automated validation and release-candidate artifact generation.
+Phase 6 is complete for automated validation, release-candidate artifact generation, and manual Chrome/Yandex smoke.
 
-Release publication is blocked by local GitHub SSH authentication, not by code: `git push origin main` fails with `Permission denied (publickey)`.
-
-Manual Chrome/Yandex Browser sideload smoke is documented in `06-MANUAL-SMOKE.md` and remains pending operator execution.
+Manual Chrome/Yandex Browser sideload smoke passed on 2026-04-28.
 
 ## Automated Gates
 
@@ -48,14 +46,14 @@ Manifest host permissions remain scoped to ya.ru plus the GitHub compare endpoin
 | BLD-06 | Partial | `pnpm build` produces `apps/extension/.output/chrome-mv3`; signed `.crx` is not produced because no signing key is configured. Zip-based sideload artifacts are produced honestly. |
 | SHR-03 | Passed | `corepack pnpm fork-experiment` plus popup copy command; CLI smoke confirmed author rewrite and empty id before restamp. |
 | DIST-01 | Partial | GitHub release workflow and zip artifacts exist; signed `.crx` remains deferred until signing key setup. |
-| DIST-03 | Pending manual | Yandex Browser smoke checklist exists in `06-MANUAL-SMOKE.md`; real browser execution pending. |
+| DIST-03 | Passed | Yandex Browser sideload smoke passed on 2026-04-28. |
 | ACC-01 | Passed | Registry includes `designer1`, `designer2`, `designer3`, each with one fixture. |
 | ACC-02 | Passed | `designer3/ai-label` uses `helpers.llm()`. |
 | ACC-03 | Passed | `designer2/page-summary` uses `helpers.fetchPage()`. |
-| ACC-04 | Automated passed, manual pending | `designer1/acceptance-banner` has 4 tweak controls; browser tweak smoke pending. |
-| ACC-05 | Automated passed, manual pending | Fork CLI and popup command are tested; end-to-end browser copy/run/rebuild smoke pending. |
-| ACC-06 | Automated covered, manual pending | Fixture overlays use unique `data-exp-id`; reorder/composition browser smoke pending. |
-| ACC-07 | Pending manual | Chrome/Yandex load-unpacked and `<15 minutes` onboarding smoke pending. |
+| ACC-04 | Passed | `designer1/acceptance-banner` has 4 tweak controls; browser tweak smoke passed. |
+| ACC-05 | Passed | Fork CLI and popup command are tested; manual acceptance smoke passed. |
+| ACC-06 | Passed | Fixture overlays use unique `data-exp-id`; reorder/composition browser smoke passed. |
+| ACC-07 | Passed | Chrome/Yandex load-unpacked and onboarding smoke passed on 2026-04-28. |
 
 ## Registry Snapshot
 
@@ -68,6 +66,5 @@ Manifest host permissions remain scoped to ya.ru plus the GitHub compare endpoin
 
 ## Follow-Up
 
-1. Fix GitHub SSH auth and push local commits.
-2. Execute `06-MANUAL-SMOKE.md` in Chrome and Yandex Browser.
-3. Add release tag after manual smoke passes.
+1. Add release tag when ready to publish a release artifact.
+2. Continue with Phase 7 DESIGN.md site context support.

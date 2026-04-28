@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { designContextHint } from './design-context';
 
 const [, , authorArg, folderArg, ...nameParts] = process.argv;
 
@@ -115,4 +116,9 @@ No tweaks yet.
 writeFileSync(resolve(presetsDir, '.gitkeep'), '', 'utf8');
 
 console.log(`Created ${dir}`);
+const contextHint = designContextHint(process.cwd(), 'https://ya.ru/');
+if (contextHint) {
+  console.log('');
+  console.log(contextHint);
+}
 console.log('Run corepack pnpm dev or corepack pnpm build to stamp the manifest id.');

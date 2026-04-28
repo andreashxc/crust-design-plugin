@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { globSync } from 'glob';
+import { designContextHint } from './design-context';
 
 const [, , sourceArg, targetAuthorArg, targetFolderArg] = process.argv;
 
@@ -45,6 +46,14 @@ function findManifest(root: string, selector: string): string | null {
 function copyIfExists(source: string, target: string): void {
   if (!existsSync(source)) return;
   cpSync(source, target, { recursive: true });
+}
+
+function firstScopeMatch(manifest: Record<string, unknown>): string | null {
+  const scope = manifest.scope;
+  if (!scope || typeof scope !== 'object' || Array.isArray(scope)) return null;
+  const match = (scope as Record<string, unknown>).match;
+  if (!Array.isArray(match)) return null;
+  return match.find((value): value is string => typeof value === 'string') ?? null;
 }
 
 function requireSourcePath(path: string, label: string): void {
@@ -96,4 +105,12 @@ writeFileSync(
 );
 
 console.log(`Forked ${sourceArg} to ${targetAuthorArg}/${targetFolder}`);
+const contextHint = designContextHint(
+  root,
+  firstScopeMatch(manifest) ?? `${targetAuthorArg}/${targetFolder}`,
+);
+if (contextHint) {
+  console.log('');
+  console.log(contextHint);
+}
 console.log('Run corepack pnpm dev or corepack pnpm build to stamp the new manifest id.');

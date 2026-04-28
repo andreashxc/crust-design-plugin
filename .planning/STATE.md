@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: complete
-stopped_at: Phase 6 complete; manual Chrome/Yandex smoke and GitHub push pending
-last_updated: "2026-04-27T10:41:00+02:00"
-last_activity: 2026-04-27 -- Phase 6 Plan 06-05 completed final automated validation and acceptance report
+stopped_at: Phase 7 complete; ready to decide next roadmap item
+last_updated: "2026-04-28T14:25:00+02:00"
+last_activity: 2026-04-28 -- Completed Phase 7 local DESIGN.md site context support
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 39
-  completed_plans: 39
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 44
+  completed_plans: 44
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Designers ship DOM-mutation experiments (incl. AI-generated content) to colleagues via `git push`, with no backend infrastructure and no target-site coordination.
-**Current focus:** v1.0 — automated implementation complete; manual smoke/push pending
+**Current focus:** v1.1 DESIGN.md site context support is complete; ready to choose the next roadmap item
 
 ## Current Position
 
-Phase: 6 (Distribution & Acceptance) — COMPLETE + MANUAL SMOKE PENDING
-Plan: 06-05 — Final validation, artifact capture, and acceptance report
-Status: all Phase 6 plans complete locally; Chrome/Yandex manual smoke and GitHub push remain external follow-up
-Last activity: 2026-04-27 -- Phase 6 Plan 06-05 completed final automated validation and acceptance report
+Phase: 7 (DESIGN.md Site Context Support) — COMPLETE
+Plan: 07-05 — Validation, large-file smoke, privacy audit, and manual workflow checklist
+Status: v1 and v1.1 automated implementation are complete; next work should be planned as a new phase or backlog item
+Last activity: 2026-04-28 -- Completed Phase 7 local DESIGN.md site context support
 
 Progress: [▓▓▓▓▓▓▓▓▓▓] 100%
 
@@ -106,11 +106,16 @@ Recent decisions affecting current work:
 - Plan 06-03 execution: added `designer1`, `designer2`, and `designer3` acceptance fixtures covering multi-tweak controls, `helpers.fetchPage`, and `helpers.llm`; build output includes all three fixture chunks.
 - Plan 06-04 execution: added `06-MANUAL-SMOKE.md` with Chrome and Yandex Browser load-unpacked paths, release artifact checks, fork/composition/LLM/fetchPage rows, and `<15 minutes` onboarding acceptance.
 - Plan 06-05 execution: final gates passed (`test -- --run`, typecheck, lint, check-csp, build, package:chrome); `06-ACCEPTANCE.md` records artifact sizes, requirement evidence, manual smoke status, and release-readiness caveats.
+- Phase 7 planning: added DESIGN.md Site Context Support as v1.1 work. Source format is Google Labs DESIGN.md alpha: YAML front matter with design tokens plus markdown rationale/sections. The supplied ya.ru DESIGN.md example is 1,345 lines and includes tokens, component DOM maps, responsive behavior, technical architecture, and Chrome extension pitfalls, so Phase 7 must support summarization/chunking and not inject full files blindly.
+- Plan 07-01 execution: recorded Google Labs DESIGN.md alpha research and analyzed the supplied ya.ru context shape.
+- Plan 07-02 execution: added git-private context conventions (`DESIGN.md`, `design-context/`, `.crust/design-context/`) and updated English/Russian onboarding/authoring docs for vibe-coder workflows.
+- Plan 07-03 execution: added `scripts/design-context.ts` parser/indexer with token reference validation, duplicate/order findings, discovery, URL matching, JSON/text CLI output, and compact summaries.
+- Plan 07-04 execution: wired `create-experiment` and `fork-experiment` to print matching design-context hints without copying private context into experiment folders.
+- Plan 07-05 execution: full Vitest/typecheck/lint/CSP/build gates passed; supplied ya.ru DESIGN.md parsed with `Findings: 0`; privacy audit found no design-context strings in extension output.
 
 ### Pending Todos
 
-- Chrome/Yandex manual smoke in `06-MANUAL-SMOKE.md` remains pending operator execution.
-- `git push origin main` is blocked by local GitHub SSH auth: `Permission denied (publickey)`.
+- Choose the next roadmap item. No active Phase 7 blockers.
 
 ### Blockers/Concerns
 
@@ -121,8 +126,8 @@ Recent decisions affecting current work:
 - **Phase 4 spike unknowns**: RESOLVED for automated implementation. Provider clients use direct REST `fetch` instead of SDK bundling; streaming uses `chrome.runtime.Port`; `fetchPage` enforces max HTML size and returns `too_large` rather than pushing arbitrary payloads through one-shot messages. Real provider/network smoke remains pending.
 - **Phase 4 manual helper smoke:** PASSED by Andrew on 2026-04-26 with a real OpenAI key. The only deferred item is a real >30s provider streaming smoke; automated port protocol tests pass.
 - **Phase 5 manual smoke:** automated validation passed; local Chrome checklist is recorded in `.planning/phases/05-dx-spa-composition-sharing/05-MANUAL-SMOKE.md` and remains pending operator execution.
-- **Phase 6 verification**: Yandex Browser sideload behavior is LOW-confidence in research; verify in real install
-- **GitHub push blocked**: local commits are complete, but `git push origin main` fails with `git@github.com: Permission denied (publickey)`. Fix local SSH key/account access before publishing.
+- **Phase 6 manual smoke:** PASSED by Andrew on 2026-04-28 for Chrome/Yandex sideload and acceptance smoke.
+- **DESIGN.md privacy**: target-site design context may include reverse-engineered DOM details, client notes, screenshots, and proprietary observations. It must remain git-private by default and must not be bundled into extension artifacts unless explicitly promoted to examples.
 
 ## Deferred Items
 
@@ -134,6 +139,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-27T10:41:00+02:00
-Stopped at: Phase 6 complete; manual Chrome/Yandex smoke and GitHub push pending
-Resume file: .planning/phases/04-helpers-llm-integration/04-MANUAL-SMOKE.md
+Last session: 2026-04-28T14:25:00+02:00
+Stopped at: Phase 7 complete; ready to decide next roadmap item
+Resume file: .planning/STATE.md
