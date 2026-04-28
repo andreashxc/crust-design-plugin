@@ -1,0 +1,29 @@
+{
+  "id": "01KQ8KM662TW84DJ51T6FHWHNS",
+  "name": "Ya header nav swap",
+  "author": "andrew",
+  "description": "Swaps the Search and Alice header navigation items on Yandex search and Alice chat pages without changing their behavior.",
+  "scope": {
+    "match": [
+      "*://ya.ru/search*",
+      "*://*.ya.ru/search*",
+      "*://ya.ru/alice*",
+      "*://*.ya.ru/alice*",
+      "*://ya.ru/alice/chat/*",
+      "*://*.ya.ru/alice/chat/*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": [
+    {
+      "type": "select",
+      "key": "order",
+      "label": "Order",
+      "options": [
+        "alice_first",
+        "search_first"
+      ],
+      "default": "alice_first"
+    }
+  ]
+}

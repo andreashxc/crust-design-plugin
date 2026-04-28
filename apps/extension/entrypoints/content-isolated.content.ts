@@ -65,13 +65,21 @@ export default defineContentScript({
   main: () => {
     ensureHeaderNavSwapEarlyGuard();
     syncActionIconWithColorScheme();
-    void bootstrap();
+    void bootstrap().catch((err) => {
+      if (isExtensionContextInvalidatedError(err)) return;
+      console.error('[engine] bootstrap failed', err);
+    });
   },
 });
 
 async function bootstrap(): Promise<void> {
   const { tabId } = await sendMessage('WHO_AM_I', undefined);
-  const scheduler = createReconcileScheduler(() => reconcile(tabId));
+  const scheduler = createReconcileScheduler(() => reconcile(tabId), {
+    onError: (err) => {
+      if (isExtensionContextInvalidatedError(err)) return;
+      console.error('[engine] reconcile failed', err);
+    },
+  });
 
   await scheduler.runNow();
 
@@ -220,6 +228,11 @@ function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
 
 function releaseHeaderNavSwapEarlyGuard(): void {
   headerNavSwapEarlyCleanup?.();
+}
+
+function isExtensionContextInvalidatedError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return message.includes('Extension context invalidated');
 }
 
 function applyHeaderNavSwapEarlyOrder(): void {
