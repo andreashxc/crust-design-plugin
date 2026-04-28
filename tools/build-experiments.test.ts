@@ -475,7 +475,7 @@ describe('scanAndValidate — Phase 6 acceptance fixtures', () => {
     expect(fixtures.some(({ data }) => data.tweaks.length >= 3)).toBe(true);
 
     const fixtureSource = fixtures
-      .map(({ path }) => readFileSync(resolve(REPO_ROOT, dirname(path), 'experiment.ts'), 'utf8'))
+      .map(({ path }) => readFileSync(resolve(tmpRoot, dirname(path), 'experiment.ts'), 'utf8'))
       .join('\n');
     expect(fixtureSource).toContain('helpers.fetchPage');
     expect(fixtureSource).toContain('helpers.llm');
