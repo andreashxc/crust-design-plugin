@@ -45,7 +45,8 @@ type AppliedExperiment = {
 
 const HEADER_NAV_SWAP_AUTHOR = 'andrew';
 const HEADER_NAV_SWAP_FOLDER = 'ya-header-nav-swap';
-const HEADER_NAV_SWAP_EARLY_STYLE_ID = 'crust-ya-header-nav-swap-early-anti-flicker';
+const HEADER_NAV_SWAP_ORIGINAL_ATTR = 'data-crust-ya-header-nav-swap-original-order';
+let headerNavSwapEarlyCleanup: (() => void) | undefined;
 
 const cleanups = new Map<string, AppliedExperiment>();
 const lastApplyAt = new Map<string, number>();
@@ -62,7 +63,7 @@ export default defineContentScript({
   matches: ['*://*.ya.ru/*', '*://ya.ru/*'],
   runAt: 'document_start',
   main: () => {
-    installHeaderNavSwapEarlyGuard();
+    ensureHeaderNavSwapEarlyGuard();
     syncActionIconWithColorScheme();
     void bootstrap();
   },
@@ -170,30 +171,35 @@ async function reconcile(tabId: number): Promise<void> {
   await sendMessage('APPLIED_COUNT_CHANGED', { tabId, count: appliedIds.length }).catch(() => {});
 }
 
-function installHeaderNavSwapEarlyGuard(): void {
+function ensureHeaderNavSwapEarlyGuard(): void {
   if (!isHeaderNavSwapTargetPage(location.href)) return;
+  if (headerNavSwapEarlyCleanup) {
+    applyHeaderNavSwapEarlyOrder();
+    return;
+  }
 
-  document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
+  const schedule = () => queueMicrotask(applyHeaderNavSwapEarlyOrder);
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some((mutation) => mutation.addedNodes.length > 0)) schedule();
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 
-  const style = document.createElement('style');
-  style.id = HEADER_NAV_SWAP_EARLY_STYLE_ID;
-  style.textContent = `
-    .HeaderNav-Tab[data-tid="alice_chat"],
-    a.HeaderNav-Tab[href*="//ya.ru/alice?"],
-    a.HeaderNav-Tab[href*="/alice/chat"] {
-      order: -2 !important;
-      transition: none !important;
-      animation: none !important;
+  const removeUrlListener = createUrlChangeWatcher(() => {
+    if (isHeaderNavSwapTargetPage(location.href)) {
+      schedule();
+    } else {
+      releaseHeaderNavSwapEarlyGuard();
     }
-    .HeaderNav-Tab[data-tid="www"],
-    a.HeaderNav-Tab[href^="//ya.ru?source=tabbar"],
-    a.HeaderNav-Tab[href*="/search/"] {
-      order: -1 !important;
-      transition: none !important;
-      animation: none !important;
-    }
-  `;
-  (document.head ?? document.documentElement).append(style);
+  });
+
+  headerNavSwapEarlyCleanup = () => {
+    observer.disconnect();
+    removeUrlListener();
+    restoreHeaderNavSwapEarlyOrder();
+    headerNavSwapEarlyCleanup = undefined;
+  };
+
+  applyHeaderNavSwapEarlyOrder();
 }
 
 function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
@@ -205,11 +211,76 @@ function syncHeaderNavSwapEarlyGuard(wantOn: RegistryEntry[]): void {
   const wantsHeaderNavSwap = wantOn.some(
     (entry) => entry.author === HEADER_NAV_SWAP_AUTHOR && entry.folder === HEADER_NAV_SWAP_FOLDER,
   );
-  if (!wantsHeaderNavSwap) releaseHeaderNavSwapEarlyGuard();
+  if (wantsHeaderNavSwap) {
+    ensureHeaderNavSwapEarlyGuard();
+  } else {
+    releaseHeaderNavSwapEarlyGuard();
+  }
 }
 
 function releaseHeaderNavSwapEarlyGuard(): void {
-  document.getElementById(HEADER_NAV_SWAP_EARLY_STYLE_ID)?.remove();
+  headerNavSwapEarlyCleanup?.();
+}
+
+function applyHeaderNavSwapEarlyOrder(): void {
+  if (!isHeaderNavSwapTargetPage(location.href)) return;
+
+  const pair = findHeaderNavSwapPair(document);
+  if (!pair) return;
+
+  if (!pair.parent.hasAttribute(HEADER_NAV_SWAP_ORIGINAL_ATTR)) {
+    pair.parent.setAttribute(HEADER_NAV_SWAP_ORIGINAL_ATTR, currentHeaderNavSwapOrder(pair));
+  }
+
+  pair.search.setAttribute('data-crust-nav-swap', 'search');
+  pair.alice.setAttribute('data-crust-nav-swap', 'alice');
+
+  if (currentHeaderNavSwapOrder(pair) !== 'alice_first') {
+    pair.parent.insertBefore(pair.alice, pair.search);
+  }
+}
+
+function restoreHeaderNavSwapEarlyOrder(): void {
+  const pair = findHeaderNavSwapPair(document);
+  if (!pair) return;
+
+  const originalOrder = pair.parent.getAttribute(HEADER_NAV_SWAP_ORIGINAL_ATTR);
+  pair.parent.removeAttribute(HEADER_NAV_SWAP_ORIGINAL_ATTR);
+
+  if (originalOrder === 'search_first' && currentHeaderNavSwapOrder(pair) !== 'search_first') {
+    pair.parent.insertBefore(pair.search, pair.alice);
+  }
+  if (originalOrder === 'alice_first' && currentHeaderNavSwapOrder(pair) !== 'alice_first') {
+    pair.parent.insertBefore(pair.alice, pair.search);
+  }
+}
+
+function findHeaderNavSwapPair(root: ParentNode): {
+  parent: Element;
+  search: Element;
+  alice: Element;
+} | null {
+  const search = root.querySelector(
+    '.HeaderNav-Tab[data-tid="www"], a.HeaderNav-Tab[href^="//ya.ru?source=tabbar"]',
+  );
+  const alice = root.querySelector(
+    '.HeaderNav-Tab[data-tid="alice_chat"], a.HeaderNav-Tab[href*="//ya.ru/alice?"]',
+  );
+  if (!search || !alice || search === alice) return null;
+
+  const parent = search.parentElement;
+  if (!parent || parent !== alice.parentElement) return null;
+  if (parent.children.length < 2 || parent.children.length > 24) return null;
+
+  return { parent, search, alice };
+}
+
+function currentHeaderNavSwapOrder(pair: {
+  search: Element;
+  alice: Element;
+}): 'alice_first' | 'search_first' {
+  const position = pair.search.compareDocumentPosition(pair.alice);
+  return position & Node.DOCUMENT_POSITION_PRECEDING ? 'alice_first' : 'search_first';
 }
 
 function isHeaderNavSwapTargetPage(url: string): boolean {
