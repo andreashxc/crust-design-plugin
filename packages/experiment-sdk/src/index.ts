@@ -219,25 +219,6 @@ export type ScrapeRenderedPageResult =
       error: string;
     };
 
-export type ChatGptPopupOptions = {
-  width?: number;
-  height?: number;
-  top?: number;
-  left?: number;
-  loadTimeoutMs?: number;
-  messageTimeoutMs?: number;
-};
-
-export type ChatGptPopupResult =
-  | {
-      ok: true;
-      text: string;
-    }
-  | {
-      ok: false;
-      error: string;
-    };
-
 export type InjectStyleOptions = {
   id?: string;
   target?: 'head' | 'body';
@@ -269,7 +250,6 @@ export type Helpers = {
     url: string,
     options?: ScrapeRenderedPageOptions,
   ) => Promise<ScrapeRenderedPageResult>;
-  chatgptPopup: (prompt: string, options?: ChatGptPopupOptions) => Promise<ChatGptPopupResult>;
   injectStyle: (css: string, options?: InjectStyleOptions) => HTMLStyleElement;
   injectNode: <TNode extends Node>(
     node: TNode,

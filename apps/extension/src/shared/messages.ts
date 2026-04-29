@@ -22,8 +22,6 @@
  * called outside a tab context.
  */
 import type {
-  ChatGptPopupOptions,
-  ChatGptPopupResult,
   ErrorRecord,
   ExperimentStatus,
   FetchPageResult,
@@ -53,16 +51,6 @@ export type LlmCompleteRequest = {
   options?: LlmOptions;
 };
 
-export type ChatGptPopupRequest = {
-  experimentId: string;
-  prompt: string;
-  options?: ChatGptPopupOptions;
-};
-
-export type ChatGptPageRunRequest = {
-  prompt: string;
-};
-
 export type ProviderTestResult = { ok: true } | { ok: false; error: string };
 export type IconTheme = 'light' | 'dark';
 export type UpdateCheckResult =
@@ -78,8 +66,6 @@ export interface ProtocolMap {
   STATUS_QUERY(): Record<string, ExperimentStatus>;
   WHO_AM_I(): WhoAmIResult;
   LLM_COMPLETE(data: LlmCompleteRequest): LlmResult;
-  CHATGPT_POPUP_RUN(data: ChatGptPopupRequest): ChatGptPopupResult;
-  CHATGPT_PAGE_RUN(data: ChatGptPageRunRequest): ChatGptPopupResult;
   PROVIDER_TEST(data: { provider: LlmProvider }): ProviderTestResult;
   LLM_CLEAR_CACHE(): { ok: true };
   LLM_RESET_SESSION(): { ok: true };

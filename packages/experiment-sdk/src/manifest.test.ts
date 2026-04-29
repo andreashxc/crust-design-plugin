@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 // If any of these imports fails, the SDK is missing a Phase 2 export.
 import type {
   AutoDisableRecord,
-  ChatGptPopupResult,
   ErrorRecord,
   ExperimentStatus,
   FetchPageResult,
@@ -74,15 +73,10 @@ const _fetchPageOk: FetchPageResult = {
   reason: 'likely_spa_shell',
   message: 'SPA shell',
 };
-const _chatGptPopupOk: ChatGptPopupResult = {
-  ok: true,
-  text: 'hello',
-};
 const _helpersOk: Helpers = {
   log: () => {},
   llm: async () => 'hello',
   fetchPage: async () => _fetchPageOk,
-  chatgptPopup: async () => _chatGptPopupOk,
   injectStyle: () => document.createElement('style'),
   injectNode: (node) => node,
   waitFor: async () => document.createElement('div'),
@@ -102,7 +96,6 @@ void _usageOk;
 void _llmOptionsOk;
 void _llmResultOk;
 void _fetchPageOk;
-void _chatGptPopupOk;
 void _helpersOk;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

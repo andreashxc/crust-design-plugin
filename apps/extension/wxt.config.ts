@@ -39,8 +39,6 @@ export default defineConfig({
       'https://yandex.ru/*',
       'https://*.yandex.ru/*',
       'https://market.yandex.ru/*',
-      'https://chatgpt.com/*',
-      'https://chat.openai.com/*',
       'https://weather.yandex.ru/*',
       'https://yandex.ru/pogoda/*',
       'https://api.github.com/repos/andreashxc/crust-design-plugin/compare/*',
