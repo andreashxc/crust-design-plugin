@@ -59,6 +59,7 @@ export function createHelperContext(args: HelperFactoryArgs): {
       llm,
       fetchPage: (url: string, selector?: string): Promise<FetchPageResult> =>
         sendMessage('FETCH_PAGE', { url, selector }),
+      scrapeRenderedPage: (url, options) => sendMessage('SCRAPE_RENDERED_PAGE', { url, options }),
       chatgptPopup: (prompt: string, options?: ChatGptPopupOptions): Promise<ChatGptPopupResult> =>
         sendMessage('CHATGPT_POPUP_RUN', {
           experimentId: args.experimentId,

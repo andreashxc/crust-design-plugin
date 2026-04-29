@@ -30,6 +30,8 @@ import type {
   LlmOptions,
   LlmProvider,
   LlmResult,
+  ScrapeRenderedPageOptions,
+  ScrapeRenderedPageResult,
 } from '@platform/experiment-sdk';
 import { defineExtensionMessaging } from '@webext-core/messaging';
 import type { UpdateState } from './storage';
@@ -82,6 +84,10 @@ export interface ProtocolMap {
   LLM_CLEAR_CACHE(): { ok: true };
   LLM_RESET_SESSION(): { ok: true };
   FETCH_PAGE(data: { url: string; selector?: string }): FetchPageResult;
+  SCRAPE_RENDERED_PAGE(data: {
+    url: string;
+    options?: ScrapeRenderedPageOptions;
+  }): ScrapeRenderedPageResult;
   ICON_THEME_CHANGED(data: { theme: IconTheme }): { ok: true };
   UPDATE_CHECK(): UpdateCheckResult;
 }

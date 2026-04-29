@@ -45,9 +45,13 @@ export type ChromeMock = {
     create: Mock;
     get: Mock;
     update: Mock;
+    remove: Mock;
     sendMessage: Mock;
     onUpdated: { addListener: Mock; removeListener: Mock; hasListener: Mock };
     onRemoved: { addListener: Mock; removeListener: Mock; hasListener: Mock };
+  };
+  scripting: {
+    executeScript: Mock;
   };
   windows: {
     create: Mock;
@@ -151,6 +155,7 @@ export function makeChromeMock(): ChromeMock {
       create: vi.fn(async () => ({}) as chrome.tabs.Tab),
       get: vi.fn(async (id: number) => ({ id, status: 'complete' }) as chrome.tabs.Tab),
       update: vi.fn(async (id: number, props: chrome.tabs.UpdateProperties) => ({ id, ...props })),
+      remove: vi.fn(async () => {}),
       sendMessage: vi.fn(),
       onUpdated: {
         addListener: vi.fn((l: TabUpdatedListener) => {
@@ -168,6 +173,19 @@ export function makeChromeMock(): ChromeMock {
       create: vi.fn(async () => ({ id: 1, tabs: [{ id: 2, status: 'complete' }] })),
       remove: vi.fn(async () => {}),
       update: vi.fn(async (id: number, props: chrome.windows.UpdateInfo) => ({ id, ...props })),
+    },
+    scripting: {
+      executeScript: vi.fn(async () => [
+        {
+          result: {
+            ok: true,
+            url: 'https://example.com/',
+            title: 'Example',
+            html: '<html></html>',
+            text: '',
+          },
+        },
+      ]),
     },
     action: {
       setIcon: vi.fn(async () => {}),

@@ -199,6 +199,26 @@ export type FetchPageResult =
       message: string;
     };
 
+export type ScrapeRenderedPageOptions = {
+  waitMs?: number;
+  loadTimeoutMs?: number;
+  selector?: string;
+};
+
+export type ScrapeRenderedPageResult =
+  | {
+      ok: true;
+      url: string;
+      title: string;
+      html: string;
+      text: string;
+    }
+  | {
+      ok: false;
+      url: string;
+      error: string;
+    };
+
 export type ChatGptPopupOptions = {
   width?: number;
   height?: number;
@@ -245,6 +265,10 @@ export type Helpers = {
     (prompt: string, options: LlmStreamOptions): Promise<LlmResult>;
   };
   fetchPage: (url: string, selector?: string) => Promise<FetchPageResult>;
+  scrapeRenderedPage: (
+    url: string,
+    options?: ScrapeRenderedPageOptions,
+  ) => Promise<ScrapeRenderedPageResult>;
   chatgptPopup: (prompt: string, options?: ChatGptPopupOptions) => Promise<ChatGptPopupResult>;
   injectStyle: (css: string, options?: InjectStyleOptions) => HTMLStyleElement;
   injectNode: <TNode extends Node>(

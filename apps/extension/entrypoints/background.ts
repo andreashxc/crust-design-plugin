@@ -35,6 +35,7 @@ import {
   handleLlmResetSession,
   handleProviderTest,
 } from '@/background/handlers/provider-test';
+import { handleScrapeRenderedPage } from '@/background/handlers/scrape-rendered-page';
 import { handleUpdateCheck } from '@/background/handlers/update-check';
 import { handleWhoAmI } from '@/background/handlers/who-am-i';
 import { registerLlmStreamHandler } from '@/background/llm/stream';
@@ -65,6 +66,7 @@ onMessage('PROVIDER_TEST', ({ data }) => handleProviderTest(data));
 onMessage('LLM_CLEAR_CACHE', () => handleLlmClearCache());
 onMessage('LLM_RESET_SESSION', () => handleLlmResetSession());
 onMessage('FETCH_PAGE', ({ data }) => handleFetchPage(data));
+onMessage('SCRAPE_RENDERED_PAGE', ({ data }) => handleScrapeRenderedPage(data));
 onMessage('ICON_THEME_CHANGED', ({ data }) => setActionIconTheme(data.theme));
 onMessage('APPLIED_COUNT_CHANGED', ({ data }) => setAppliedCountBadge(data.tabId, data.count));
 onMessage('UPDATE_CHECK', () => handleUpdateCheck());
