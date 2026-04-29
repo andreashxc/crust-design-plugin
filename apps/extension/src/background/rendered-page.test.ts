@@ -31,10 +31,33 @@ describe('scrapeRenderedPage', () => {
     expect(chrome.scripting.executeScript).toHaveBeenCalledWith(
       expect.objectContaining({
         target: { tabId: 41 },
-        args: [null, expect.any(Number)],
+        args: [null, 900_000],
       }),
     );
     expect(chrome.tabs.remove).toHaveBeenCalledWith(41);
+  });
+
+  it('passes a custom rendered HTML limit to the collector', async () => {
+    chrome.tabs.create = vi.fn(async () => ({ id: 42, status: 'complete' }));
+    chrome.scripting.executeScript = vi.fn(async () => [
+      {
+        result: {
+          ok: true,
+          url: 'https://yandex.ru/search?text=test',
+          title: 'Search',
+          html: '<main>products</main>',
+          text: 'products',
+        },
+      },
+    ]);
+
+    await scrapeRenderedPage('https://yandex.ru/search?text=test', { maxHtmlChars: 2_500_000 });
+
+    expect(chrome.scripting.executeScript).toHaveBeenCalledWith(
+      expect.objectContaining({
+        args: [null, 2_500_000],
+      }),
+    );
   });
 
   it('returns an error for invalid URLs without opening a tab', async () => {

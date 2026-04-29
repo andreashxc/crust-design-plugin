@@ -203,6 +203,7 @@ export type ScrapeRenderedPageOptions = {
   waitMs?: number;
   loadTimeoutMs?: number;
   selector?: string;
+  maxHtmlChars?: number;
 };
 
 export type ScrapeRenderedPageResult =

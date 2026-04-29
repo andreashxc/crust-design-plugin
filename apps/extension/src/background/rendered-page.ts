@@ -31,7 +31,7 @@ export async function scrapeRenderedPage(
     const [injection] = await chrome.scripting.executeScript({
       target: { tabId },
       func: collectRenderedPage,
-      args: [options.selector ?? null, MAX_HTML_CHARS],
+      args: [options.selector ?? null, options.maxHtmlChars ?? MAX_HTML_CHARS],
     });
     const result = injection?.result;
 
