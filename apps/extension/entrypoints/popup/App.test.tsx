@@ -589,7 +589,11 @@ describe('popup App', () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith('{"status":"Debug ready"}');
     });
-    expect(screen.getByText('Debug copied')).toBeTruthy();
+    expect(
+      screen
+        .getByRole('button', { name: 'Copy debug output for Smoke pink' })
+        .getAttribute('title'),
+    ).toBe('Debug copied');
   });
 
   it('copies a truthful CLI fork command', async () => {

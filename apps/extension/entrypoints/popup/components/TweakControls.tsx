@@ -1,7 +1,7 @@
 import type { TweakDefinition, TweakValue, TweakValueMap } from '@platform/experiment-sdk';
 import { ColorControl, Slider as DialSlider, SelectControl, TextControl, Toggle } from 'dialkit';
 import { Copy, RotateCcw, SlidersHorizontal } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectOption } from '@/components/ui/select';
@@ -25,6 +25,7 @@ type TweakControlsProps = {
   onPresetLoad?: (name: string) => void;
   onPresetSaveNameChange?: (name: string) => void;
   onCopyPresetCommand?: () => void;
+  tweakActions?: Partial<Record<string, ReactNode>>;
 };
 
 function stringValue(value: TweakValue | undefined, fallback: string): string {
@@ -116,6 +117,7 @@ export function TweakControls({
   onPresetLoad,
   onPresetSaveNameChange,
   onCopyPresetCommand,
+  tweakActions = {},
 }: TweakControlsProps) {
   const [draftValues, setDraftValues] = useState<TweakValueMap>(values);
   const [presetsOpen, setPresetsOpen] = useState(false);
@@ -376,12 +378,20 @@ export function TweakControls({
       <div className="tweak-dialkit flex flex-col gap-1.5">
         {tweaks.map((tweak) => {
           const controlErrors = errorsFor(errors, tweak);
+          const action = tweakActions[tweak.key];
           return (
             <div key={tweak.key} className="grid gap-1">
               {tweak.description ? (
                 <p className="text-muted-foreground text-xs">{tweak.description}</p>
               ) : null}
-              {renderControl(tweak)}
+              {action ? (
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1">
+                  <div className="min-w-0">{renderControl(tweak)}</div>
+                  {action}
+                </div>
+              ) : (
+                renderControl(tweak)
+              )}
               {controlErrors.map((message) => (
                 <div key={message} className="text-destructive text-xs">
                   {message}

@@ -415,40 +415,39 @@ export function ExperimentRow({
       {canToggleTweaks ? (
         <div>
           {tweaksOpen ? (
-            <>
-              {hasDebugModeTweak ? (
-                <div className="bg-background/70 mb-2 flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs">
-                  <span className="text-muted-foreground min-w-0 truncate">
-                    {debugCopyStatus ?? 'Debug output'}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Copy debug output for ${entry.name}`}
-                    className="h-6 shrink-0 px-1.5 text-xs"
-                    onClick={() => void handleCopyDebugOutput()}
-                  >
-                    <Copy className="size-3" aria-hidden="true" />
-                    Copy debug
-                  </Button>
-                </div>
-              ) : null}
-              <TweakControls
-                tweaks={entry.tweaks}
-                values={resolvedTweakValues}
-                errors={tweakErrors ?? EMPTY_TWEAK_ERRORS}
-                presets={entry.presets}
-                selectedPresetName={selectedPresetName}
-                presetSaveName={presetSaveName}
-                presetStatus={presetStatus}
-                onChange={handleTweakChange}
-                onReset={handleTweakReset}
-                onPresetLoad={(name) => void handlePresetLoad(name)}
-                onPresetSaveNameChange={setPresetSaveName}
-                onCopyPresetCommand={() => void handleCopyPresetCommand()}
-              />
-            </>
+            <TweakControls
+              tweaks={entry.tweaks}
+              values={resolvedTweakValues}
+              errors={tweakErrors ?? EMPTY_TWEAK_ERRORS}
+              presets={entry.presets}
+              selectedPresetName={selectedPresetName}
+              presetSaveName={presetSaveName}
+              presetStatus={presetStatus}
+              onChange={handleTweakChange}
+              onReset={handleTweakReset}
+              onPresetLoad={(name) => void handlePresetLoad(name)}
+              onPresetSaveNameChange={setPresetSaveName}
+              onCopyPresetCommand={() => void handleCopyPresetCommand()}
+              tweakActions={
+                hasDebugModeTweak
+                  ? {
+                      debug_mode: (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          title={debugCopyStatus ?? 'Copy debug output'}
+                          aria-label={`Copy debug output for ${entry.name}`}
+                          className="text-muted-foreground h-8 w-8 shrink-0 rounded-lg"
+                          onClick={() => void handleCopyDebugOutput()}
+                        >
+                          <Copy className="size-3.5" aria-hidden="true" />
+                        </Button>
+                      ),
+                    }
+                  : undefined
+              }
+            />
           ) : null}
         </div>
       ) : null}
