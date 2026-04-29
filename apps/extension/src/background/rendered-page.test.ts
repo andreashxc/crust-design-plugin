@@ -31,6 +31,7 @@ describe('scrapeRenderedPage', () => {
     expect(chrome.scripting.executeScript).toHaveBeenCalledWith(
       expect.objectContaining({
         target: { tabId: 41 },
+        args: [null, expect.any(Number)],
       }),
     );
     expect(chrome.tabs.remove).toHaveBeenCalledWith(41);

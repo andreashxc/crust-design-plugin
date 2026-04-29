@@ -31,7 +31,7 @@ export async function scrapeRenderedPage(
     const [injection] = await chrome.scripting.executeScript({
       target: { tabId },
       func: collectRenderedPage,
-      args: [options.selector, MAX_HTML_CHARS],
+      args: [options.selector ?? null, MAX_HTML_CHARS],
     });
     const result = injection?.result;
 
@@ -79,7 +79,10 @@ async function waitForTabComplete(tabId: number, timeoutMs: number): Promise<voi
   });
 }
 
-function collectRenderedPage(selector?: string, maxHtmlChars = 900_000): ScrapeRenderedPageResult {
+function collectRenderedPage(
+  selector: string | null = null,
+  maxHtmlChars = 900_000,
+): ScrapeRenderedPageResult {
   const target = selector ? document.querySelector(selector) : document.documentElement;
   if (!target) {
     return { ok: false, url: location.href, error: `Selector not found: ${selector}` };
