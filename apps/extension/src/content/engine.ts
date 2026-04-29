@@ -159,6 +159,7 @@ export async function runEngine(args: {
       const mod = await exp.load();
       const controller = new AbortController();
       await mod.apply({
+        experimentId: id,
         tweaks: {},
         helpers: createHelpers({ experimentId: id }),
         currentURL: args.currentURL,

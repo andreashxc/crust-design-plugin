@@ -350,6 +350,7 @@ async function applyEntry(
       signal: controller.signal,
     });
     const cleanup = await mod.apply({
+      experimentId: entry.id,
       tweaks: tweakValues,
       helpers: helperContext.helpers,
       currentURL: location.href,

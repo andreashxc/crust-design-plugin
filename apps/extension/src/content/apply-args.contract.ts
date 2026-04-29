@@ -2,6 +2,7 @@ import type { ApplyArgs } from '@platform/experiment-sdk';
 import { createHelpers } from './helpers';
 
 const validApplyArgs: ApplyArgs = {
+  experimentId: 'test',
   tweaks: {},
   helpers: createHelpers({ experimentId: 'test', log: () => {} }),
   currentURL: 'https://ya.ru/',
@@ -13,6 +14,7 @@ void validApplyArgs;
 
 // @ts-expect-error signal is part of the required experiment apply contract.
 const missingSignal: ApplyArgs = {
+  experimentId: 'test',
   tweaks: {},
   helpers: createHelpers({ experimentId: 'test', log: () => {} }),
   currentURL: 'https://ya.ru/',

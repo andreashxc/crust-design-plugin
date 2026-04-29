@@ -565,6 +565,33 @@ describe('popup App', () => {
     expect(screen.getByText('Save command copied')).toBeTruthy();
   });
 
+  it('copies stored debug output from an enabled debug tweak row', async () => {
+    const writeText = vi.fn(async () => {});
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    chromeMock().storage.local._data['debug_output:01J0AAAAAAAAAAAAAAAAAAAAAA'] =
+      '{"status":"Debug ready"}';
+    resetStore(
+      makeEntry({
+        tweaks: [{ type: 'toggle', key: 'debug_mode', label: 'Debug mode', default: false }],
+      }),
+    );
+    useStore.setState({
+      enabled: { '01J0AAAAAAAAAAAAAAAAAAAAAA': true },
+      tweakValues: { '01J0AAAAAAAAAAAAAAAAAAAAAA': { debug_mode: true } },
+    });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy debug output for Smoke pink' }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith('{"status":"Debug ready"}');
+    });
+    expect(screen.getByText('Debug copied')).toBeTruthy();
+  });
+
   it('copies a truthful CLI fork command', async () => {
     const writeText = vi.fn(async () => {});
     Object.defineProperty(navigator, 'clipboard', {

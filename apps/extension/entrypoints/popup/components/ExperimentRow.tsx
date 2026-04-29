@@ -79,6 +79,7 @@ export function ExperimentRow({
   const [tweaksOpen, setTweaksOpen] = useState(enabled);
   const [sourceStatus, setSourceStatus] = useState<string | null>(null);
   const [forkStatus, setForkStatus] = useState<string | null>(null);
+  const [debugCopyStatus, setDebugCopyStatus] = useState<string | null>(null);
   const [selectedPresetName, setSelectedPresetName] = useState<string | null>(null);
   const [presetSaveName, setPresetSaveName] = useState('custom-preset');
   const [presetStatus, setPresetStatus] = useState<string | null>(null);
@@ -96,6 +97,7 @@ export function ExperimentRow({
   });
   const shouldShowError = status === 'error' || status === 'auto-disabled';
   const canToggleTweaks = enabled && entry.tweaks.length > 0;
+  const hasDebugModeTweak = entry.tweaks.some((tweak) => tweak.key === 'debug_mode');
   const missingLlmKey =
     enabled &&
     lastLlmError?.experimentId === entry.id &&
@@ -248,6 +250,23 @@ export function ExperimentRow({
     }
   }
 
+  async function handleCopyDebugOutput() {
+    setDebugCopyStatus(null);
+    const key = `debug_output:${entry.id}`;
+    const result = await chrome.storage.local.get(key);
+    const text = typeof result[key] === 'string' ? result[key] : '';
+    if (!text) {
+      setDebugCopyStatus('No debug output yet');
+      return;
+    }
+    try {
+      await navigator.clipboard?.writeText(text);
+      setDebugCopyStatus('Debug copied');
+    } catch {
+      setDebugCopyStatus(text);
+    }
+  }
+
   return (
     <Card
       className="gap-2 rounded-xl border-transparent bg-card p-2.5 shadow-none"
@@ -396,20 +415,40 @@ export function ExperimentRow({
       {canToggleTweaks ? (
         <div>
           {tweaksOpen ? (
-            <TweakControls
-              tweaks={entry.tweaks}
-              values={resolvedTweakValues}
-              errors={tweakErrors ?? EMPTY_TWEAK_ERRORS}
-              presets={entry.presets}
-              selectedPresetName={selectedPresetName}
-              presetSaveName={presetSaveName}
-              presetStatus={presetStatus}
-              onChange={handleTweakChange}
-              onReset={handleTweakReset}
-              onPresetLoad={(name) => void handlePresetLoad(name)}
-              onPresetSaveNameChange={setPresetSaveName}
-              onCopyPresetCommand={() => void handleCopyPresetCommand()}
-            />
+            <>
+              {hasDebugModeTweak ? (
+                <div className="bg-background/70 mb-2 flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs">
+                  <span className="text-muted-foreground min-w-0 truncate">
+                    {debugCopyStatus ?? 'Debug output'}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Copy debug output for ${entry.name}`}
+                    className="h-6 shrink-0 px-1.5 text-xs"
+                    onClick={() => void handleCopyDebugOutput()}
+                  >
+                    <Copy className="size-3" aria-hidden="true" />
+                    Copy debug
+                  </Button>
+                </div>
+              ) : null}
+              <TweakControls
+                tweaks={entry.tweaks}
+                values={resolvedTweakValues}
+                errors={tweakErrors ?? EMPTY_TWEAK_ERRORS}
+                presets={entry.presets}
+                selectedPresetName={selectedPresetName}
+                presetSaveName={presetSaveName}
+                presetStatus={presetStatus}
+                onChange={handleTweakChange}
+                onReset={handleTweakReset}
+                onPresetLoad={(name) => void handlePresetLoad(name)}
+                onPresetSaveNameChange={setPresetSaveName}
+                onCopyPresetCommand={() => void handleCopyPresetCommand()}
+              />
+            </>
           ) : null}
         </div>
       ) : null}

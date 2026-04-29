@@ -93,7 +93,7 @@ describe('runEngine error isolation (D-14 / ENG-05 / SP-2)', () => {
     expect(result.failed).toEqual([]);
   });
 
-  it('apply args include {tweaks: {}, helpers: {log}, signal, currentURL}', async () => {
+  it('apply args include {experimentId, tweaks: {}, helpers: {log}, signal, currentURL}', async () => {
     const captured: Parameters<ApplyFn>[0][] = [];
     const apply: ApplyFn = (args) => {
       captured.push(args);
@@ -107,6 +107,7 @@ describe('runEngine error isolation (D-14 / ENG-05 / SP-2)', () => {
     });
 
     expect(captured).toHaveLength(1);
+    expect(captured[0]?.experimentId).toBe('01J0AAAAAAAAAAAAAAAAAAAAAA');
     expect(captured[0]?.tweaks).toEqual({});
     expect(captured[0]?.currentURL).toBe('https://ya.ru/path');
     expect(typeof captured[0]?.helpers.log).toBe('function');

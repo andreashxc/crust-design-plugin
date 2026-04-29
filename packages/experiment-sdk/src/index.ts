@@ -275,6 +275,7 @@ export type Tweak = TweakDefinition;
  * `signal` lets experiments cooperatively abort async work on cleanup.
  */
 export type ApplyArgs = {
+  experimentId: string;
   tweaks: Record<string, unknown>;
   helpers: Helpers;
   currentURL: string;
