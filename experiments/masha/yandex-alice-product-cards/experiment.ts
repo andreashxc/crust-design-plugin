@@ -28,21 +28,6 @@ type VerticalCard = {
   shop: string;
 };
 
-type SearchDiagnostics = {
-  method: 'direct-fetch' | 'helpers.fetchPage';
-  ok: boolean;
-  requestUrl: string;
-  responseUrl?: string;
-  status?: number;
-  reason?: string;
-  error?: string;
-  htmlLength?: number;
-  title?: string;
-  verification: boolean;
-  selectorCounts?: Record<string, number>;
-  textSample?: string;
-};
-
 type VerticalResult =
   | {
       ok: true;
@@ -50,7 +35,6 @@ type VerticalResult =
       requestUrl: string;
       responseUrl: string;
       htmlLength: number;
-      diagnostics?: SearchDiagnostics;
       card: VerticalCard;
     }
   | {
@@ -64,7 +48,6 @@ type VerticalResult =
       htmlLength?: number;
       selectorsTried?: string[];
       fields?: Partial<VerticalCard>;
-      diagnostics?: SearchDiagnostics;
     };
 
 type HiddenNode = {
@@ -77,14 +60,10 @@ type ExperimentState = {
   inserted: Element[];
   hidden: HiddenNode[];
   observer: MutationObserver | null;
-  debugPanel: HTMLElement | null;
-  debugPre: HTMLPreElement | null;
-  debugSummary: HTMLElement | null;
   applyTimer: number | undefined;
   searchCache: Map<string, Promise<VerticalResult>>;
   lastUrl: string;
   stopped: boolean;
-  lastDebugText: string;
 };
 
 type DebugProduct = {
@@ -247,66 +226,6 @@ const styles = `
   .${NS}-hidden {
     display: none !important;
   }
-
-  .${NS}-debug {
-    position: fixed;
-    left: 12px;
-    bottom: 12px;
-    z-index: 2147483647;
-    width: min(520px, calc(100vw - 24px));
-    max-height: min(560px, calc(100vh - 24px));
-    box-sizing: border-box;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
-    background: rgba(18, 18, 20, 0.96);
-    color: #f4f4f5;
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
-    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-
-  .${NS}-debug-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.05);
-    font: 600 12px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
-
-  .${NS}-debug-actions {
-    display: flex;
-    gap: 6px;
-  }
-
-  .${NS}-debug button {
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 6px;
-    padding: 4px 8px;
-    color: #f4f4f5;
-    background: rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    font: 600 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
-
-  .${NS}-debug-summary {
-    padding: 8px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    color: #d4d4d8;
-    white-space: pre-wrap;
-  }
-
-  .${NS}-debug pre {
-    max-height: 420px;
-    margin: 0;
-    padding: 10px;
-    overflow: auto;
-    color: #e4e4e7;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
 `;
 
 export const apply: ApplyFn = ({ helpers, log }) => {
@@ -316,76 +235,13 @@ export const apply: ApplyFn = ({ helpers, log }) => {
     inserted: [],
     hidden: [],
     observer: null,
-    debugPanel: null,
-    debugPre: null,
-    debugSummary: null,
     applyTimer: undefined,
     searchCache: new Map(),
     lastUrl: location.href,
     stopped: false,
-    lastDebugText: '',
   };
 
   helpers.injectStyle(styles, { id: STYLE_ID });
-
-  const renderDebugPanel = (payload: unknown) => {
-    ensureDebugPanel();
-    const text = JSON.stringify(payload, null, 2);
-    state.lastDebugText = text;
-    if (state.debugPre) state.debugPre.textContent = text;
-    if (state.debugSummary) state.debugSummary.textContent = summarizeDebugPayload(payload);
-  };
-
-  const ensureDebugPanel = () => {
-    if (state.debugPanel || !document.body) return;
-
-    const panel = document.createElement('aside');
-    panel.className = `${NS}-debug`;
-    panel.setAttribute('role', 'status');
-
-    const header = document.createElement('div');
-    header.className = `${NS}-debug-header`;
-
-    const title = document.createElement('span');
-    title.textContent = 'Alice cards debug';
-    header.append(title);
-
-    const actions = document.createElement('div');
-    actions.className = `${NS}-debug-actions`;
-
-    const copy = document.createElement('button');
-    copy.type = 'button';
-    copy.textContent = 'Copy';
-    copy.addEventListener('click', () => {
-      void navigator.clipboard?.writeText(state.lastDebugText || '');
-    });
-    actions.append(copy);
-
-    const hide = document.createElement('button');
-    hide.type = 'button';
-    hide.textContent = 'Hide';
-    hide.addEventListener('click', () => {
-      panel.style.display = 'none';
-    });
-    actions.append(hide);
-
-    header.append(actions);
-    panel.append(header);
-
-    const summary = document.createElement('div');
-    summary.className = `${NS}-debug-summary`;
-    summary.textContent = 'Waiting for experiment run...';
-    panel.append(summary);
-
-    const pre = document.createElement('pre');
-    pre.textContent = '{}';
-    panel.append(pre);
-
-    state.debugPanel = panel;
-    state.debugSummary = summary;
-    state.debugPre = pre;
-    helpers.injectNode(panel);
-  };
 
   const fetchSearchHtml = async (
     query: string,
@@ -395,7 +251,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
         requestUrl: string;
         responseUrl: string;
         html: string;
-        diagnostics: SearchDiagnostics;
       }
     | {
         ok: false;
@@ -404,7 +259,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
         responseUrl?: string;
         status?: number;
         error?: string;
-        diagnostics: SearchDiagnostics;
       }
   > => {
     const url = new URL('/search/', location.origin);
@@ -412,7 +266,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
     url.searchParams.set('products_mode', '1');
     url.searchParams.set('from', 'tabbar');
     const requestUrl = url.toString();
-    let directFetchError = '';
 
     try {
       const response = await fetch(requestUrl, {
@@ -426,37 +279,16 @@ export const apply: ApplyFn = ({ helpers, log }) => {
           requestUrl,
           responseUrl: response.url || requestUrl,
           status: response.status,
-          diagnostics: {
-            method: 'direct-fetch',
-            ok: false,
-            requestUrl,
-            responseUrl: response.url || requestUrl,
-            status: response.status,
-            reason: 'http-error',
-            verification: false,
-          },
         };
       }
 
       const html = await response.text();
-      const diagnostics = analyzeSearchHtml({
-        html,
-        method: 'direct-fetch',
-        requestUrl,
-        responseUrl: response.url || requestUrl,
-        status: response.status,
-      });
       if (isYandexVerificationPage(html)) {
         return {
           ok: false,
           reason: 'yandex-verification',
           requestUrl,
           responseUrl: response.url || requestUrl,
-          diagnostics: {
-            ...diagnostics,
-            ok: false,
-            reason: 'yandex-verification',
-          },
         };
       }
 
@@ -465,10 +297,8 @@ export const apply: ApplyFn = ({ helpers, log }) => {
         requestUrl,
         responseUrl: response.url || requestUrl,
         html,
-        diagnostics,
       };
-    } catch (error) {
-      directFetchError = error instanceof Error ? error.message : String(error);
+    } catch {
       const fallback = await helpers.fetchPage(requestUrl).catch((fallbackError: unknown) => ({
         ok: false as const,
         url: requestUrl,
@@ -483,37 +313,15 @@ export const apply: ApplyFn = ({ helpers, log }) => {
           requestUrl,
           responseUrl: fallback.url,
           error: fallback.message,
-          diagnostics: {
-            method: 'helpers.fetchPage',
-            ok: false,
-            requestUrl,
-            responseUrl: fallback.url,
-            reason: fallback.reason,
-            error: directFetchError
-              ? `direct fetch failed: ${directFetchError}; helper failed: ${fallback.message}`
-              : fallback.message,
-            verification: false,
-          },
         };
       }
 
-      const diagnostics = analyzeSearchHtml({
-        html: fallback.html,
-        method: 'helpers.fetchPage',
-        requestUrl,
-        responseUrl: fallback.url,
-      });
       if (isYandexVerificationPage(fallback.html)) {
         return {
           ok: false,
           reason: 'yandex-verification',
           requestUrl,
           responseUrl: fallback.url,
-          diagnostics: {
-            ...diagnostics,
-            ok: false,
-            reason: 'yandex-verification',
-          },
         };
       }
 
@@ -522,7 +330,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
         requestUrl,
         responseUrl: fallback.url,
         html: fallback.html,
-        diagnostics,
       };
     }
   };
@@ -546,7 +353,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
             status: response.status,
             reason: response.reason,
             error: response.error || '',
-            diagnostics: response.diagnostics,
           };
         }
 
@@ -560,7 +366,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
           requestUrl: response.requestUrl,
           responseUrl: response.responseUrl || response.requestUrl,
           htmlLength: response.html.length,
-          diagnostics: response.diagnostics,
           ...parsed,
         };
       } catch (error) {
@@ -618,7 +423,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
     if (!message) {
       debug.steps.message = 'missing';
       log('debug', debug);
-      renderDebugPanel(debug);
       return { ok: false, reason: 'Не нашёл последний ответ Алисы.' };
     }
     debug.steps.message = 'ok';
@@ -627,7 +431,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
     if (!gallery) {
       debug.steps.gallery = 'missing';
       log('debug', debug);
-      renderDebugPanel(debug);
       return { ok: false, reason: 'Не нашёл блок с товарными карточками.' };
     }
     debug.steps.gallery = 'ok';
@@ -636,7 +439,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
     if (!rawCards.length) {
       debug.steps.galleryCards = 0;
       log('debug', debug);
-      renderDebugPanel(debug);
       return { ok: false, reason: 'В галерее нет карточек.' };
     }
     debug.steps.galleryCards = rawCards.length;
@@ -673,7 +475,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
         vertical: verticalCards[index],
       }));
       log('debug', debug);
-      renderDebugPanel(debug);
       return { ok: false, reason: 'Не нашёл текстовые блоки для вставки карточек.' };
     }
 
@@ -725,7 +526,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
       removeInserted();
       debug.steps.attachedCount = attachedCount;
       log('debug', debug);
-      renderDebugPanel(debug);
       return { ok: false, reason: 'Не удалось сопоставить карточки с упоминаниями товаров.' };
     }
 
@@ -737,7 +537,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
       (item) => item.verticalInserted,
     ).length;
     log('debug', debug);
-    renderDebugPanel(debug);
 
     return { ok: true, count: attachedCount };
   };
@@ -804,7 +603,6 @@ export const apply: ApplyFn = ({ helpers, log }) => {
 
   const boot = () => {
     state.lastUrl = location.href;
-    ensureDebugPanel();
     scheduleApply();
 
     if (!state.observer) {
@@ -881,73 +679,6 @@ function buildSearchQuery(product: Pick<ProductCardData, 'query' | 'title'>): st
 
 function isYandexVerificationPage(html: string): boolean {
   return /<title>\s*Верификация\s*<\/title>/i.test(html) || /checkcaptchafast/i.test(html);
-}
-
-function analyzeSearchHtml(args: {
-  html: string;
-  method: SearchDiagnostics['method'];
-  requestUrl: string;
-  responseUrl: string;
-  status?: number;
-}): SearchDiagnostics {
-  const doc = new DOMParser().parseFromString(args.html, 'text/html');
-  const selectorCounts = {
-    AdvProductGalleryCard: doc.querySelectorAll('.AdvProductGalleryCard').length,
-    ProductGalleryCard: doc.querySelectorAll('.ProductGalleryCard').length,
-    EProductSnippet2: doc.querySelectorAll('.EProductSnippet2').length,
-    EProductSnippet2Title: doc.querySelectorAll('.EProductSnippet2-Title').length,
-    EProductSnippet2Overlay: doc.querySelectorAll('.EProductSnippet2-Overlay[href]').length,
-    EProductSnippet2Thumb: doc.querySelectorAll('.EProductSnippet2-Thumb[href]').length,
-    EPriceContent: doc.querySelectorAll('.EPrice-Content').length,
-    priceDrivenCandidates: findPriceDrivenRoots(doc, '').length,
-    img: doc.querySelectorAll('img').length,
-  };
-  const textSample = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 420);
-
-  return {
-    method: args.method,
-    ok: true,
-    requestUrl: args.requestUrl,
-    responseUrl: args.responseUrl,
-    status: args.status,
-    htmlLength: args.html.length,
-    title: doc.title || undefined,
-    verification: isYandexVerificationPage(args.html),
-    selectorCounts,
-    textSample,
-  };
-}
-
-function summarizeDebugPayload(payload: unknown): string {
-  const debug = payload as Partial<DistributeDebug> | undefined;
-  const products = Array.isArray(debug?.products) ? debug.products : [];
-  const verticalOk = products.filter((product) => product.vertical?.ok).length;
-  const verticalReasons = products.reduce<Record<string, number>>((acc, product) => {
-    const reason = product.vertical?.ok ? 'ok' : product.vertical?.reason || 'unknown';
-    acc[reason] = (acc[reason] || 0) + 1;
-    return acc;
-  }, {});
-  const selectorTotals = products.reduce<Record<string, number>>((acc, product) => {
-    const counts = product.vertical?.diagnostics?.selectorCounts || {};
-    for (const [key, value] of Object.entries(counts)) {
-      acc[key] = (acc[key] || 0) + value;
-    }
-    return acc;
-  }, {});
-  const methods = products.reduce<Record<string, number>>((acc, product) => {
-    const method = product.vertical?.diagnostics?.method || 'none';
-    acc[method] = (acc[method] || 0) + 1;
-    return acc;
-  }, {});
-
-  return [
-    `time: ${debug?.timestamp || 'n/a'}`,
-    `steps: ${JSON.stringify(debug?.steps || {})}`,
-    `products: ${products.length}; vertical ok: ${verticalOk}`,
-    `vertical reasons: ${JSON.stringify(verticalReasons)}`,
-    `fetch methods: ${JSON.stringify(methods)}`,
-    `search selector totals: ${JSON.stringify(selectorTotals)}`,
-  ].join('\n');
 }
 
 function absoluteUrl(value: string | null | undefined, baseUrl: string): string {
