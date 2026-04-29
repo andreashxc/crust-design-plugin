@@ -22,6 +22,8 @@ For local work, use your own author folder, for example `experiments/andrew/sear
 
 Prefer putting experiment-specific logic inside the experiment folder. This makes experiments easier to share, fork, delete, and review without shaking core Crust behavior.
 
+Agent rule: when a task is to create, port, or fix one experiment, stay inside `experiments/<author>/<folder>/` by default. Do not change `apps/extension/**`, `packages/**`, shared message protocols, background handlers, permissions, build tooling, or SDK code unless the user explicitly asks for platform work or the experiment is impossible without a generic reusable capability.
+
 Good experiment-local files:
 
 ```text
@@ -35,7 +37,7 @@ experiments/<author>/<folder>/
   description.md
 ```
 
-Only change shared extension/core code when the experiment needs a real platform capability that cannot live in a content-script bundle, such as browser window/tab APIs, new host permissions, storage migrations, or a reusable helper boundary. Keep that shared surface small and generic; keep product heuristics, UI states, parsing, prompts, and visual styling in the experiment folder.
+Only change shared extension/core code when the experiment needs a real platform capability that cannot live in a content-script bundle, such as browser window/tab APIs, new host permissions, storage migrations, or a reusable helper boundary. Keep that shared surface small and generic; keep product heuristics, UI states, parsing, prompts, and visual styling in the experiment folder. If shared code looks necessary, stop and explain the tradeoff before editing it.
 
 ## Manifest
 

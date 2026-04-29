@@ -1,0 +1,13 @@
+{
+  "id": "01KQD7EA9C2WSBMYBYCXJSGWWS",
+  "name": "Alice Product Cards Inline",
+  "author": "masha",
+  "description": "Раскладывает карточки товаров из ответа Алисы под соответствующими упоминаниями.",
+  "scope": {
+    "match": [
+      "https://ya.ru/alice/chat/*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": []
+}
