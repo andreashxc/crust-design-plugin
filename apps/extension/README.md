@@ -6,13 +6,14 @@ Create a new experiment:
 
 ```sh
 corepack pnpm create-experiment <author> <folder> [Display name]
+corepack pnpm create-experiment <author> <folder> [Display name] --url <target-url> [--scope path|origin|host]
 ```
 
 Examples:
 
 ```sh
 corepack pnpm create-experiment andrew hero-test "Hero Test"
-corepack pnpm create-experiment alex search-card
+corepack pnpm create-experiment alex search-card --url https://example.com/pricing
 ```
 
 Experiments live at:
@@ -21,13 +22,15 @@ Experiments live at:
 experiments/<author>/<folder>/
   manifest.json
   experiment.ts
+  analysis.md
   description.md
   presets/
 ```
 
 The public repo tracks only curated examples under `experiments/examples/**`.
-Your own `experiments/<author>/**` folders are ignored by git unless you
-explicitly force-add them.
+Your own `experiments/<author>/**` folders are ignored by git and should stay
+outside the plugin repository. Share private/client experiments through a
+separate private repository or archive.
 
 While `corepack pnpm dev` is running, Crust watches `experiments/**` and refreshes
 the generated `registry.json` plus experiment chunks when files are added,
@@ -40,5 +43,6 @@ experiment list if the popup is already open.
 use either `{ "name": "...", "values": { ... } }` or a plain values object.
 
 The popup only shows experiments whose `scope.match` or `scope.regex` matches
-the active tab URL. New host scopes may still require extension manifest changes
-for permissions and content-script matches.
+the active tab URL. New host scopes require rebuilding and reloading the
+extension because Chrome permissions and content-script matches are generated
+from experiment manifests at dev/build time.

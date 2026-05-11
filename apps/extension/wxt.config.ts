@@ -4,10 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { buildExperiments } from '@platform/build-tools/build-experiments';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'wxt';
+import { experimentMatchesForExtension } from '../../tools/extension-permissions';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '../..');
 const chromeOutDir = resolve(__dirname, '.output/chrome-mv3');
+const extensionPermissions = experimentMatchesForExtension(repoRoot);
+const githubComparePermission =
+  'https://api.github.com/repos/andreashxc/crust-design-plugin/compare/*';
 
 function currentCommit(): string {
   try {
@@ -33,22 +37,29 @@ export default defineConfig({
       },
     },
     permissions: ['storage', 'tabs', 'offscreen', 'scripting'],
-    host_permissions: [
-      '*://ya.ru/*',
-      '*://*.ya.ru/*',
-      'https://yandex.ru/*',
-      'https://*.yandex.ru/*',
-      'https://market.yandex.ru/*',
-      'https://weather.yandex.ru/*',
-      'https://yandex.ru/pogoda/*',
-      'https://api.github.com/repos/andreashxc/crust-design-plugin/compare/*',
-    ],
+    host_permissions: [...extensionPermissions.hostPermissions, githubComparePermission],
     web_accessible_resources: [
       {
         resources: ['registry.json', 'chunks/experiments-*.js'],
-        matches: ['*://ya.ru/*', '*://*.ya.ru/*'],
+        matches: extensionPermissions.webAccessibleMatches,
       },
     ],
+  },
+  hooks: {
+    'build:manifestGenerated': (_wxt, manifest) => {
+      for (const contentScript of manifest.content_scripts ?? []) {
+        contentScript.matches = extensionPermissions.contentMatches;
+      }
+      for (const resource of manifest.web_accessible_resources ?? []) {
+        resource.matches = extensionPermissions.webAccessibleMatches;
+      }
+      manifest.host_permissions = [
+        ...new Set([...(manifest.host_permissions ?? []), ...extensionPermissions.hostPermissions]),
+      ];
+      for (const warning of extensionPermissions.warnings) {
+        console.warn(`[extension-permissions] ${warning}`);
+      }
+    },
   },
   vite: () => ({
     // `buildExperiments` runs at build start: it scans `experiments/*/*/manifest.json`

@@ -10,6 +10,7 @@ The public GitHub repo tracks only curated examples under `experiments/examples/
 experiments/<author>/<folder>/
   manifest.json
   experiment.ts
+  analysis.md
   description.md
   presets/
 ```
@@ -34,6 +35,7 @@ experiments/<author>/<folder>/
   prompt.ts
   styles.ts
   manifest.json
+  analysis.md
   description.md
 ```
 
@@ -58,6 +60,45 @@ Only change shared extension/core code when the experiment needs a real platform
 ```
 
 Leave `id` empty for a new experiment; the build stamps a stable ULID. Do not change it after teammates have used the experiment, because storage is keyed by ID.
+
+## Create An Experiment For A URL
+
+Use `create-experiment` to generate a Hummer-ready starter:
+
+```sh
+corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path
+```
+
+`--url` accepts `http:` and `https:` URLs. If omitted, the command preserves the original ya.ru starter behavior for older docs and examples.
+
+Scope modes:
+
+- `path`: `https://example.com/pricing?utm=x` becomes `https://example.com/pricing*`.
+- `origin`: `https://example.com/pricing` becomes `https://example.com/*`.
+- `host`: `https://example.com/pricing` becomes `https://example.com/*` and `https://*.example.com/*`.
+
+The generated starter includes `variant` and `show_annotations` tweaks, `analysis.md`, generated `description.md`, and conservative/balanced/exploratory presets. After adding an experiment for a new domain, rebuild and reload the extension because Chrome permissions are generated from experiment scopes at build/dev time.
+
+## Hummer Experiment Pattern
+
+For real Crust Hummer tasks, prefer this shape:
+
+```text
+experiments/<author>/<folder>/
+  manifest.json
+  experiment.ts
+  dom.ts
+  renderer.ts
+  styles.ts
+  analysis.md
+  description.md
+  presets/
+    conservative.json
+    balanced.json
+    exploratory.json
+```
+
+Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `analysis.md` for diagnosis and branch rationale, and `description.md` for usage/testing notes.
 
 ## Tweaks
 
@@ -125,7 +166,7 @@ The command prints a compact summary for the AI agent: token groups, key section
 
 When `create-experiment` or `fork-experiment` finds matching context for the experiment scope, it prints a hint telling you which command to run and paste into your AI coding tool.
 
-Do not commit private `DESIGN.md`, `design-context/`, or `.crust/design-context/` files unless you intentionally force-add a sanitized public example.
+Do not commit private `DESIGN.md`, `design-context/`, or `.crust/design-context/` files. Only sanitized public examples should be intentionally added to this repository.
 
 ## Presets
 

@@ -38,7 +38,7 @@ When dev mode is running, load the extension:
 1. Open `chrome://extensions` in Chrome or `browser://extensions` in Yandex Browser.
 2. Enable Developer mode.
 3. Click `Load unpacked`.
-4. Select `apps/extension/.output/chrome-mv3`.
+4. Select `crust-extension` from the repo root.
 5. Open `https://ya.ru/`.
 6. Open the Crust toolbar popup.
 
@@ -151,24 +151,20 @@ corepack pnpm save-preset <author>/<folder> <preset-name> '<json-values>'
 
 By default, personal experiments are ignored by git. That is intentional.
 
-To share with a teammate, prefer a private branch or private repo. If you really want to commit one experiment into git, ask your coding agent:
+Do not commit personal or client experiments into the Crust plugin repository. Keep the plugin repo clean and use a separate private GitHub repository, private gist, secure archive, or team file share for experiment exchange.
+
+Recommended teammate flow:
 
 ```text
-Share only this Crust experiment:
+Package this Crust experiment for sharing outside the plugin repo:
 experiments/<author>/<folder>
 
-Force-add only that folder, commit it with a clear message, and do not add other ignored local experiments.
+Create a clean copy that includes manifest.json, experiment.ts, analysis.md, description.md, presets/, and any local helper files from that experiment folder. Do not commit it into the Crust plugin repository.
 ```
 
-Manual commands:
+The teammate should copy that folder into their own local Crust checkout under `experiments/<their-name>/<folder>/`, then run `corepack pnpm dev` or rebuild the extension. If the experiment targets a new domain, they need to reload the extension because Chrome permissions are generated from experiment scopes during dev/build.
 
-```sh
-git add -f experiments/<author>/<folder>
-git commit -m "Add <experiment name>"
-git push
-```
-
-After teammates pull and run `corepack pnpm dev` or rebuild, the experiment appears in their popup when the active tab matches its scope.
+Only curated public examples should be intentionally added under `experiments/examples/**`.
 
 ## Release Install
 
@@ -240,7 +236,7 @@ corepack pnpm dev
 1. Открой `chrome://extensions` в Chrome или `browser://extensions` в Яндекс Браузере.
 2. Включи Developer mode.
 3. Нажми `Load unpacked`.
-4. Выбери папку `apps/extension/.output/chrome-mv3`.
+4. Выбери папку `crust-extension` в корне репозитория.
 5. Открой `https://ya.ru/`.
 6. Открой popup Crust в toolbar браузера.
 
@@ -353,24 +349,20 @@ corepack pnpm save-preset <author>/<folder> <preset-name> '<json-values>'
 
 Личные эксперименты по умолчанию игнорируются git. Это специально.
 
-Если надо поделиться с коллегой, лучше использовать приватную ветку или приватный репозиторий. Если точно хочешь добавить один эксперимент в git, попроси AI-агента:
+Не коммить личные или клиентские эксперименты в репозиторий плагина Crust. Держи репозиторий плагина чистым, а для обмена используй отдельный приватный GitHub-репозиторий, private gist, защищенный архив или командное файловое хранилище.
+
+Рекомендованный сценарий для обмена с коллегой:
 
 ```text
-Опубликуй только этот Crust experiment:
+Упакуй этот Crust experiment для передачи вне репозитория плагина:
 experiments/<author>/<folder>
 
-Force-add только эту папку, сделай понятный commit и не добавляй другие ignored local experiments.
+Сделай чистую копию, в которую входят manifest.json, experiment.ts, analysis.md, description.md, presets/ и все локальные helper-файлы из папки эксперимента. Не коммить это в репозиторий Crust plugin.
 ```
 
-Команды вручную:
+Коллега должен скопировать эту папку в свой локальный Crust checkout как `experiments/<его-имя>/<folder>/`, затем запустить `corepack pnpm dev` или пересобрать расширение. Если эксперимент под новый домен, расширение нужно перезагрузить, потому что Chrome permissions генерируются из scope экспериментов во время dev/build.
 
-```sh
-git add -f experiments/<author>/<folder>
-git commit -m "Add <experiment name>"
-git push
-```
-
-После `pull` и запуска `corepack pnpm dev` или rebuild эксперимент появится у коллеги в popup, если открытая вкладка подходит под scope.
+В git стоит осознанно добавлять только публичные curated examples в `experiments/examples/**`.
 
 ## Установка Release Версии
 
