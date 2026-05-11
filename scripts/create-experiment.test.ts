@@ -43,6 +43,24 @@ describe('scopeMatchesForUrl', () => {
     ]);
   });
 
+  it('does not generate wildcard subdomains for localhost host scope', () => {
+    expect(scopeMatchesForUrl('http://localhost:3000/pricing', 'host')).toEqual([
+      'http://localhost:3000/*',
+    ]);
+  });
+
+  it('does not generate wildcard subdomains for IPv4 host scope', () => {
+    expect(scopeMatchesForUrl('http://127.0.0.1:3000/pricing', 'host')).toEqual([
+      'http://127.0.0.1:3000/*',
+    ]);
+  });
+
+  it('does not generate wildcard subdomains for IPv6 host scope', () => {
+    expect(scopeMatchesForUrl('http://[::1]:3000/pricing', 'host')).toEqual([
+      'http://[::1]:3000/*',
+    ]);
+  });
+
   it('rejects non-http URLs', () => {
     expect(() => scopeMatchesForUrl('file:///tmp/page.html', 'path')).toThrow(/http: or https:/);
   });

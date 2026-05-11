@@ -77,11 +77,29 @@ export function scopeMatchesForUrl(targetUrl: string, scope: CreateExperimentSco
   const host = url.hostname;
 
   if (scope === 'origin') return [`${origin}/*`];
-  if (scope === 'host') return [`${origin}/*`, `${url.protocol}//*.${host}/*`];
+  if (scope === 'host') {
+    const matches = [`${origin}/*`];
+    if (supportsWildcardSubdomain(host)) {
+      matches.push(`${url.protocol}//*.${host}/*`);
+    }
+    return matches;
+  }
 
   const pathname = url.pathname || '/';
   if (pathname === '/') return [`${origin}/*`];
   return [`${origin}${pathname}*`];
+}
+
+function supportsWildcardSubdomain(host: string): boolean {
+  return host !== 'localhost' && !isIpv4(host) && !isIpv6(host);
+}
+
+function isIpv4(host: string): boolean {
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host);
+}
+
+function isIpv6(host: string): boolean {
+  return host.includes(':');
 }
 
 function parseHttpUrl(targetUrl: string): URL {

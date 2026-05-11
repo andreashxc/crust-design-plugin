@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, lstatSync, symlinkSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = process.cwd();
@@ -17,7 +17,7 @@ if (existsSync(linkPath)) {
     console.error(`Refusing to replace non-symlink path: ${linkPath}`);
     process.exit(1);
   }
-  rmSync(linkPath, { force: true });
+  unlinkSync(linkPath);
 }
 
 const linkType = process.platform === 'win32' ? 'junction' : 'dir';

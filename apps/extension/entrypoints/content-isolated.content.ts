@@ -298,7 +298,8 @@ function currentHeaderNavSwapOrder(pair: {
 
 function isHeaderNavSwapTargetPage(url: string): boolean {
   try {
-    const { pathname } = new URL(url);
+    const { hostname, pathname } = new URL(url);
+    if (hostname !== 'ya.ru' && !hostname.endsWith('.ya.ru')) return false;
     return (
       pathname === '/search' ||
       pathname.startsWith('/search/') ||

@@ -40,7 +40,7 @@ describe('hostPermissionForMatch', () => {
 });
 
 describe('experimentMatchesForExtension', () => {
-  it('uses exact experiment scope matches for content scripts and web resources', () => {
+  it('uses exact content matches and origin-level web accessible matches', () => {
     writeManifest('experiments/andrew/pricing/manifest.json', {
       scope: { match: ['https://example.com/pricing*'] },
     });
@@ -48,14 +48,14 @@ describe('experimentMatchesForExtension', () => {
     const result = experimentMatchesForExtension(tmpRoot);
 
     expect(result.contentMatches).toEqual(['https://example.com/pricing*']);
-    expect(result.webAccessibleMatches).toEqual(['https://example.com/pricing*']);
+    expect(result.webAccessibleMatches).toEqual(['https://example.com/*']);
     expect(result.hostPermissions).toEqual(['https://example.com/*']);
   });
 
   it('falls back to public example matches when no experiment manifests exist', () => {
     const result = experimentMatchesForExtension(tmpRoot);
     expect(result.contentMatches).toEqual(FALLBACK_EXTENSION_MATCHES);
-    expect(result.webAccessibleMatches).toEqual(FALLBACK_EXTENSION_MATCHES);
+    expect(result.webAccessibleMatches).toEqual(['*://*.ya.ru/*', '*://ya.ru/*']);
     expect(result.hostPermissions).toEqual(['*://*.ya.ru/*', '*://ya.ru/*']);
   });
 

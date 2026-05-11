@@ -59,7 +59,7 @@ export function experimentMatchesForExtension(root: string): ExtensionPermission
   return {
     contentMatches: effectiveContentMatches,
     hostPermissions,
-    webAccessibleMatches: effectiveContentMatches,
+    webAccessibleMatches: hostPermissions,
     warnings,
   };
 }
