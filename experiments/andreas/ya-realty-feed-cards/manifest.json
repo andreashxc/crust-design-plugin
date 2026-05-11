@@ -1,0 +1,54 @@
+{
+  "id": "01KRC9NMZ44R442CP7QN36S0FE",
+  "name": "Ya Realty Feed Cards",
+  "author": "andreas",
+  "description": "Adds compact Yandex Realty apartment cards into the ya.ru feed.",
+  "scope": {
+    "match": [
+      "https://ya.ru/*",
+      "https://www.ya.ru/*",
+      "https://yandex.ru/realty*",
+      "https://www.yandex.ru/realty*"
+    ]
+  },
+  "world": "isolated",
+  "tweaks": [
+    {
+      "key": "variant",
+      "label": "Variant",
+      "type": "select",
+      "options": [
+        "conservative",
+        "balanced",
+        "exploratory"
+      ],
+      "default": "balanced"
+    },
+    {
+      "key": "show_annotations",
+      "label": "Show annotations",
+      "type": "toggle",
+      "default": false
+    },
+    {
+      "key": "card_count",
+      "label": "Card count",
+      "type": "number-slider",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "key": "placement",
+      "label": "Placement",
+      "type": "select",
+      "options": [
+        "auto",
+        "top",
+        "after_first_card"
+      ],
+      "default": "auto"
+    }
+  ]
+}

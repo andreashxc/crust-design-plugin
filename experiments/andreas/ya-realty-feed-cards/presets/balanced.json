@@ -1,0 +1,10 @@
+{
+  "name": "balanced",
+  "values": {
+    "variant": "balanced",
+    "show_annotations": false,
+    "card_count": 3,
+    "placement": "auto"
+  },
+  "updatedAt": "2026-05-11T19:49:55.776Z"
+}

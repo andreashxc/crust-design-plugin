@@ -1,0 +1,10 @@
+{
+  "name": "exploratory",
+  "values": {
+    "variant": "exploratory",
+    "show_annotations": false,
+    "card_count": 4,
+    "placement": "top"
+  },
+  "updatedAt": "2026-05-11T19:49:55.776Z"
+}
