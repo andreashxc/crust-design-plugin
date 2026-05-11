@@ -4,7 +4,7 @@ generated: false
 
 # Ya Realty Feed Cards
 
-Adds compact apartment object cards from Yandex Realty into the `ya.ru` feed.
+Adds separate apartment object cards from Yandex Realty into the `ya.ru` feed.
 
 ## Scope
 
@@ -15,19 +15,19 @@ Adds compact apartment object cards from Yandex Realty into the `ya.ru` feed.
 ## Variants
 
 - `conservative`: one compact Realty object card after the first detected feed item.
-- `balanced`: recommended, three object cards in a feed-native strip.
-- `exploratory`: larger module with a featured object card and stronger CTA.
+- `balanced`: recommended, three separate object cards inserted as normal feed siblings.
+- `exploratory`: more visually dominant object cards with taller media.
 
 ## Tweaks
 
 - `variant`: `conservative`, `balanced`, or `exploratory`.
 - `show_annotations`: show branch rationale on the page.
-- `card_count`: 1-6 visible apartment cards.
+- `card_count`: 1-6 separate apartment cards inserted into the feed.
 - `placement`: `auto`, `top`, or `after_first_card`.
 
 ## Recommendation
 
-Use `balanced` for the first product readout. It exposes actual apartment listings as a meaningful feed entity while keeping the module compact enough to sit next to product and video cards.
+Use `balanced` for the first product readout. It exposes actual apartment listings as feed-native cards next to product and video cards.
 
 ## How To Test In Crust
 

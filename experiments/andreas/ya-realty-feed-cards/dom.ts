@@ -53,15 +53,21 @@ export function observePage(
 }
 
 export function isCurrentInsertion(
-  module: Element,
+  modules: Element[],
   target: InsertionTarget,
   signature: string,
 ): boolean {
-  return (
-    module.parentElement === target.parent &&
-    module.nextElementSibling === target.before &&
-    module.getAttribute('data-crust-signature') === signature
-  );
+  if (modules.length === 0) return false;
+
+  return modules.every((module, index) => {
+    const next = modules[index + 1] ?? target.before;
+    return (
+      module.parentElement === target.parent &&
+      module.nextElementSibling === next &&
+      module.getAttribute('data-crust-signature') === signature &&
+      module.getAttribute('data-crust-index') === String(index)
+    );
+  });
 }
 
 export function findInsertionTarget(root: Document, placement: Placement): InsertionTarget | null {

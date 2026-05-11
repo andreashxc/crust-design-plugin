@@ -22,25 +22,26 @@ Apartment cards in the feed should increase transitions from `ya.ru` to Yandex R
 
 ## Diagnosis
 
-Real estate is a high-consideration vertical, so it needs enough detail to justify a click, but the `ya.ru` feed is not the place for full listing cards. The highest-leverage format is a compact object card that preserves the Yandex Realty decision cues: photo, total price, price per meter, transit/location, room count, area, floor, building/JК, and source marketplaces.
+Real estate is a high-consideration vertical, so it needs enough detail to justify a click, but the `ya.ru` feed is not the place for a bundled realty module. The highest-leverage format is separate feed items, exactly like product cards: one apartment object per card, with photo, total price, price per meter, transit/location, room count, area, floor, building/JК, and a Yandex Realty service row.
 
 The main risk is visual weight. Full realty cards would dominate the feed and feel like an ad block. The module should borrow the feed card rhythm, keep secondary data small, and make the click target obvious.
 
 ## Solution Branches
 
-- Conservative: inserts one horizontal apartment card after the first feed item. Lowest layout risk, useful as a control for incremental click lift.
-- Balanced: inserts a three-card strip with one concise heading and CTA. Best impact/risk ratio because it makes the vertical visible while preserving feed density.
-- Exploratory: inserts a stronger four-card module with one featured card and three supporting cards. Higher salience, useful if the team wants to test whether realty can become a larger feed entity.
+- Conservative: inserts one apartment object card after the first feed item. Lowest layout risk, useful as a control for incremental click lift.
+- Balanced: inserts three separate apartment cards as normal feed siblings. Best impact/risk ratio because it makes the vertical visible while preserving the existing product/video rhythm.
+- Exploratory: inserts more visually dominant apartment cards with taller media. Higher salience, useful if the team wants to test whether realty can behave like a larger feed entity.
 
 ## Recommended Direction
 
 Recommend `balanced`.
 
-It gives users a real choice set without making the feed feel like a real estate page. Three cards are enough to communicate variety across budget/location/new-build options, while the compact module still fits the existing feed pattern.
+It gives users a real choice set without making the feed feel like a real estate page. Three separate cards are enough to communicate variety across budget/location/new-build options, while matching the existing product-card feed pattern.
 
 ## Implementation Notes
 
 - `variant`, `card_count`, `placement`, and `show_annotations` are tweakable from Crust.
+- `card_count` controls the number of separate feed cards, not the number of cards inside a wrapper.
 - The experiment applies only on `ya.ru` home, even though the manifest includes `yandex.ru/realty*` so the helper can fetch source listing data.
 - Parsing uses `DOMParser` and real Realty selectors rather than a text-line heuristic.
 - Rendering avoids `innerHTML`; all listing text is inserted through DOM text nodes.
@@ -55,7 +56,7 @@ It gives users a real choice set without making the feed feel like a real estate
 ## QA Checklist
 
 - [ ] Experiment appears in the Crust popup on `https://ya.ru/`.
-- [ ] `balanced` shows three compact object cards from Realty listings.
+- [ ] `balanced` shows three separate object cards from Realty listings.
 - [ ] `conservative` shows one smaller card.
 - [ ] `exploratory` shows a larger module with a featured card.
 - [ ] `card_count` adjusts visible cards up to six.

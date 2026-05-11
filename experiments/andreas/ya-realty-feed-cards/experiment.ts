@@ -1,12 +1,11 @@
 import type { ApplyFn } from '@platform/experiment-sdk';
 import { findInsertionTarget, isCurrentInsertion, isYaHomePage, observePage } from './dom';
 import { extractRealtyCardsFromHtml, SNAPSHOT_REALTY_CARDS } from './realty-parser';
-import { renderRealtyModule, type Variant } from './renderer';
+import { renderRealtyFeedCards, type Variant } from './renderer';
 import { realtyFeedStyles } from './styles';
 
 const EXP_ID = 'andreas-ya-realty-feed-cards';
 const STYLE_ID = `${EXP_ID}-styles`;
-const MODULE_ID = `${EXP_ID}-module`;
 const MODULE_ATTR = 'data-crust-ya-realty-feed-cards';
 const MODULE_SELECTOR = `[${MODULE_ATTR}]`;
 const SOURCE_URL = 'https://yandex.ru/realty/moskva_i_moskovskaya_oblast/kupit/kvartira?lr=213';
@@ -59,23 +58,26 @@ export const apply: ApplyFn = async ({ helpers, tweaks, signal, currentURL, log 
       cards: visibleCards,
     });
 
-    const existing = document.getElementById(MODULE_ID);
+    const existing = Array.from(document.querySelectorAll<HTMLElement>(MODULE_SELECTOR));
     if (existing && isCurrentInsertion(existing, target, signature)) return;
 
-    const module = renderRealtyModule({
-      id: MODULE_ID,
+    const modules = renderRealtyFeedCards({
       cards: visibleCards,
       variant,
       showAnnotations,
-      sourceUrl: SOURCE_URL,
     });
-    module.setAttribute(MODULE_ATTR, '');
-    module.setAttribute('data-crust-signature', signature);
+    modules.forEach((module, index) => {
+      module.setAttribute(MODULE_ATTR, '');
+      module.setAttribute('data-crust-signature', signature);
+      module.setAttribute('data-crust-index', String(index));
+    });
 
     isApplying = true;
     try {
-      existing?.remove();
-      target.parent.insertBefore(module, target.before);
+      existing.forEach((module) => module.remove());
+      const fragment = document.createDocumentFragment();
+      modules.forEach((module) => fragment.append(module));
+      target.parent.insertBefore(fragment, target.before);
     } finally {
       queueMicrotask(() => {
         isApplying = false;
@@ -94,7 +96,7 @@ export const apply: ApplyFn = async ({ helpers, tweaks, signal, currentURL, log 
     isApplying = true;
     stopObserving();
     stopUrlListener();
-    document.getElementById(MODULE_ID)?.remove();
+    document.querySelectorAll(MODULE_SELECTOR).forEach((module) => module.remove());
     isApplying = false;
   };
 };
