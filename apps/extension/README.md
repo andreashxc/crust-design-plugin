@@ -6,7 +6,7 @@ Create a new experiment:
 
 ```sh
 corepack pnpm create-experiment <author> <folder> [Display name]
-corepack pnpm create-experiment <author> <folder> [Display name] --url <target-url> [--scope path|origin|host]
+corepack pnpm create-experiment <author> <folder> [Display name] --url <target-url> [--scope path|origin|host] [--template minimal|hummer]
 ```
 
 Examples:
@@ -14,6 +14,7 @@ Examples:
 ```sh
 corepack pnpm create-experiment andrew hero-test "Hero Test"
 corepack pnpm create-experiment alex search-card --url https://example.com/pricing
+corepack pnpm create-experiment alex pricing-hummer "Pricing Hummer" --url https://example.com/pricing --scope path --template hummer
 ```
 
 Experiments live at:
@@ -22,10 +23,19 @@ Experiments live at:
 experiments/<author>/<folder>/
   manifest.json
   experiment.ts
+  dom.ts
+  renderer.ts
+  styles.ts
+  copy.ts
   analysis.md
   description.md
   presets/
 ```
+
+`--template minimal` is the default legacy one-file starter. `--template hummer`
+creates the repo-side Design Hammer starter with conservative, balanced, and
+exploratory variants, page-evidence sections in `analysis.md`, generated
+`description.md`, and matching presets.
 
 The public repo tracks only curated examples under `experiments/examples/**`.
 Your own `experiments/<author>/**` folders are ignored by git and should stay

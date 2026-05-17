@@ -227,6 +227,7 @@ export type InjectStyleOptions = {
 
 export type InjectNodeOptions = {
   position?: InsertPosition;
+  markOwned?: boolean;
 };
 
 export type WaitForOptions = {

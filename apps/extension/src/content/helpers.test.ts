@@ -17,12 +17,26 @@ describe('createHelperContext', () => {
 
     expect(style.dataset.expId).toBe('exp');
     expect(style.isConnected).toBe(true);
+    expect(node.dataset.expId).toBe('exp');
+    expect(node.dataset.crustOwned).toBe('true');
     expect(node.isConnected).toBe(true);
 
     await context.cleanup();
 
     expect(style.isConnected).toBe(false);
     expect(node.isConnected).toBe(false);
+  });
+
+  it('preserves existing element ownership attributes when injecting nodes', async () => {
+    const context = createHelperContext({ experimentId: 'exp' });
+    const node = document.createElement('section');
+    node.dataset.expId = 'existing-exp';
+
+    context.helpers.injectNode(node, undefined, { markOwned: false });
+
+    expect(node.dataset.expId).toBe('existing-exp');
+    expect(node.dataset.crustOwned).toBeUndefined();
+    await context.cleanup();
   });
 
   it('waitFor resolves when a matching node appears and disconnects on cleanup', async () => {

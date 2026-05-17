@@ -137,6 +137,8 @@ Crust Hummer is the repo-side AI workflow for design/product UI work on real web
 
 Use Hummer when you want the agent to reason like a product designer, compare conservative/balanced/exploratory directions, and implement the recommended prototype as a Crust experiment.
 
+Hummer is intentionally lean: one agent normalizes the task, gathers page evidence, compares three branches, recommends one branch, implements it as a Crust experiment, writes `analysis.md` and `description.md`, and runs typecheck/build QA. It should not clone references, create a separate agent app, add popup authoring, run a companion server, add Figma integration, or make broad core changes unless the task explicitly needs a reusable platform capability.
+
 Prompt example:
 
 ```text
@@ -164,7 +166,7 @@ Create a Crust experiment with 3 tweakable variants and recommend one.
 The starter command for arbitrary URLs is:
 
 ```sh
-corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path
+corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path --template hummer
 ```
 
 Scope modes:
@@ -172,6 +174,25 @@ Scope modes:
 - `path`: target the exact path, ignoring query and hash.
 - `origin`: target the whole origin.
 - `host`: target the origin and wildcard subdomains.
+
+References are opt-in. By default, Hummer uses no external references. If you want the agent to inspect inspiration or competitor pages, say it explicitly:
+
+```text
+References:
+provided URLs allowed:
+- https://reference.example/pricing
+- https://reference.example/signup
+```
+
+If your AI environment has an MCP connector or reference tool such as Lazyweb, you can allow it explicitly:
+
+```text
+References:
+MCP references allowed
+Lazyweb allowed
+```
+
+Hummer should extract reusable patterns only. It should not copy exact layouts, brand assets, exact text, or execute remote code from references.
 
 After adding an experiment for a new domain, rebuild and reload the extension because Chrome permissions are generated from experiment scopes during dev/build. More detail: `docs/HUMMER.md`.
 
@@ -385,6 +406,8 @@ Crust Hummer это repo-side AI workflow для дизайн- и продукт
 
 Используй Hummer, когда хочешь, чтобы агент думал как продуктовый дизайнер, сравнил conservative/balanced/exploratory направления и реализовал рекомендованный прототип как Crust experiment.
 
+Hummer намеренно остается легким: один агент нормализует задачу, собирает page evidence, сравнивает три ветки, рекомендует одну, реализует ее как Crust experiment, пишет `analysis.md` и `description.md`, затем запускает typecheck/build QA. Он не должен клонировать референсы, создавать отдельное agent app, добавлять popup authoring, запускать companion server, добавлять Figma integration или делать широкие core changes, если задаче явно не нужна переиспользуемая platform capability.
+
 Пример запроса:
 
 ```text
@@ -412,7 +435,7 @@ Create a Crust experiment with 3 tweakable variants and recommend one.
 Команда для starter-эксперимента под любой URL:
 
 ```sh
-corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path
+corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path --template hummer
 ```
 
 Режимы scope:
@@ -420,6 +443,25 @@ corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-u
 - `path`: только конкретный path, без query и hash.
 - `origin`: весь origin.
 - `host`: origin и wildcard subdomains.
+
+Референсы включаются только явно. По умолчанию Hummer не использует внешние референсы. Если хочешь, чтобы агент посмотрел inspiration или страницы конкурентов, напиши это прямо:
+
+```text
+References:
+provided URLs allowed:
+- https://reference.example/pricing
+- https://reference.example/signup
+```
+
+Если в твоей AI-среде есть MCP connector или reference tool вроде Lazyweb, разреши его явно:
+
+```text
+References:
+MCP references allowed
+Lazyweb allowed
+```
+
+Hummer должен извлекать только переиспользуемые паттерны. Он не должен копировать точные layout, brand assets, точный текст или исполнять remote code из референсов.
 
 После добавления эксперимента под новый домен пересобери и перезагрузи расширение, потому что Chrome permissions генерируются из scope экспериментов во время dev/build. Подробнее: `docs/HUMMER.md`.
 

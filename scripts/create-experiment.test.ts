@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { scanAndValidate, writeDevExperimentArtifacts } from '../tools/build-experiments';
 import {
   createExperiment,
   parseCreateExperimentArgs,
@@ -87,6 +88,26 @@ describe('parseCreateExperimentArgs', () => {
     ]);
     expect(args.displayName).toBe('Pricing Hero');
     expect(args.matches).toEqual(['https://example.com/*']);
+    expect(args.template).toBe('minimal');
+  });
+
+  it('parses the template option', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing-hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+    expect(args.template).toBe('hummer');
+  });
+
+  it('rejects unknown templates', () => {
+    expect(() =>
+      parseCreateExperimentArgs(['andrew', 'pricing-hero', '--template', 'full']),
+    ).toThrow(/--template must be one of/);
   });
 
   it('formats titles from folders', () => {
@@ -95,7 +116,7 @@ describe('parseCreateExperimentArgs', () => {
 });
 
 describe('createExperiment', () => {
-  it('writes Hummer-ready starter files', () => {
+  it('keeps minimal starter behavior by default', () => {
     const args = parseCreateExperimentArgs([
       'andrew',
       'pricing-hero',
@@ -108,16 +129,147 @@ describe('createExperiment', () => {
     const manifest = JSON.parse(readFileSync(resolve(dir, 'manifest.json'), 'utf8'));
 
     expect(manifest.scope.match).toEqual(['https://example.com/pricing*']);
+    expect(manifest.description).toContain('Pricing Hero design experiment');
     expect(manifest.tweaks.map((tweak: { key: string }) => tweak.key)).toEqual([
       'variant',
       'show_annotations',
     ]);
     expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain('helpers.injectNode');
     expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).not.toContain('innerHTML');
+    expect(existsSync(resolve(dir, 'dom.ts'))).toBe(false);
+    expect(existsSync(resolve(dir, 'renderer.ts'))).toBe(false);
     expect(existsSync(resolve(dir, 'analysis.md'))).toBe(true);
     expect(readFileSync(resolve(dir, 'description.md'), 'utf8')).toContain('How to test in Crust');
     expect(existsSync(resolve(dir, 'presets/conservative.json'))).toBe(true);
     expect(existsSync(resolve(dir, 'presets/balanced.json'))).toBe(true);
     expect(existsSync(resolve(dir, 'presets/exploratory.json'))).toBe(true);
+  });
+
+  it('writes the Hummer template shape', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing-hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    const dir = createExperiment(tmpRoot, args);
+    const files = [
+      'manifest.json',
+      'experiment.ts',
+      'dom.ts',
+      'renderer.ts',
+      'styles.ts',
+      'copy.ts',
+      'analysis.md',
+      'description.md',
+      'presets/conservative.json',
+      'presets/balanced.json',
+      'presets/exploratory.json',
+    ];
+
+    for (const file of files) expect(existsSync(resolve(dir, file))).toBe(true);
+    const manifest = JSON.parse(readFileSync(resolve(dir, 'manifest.json'), 'utf8'));
+    expect(manifest.description).toContain('conservative, balanced, and exploratory');
+    expect(manifest.world).toBe('isolated');
+    expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain('findMountTarget');
+    expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain('renderPrototype');
+    expect(readFileSync(resolve(dir, 'renderer.ts'), 'utf8')).not.toContain('innerHTML');
+  });
+
+  it('writes Hummer analysis sections', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing-hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    const dir = createExperiment(tmpRoot, args);
+    const analysis = readFileSync(resolve(dir, 'analysis.md'), 'utf8');
+
+    for (const section of [
+      'Input',
+      'Page evidence',
+      'Diagnosis',
+      'Assumptions',
+      'Constraints',
+      'Conservative branch',
+      'Balanced branch',
+      'Exploratory branch',
+      'Recommendation',
+      'Implementation plan',
+      'Risks',
+      'QA checklist',
+    ]) {
+      expect(analysis).toContain(`## ${section}`);
+    }
+  });
+
+  it('writes Hummer presets that validate against manifest tweaks', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing-hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    createExperiment(tmpRoot, args);
+    const result = scanAndValidate(tmpRoot);
+
+    expect(result.errors).toEqual([]);
+    expect(result.manifests[0]?.meta.presets.map((preset) => preset.name)).toEqual([
+      'balanced',
+      'conservative',
+      'exploratory',
+    ]);
+  });
+
+  it('keeps generated manifest descriptions within schema limits', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'long-description',
+      'A'.repeat(320),
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    const dir = createExperiment(tmpRoot, args);
+    const manifest = JSON.parse(readFileSync(resolve(dir, 'manifest.json'), 'utf8'));
+    const result = scanAndValidate(tmpRoot);
+
+    expect(manifest.description).toHaveLength(280);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('emits a bundle for the Hummer template', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing-hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    createExperiment(tmpRoot, args);
+    const result = writeDevExperimentArtifacts({
+      root: tmpRoot,
+      outDir: resolve(tmpRoot, 'dist'),
+    });
+
+    expect(result.registry[0]?.chunkPath).toMatch(/^chunks\/experiments-andrew__pricing-hero-/);
   });
 });

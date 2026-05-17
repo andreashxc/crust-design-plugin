@@ -44,4 +44,17 @@ describe('createDomChangeScheduler', () => {
     expect(schedule).not.toHaveBeenCalled();
     cleanup();
   });
+
+  it('ignores nodes marked as Crust-owned', async () => {
+    const schedule = vi.fn();
+    const cleanup = createDomChangeScheduler(schedule, document.body);
+    const owned = document.createElement('section');
+    owned.dataset.crustOwned = 'true';
+
+    document.body.append(owned);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(schedule).not.toHaveBeenCalled();
+    cleanup();
+  });
 });

@@ -63,11 +63,13 @@ Leave `id` empty for a new experiment; the build stamps a stable ULID. Do not ch
 
 ## Create An Experiment For A URL
 
-Use `create-experiment` to generate a Hummer-ready starter:
+Use `create-experiment` with the Hummer template to generate a Hummer-ready starter:
 
 ```sh
-corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path
+corepack pnpm create-experiment <author> <folder> "Display Name" --url <target-url> --scope path --template hummer
 ```
+
+For the legacy one-file starter, omit `--template` or pass `--template minimal`.
 
 `--url` accepts `http:` and `https:` URLs. If omitted, the command preserves the original ya.ru starter behavior for older docs and examples.
 
@@ -99,6 +101,18 @@ experiments/<author>/<folder>/
 ```
 
 Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `analysis.md` for diagnosis and branch rationale, and `description.md` for usage/testing notes.
+
+Hummer authoring workflow:
+
+1. Normalize the user task into URL, business goal, design freedom, references, output, and constraints.
+2. Capture page evidence before implementation: visible copy, DOM anchors, screenshots/browser notes when available, responsive risks, and matching design context.
+3. Diagnose the page, then define conservative, balanced, and exploratory branches.
+4. Recommend one branch and implement that branch as a Crust experiment.
+5. Keep implementation local to the experiment folder unless a small reusable platform capability is explicitly needed.
+6. Write both `analysis.md` and `description.md`.
+7. QA with typecheck/build and targeted tests for touched code paths.
+
+Do not clone references, copy brand assets/exact text, build popup authoring UI, create a companion server, add Figma integration, or introduce a real multi-agent system for Hummer work.
 
 ## Tweaks
 
@@ -133,7 +147,7 @@ Prefer helpers for page side effects so cleanup stays automatic.
 ## Helpers
 
 - `helpers.injectStyle(css, options?)` tracks injected styles.
-- `helpers.injectNode(node, target?, options?)` tracks injected DOM.
+- `helpers.injectNode(node, target?, options?)` tracks injected DOM. Injected elements are marked with `data-exp-id` and `data-crust-owned="true"` so Crust can ignore its own DOM mutations.
 - `helpers.waitFor(selectorOrCallback, options?)` waits for page elements.
 - `helpers.onUrlChange(callback)` reacts to SPA navigation.
 - `helpers.fetchPage(url, selector?)` fetches and parses SSR HTML from the service worker.

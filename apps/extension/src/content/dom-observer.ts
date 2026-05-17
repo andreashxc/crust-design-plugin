@@ -16,5 +16,5 @@ function shouldScheduleForMutation(mutation: MutationRecord): boolean {
 
 function isExtensionOwnedNode(node: Node): boolean {
   if (!(node instanceof Element)) return false;
-  return Boolean(node.closest('[data-exp-id]'));
+  return Boolean(node.closest('[data-exp-id], [data-crust-owned="true"]'));
 }

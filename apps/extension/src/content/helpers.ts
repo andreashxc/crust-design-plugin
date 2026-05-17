@@ -73,6 +73,11 @@ export function createHelperContext(args: HelperFactoryArgs): {
       injectNode: (node, target?: ParentNode, options?: InjectNodeOptions) => {
         const parent = target ?? globalThis.document?.body;
         if (!parent) throw new Error('injectNode requires a target node');
+        if (node instanceof Element) {
+          if (!node.getAttribute('data-exp-id'))
+            node.setAttribute('data-exp-id', args.experimentId);
+          if (options?.markOwned !== false) node.setAttribute('data-crust-owned', 'true');
+        }
         if (node instanceof Element && parent instanceof Element) {
           parent.insertAdjacentElement(options?.position ?? 'beforeend', node);
         } else {
