@@ -17,6 +17,7 @@
     "typecheck": "tsc -b --pretty",
     "test": "vitest",
     "check-csp": "tsx scripts/check-csp.ts",
+    "check-private-experiments": "tsx scripts/check-private-experiments.ts",
     "create-experiment": "tsx scripts/create-experiment.ts",
     "fork-experiment": "tsx scripts/fork-experiment.ts",
     "generate-descriptions": "tsx scripts/generate-descriptions.ts",

@@ -4,6 +4,12 @@ Experiments live in `experiments/<author>/<folder>/` and are bundled into the ex
 
 The public GitHub repo tracks only curated examples under `experiments/examples/**`. Personal, client, or NDA experiments under `experiments/<author>/**` are ignored by default so forks stay clean.
 
+The pre-commit guard also rejects newly staged personal/client experiment files outside `experiments/examples/**`. If a private experiment was already tracked before the ignore rule existed, remove it from git without deleting local files:
+
+```sh
+git rm --cached -r experiments/<author>/<folder>
+```
+
 ## Folder Shape
 
 ```text

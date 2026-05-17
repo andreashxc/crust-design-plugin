@@ -9,3 +9,5 @@ pre-commit:
       run: corepack pnpm test --run
     check-csp:
       run: corepack pnpm check-csp
+    check-private-experiments:
+      run: corepack pnpm check-private-experiments
