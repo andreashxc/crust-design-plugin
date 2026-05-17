@@ -113,11 +113,12 @@ The agent will usually create:
 experiments/<author>/<folder>/
   manifest.json
   experiment.ts
+  analysis.md
   description.md
   presets/
 ```
 
-For anything more complex than a tiny one-file tweak, ask the agent to keep the implementation self-contained inside that folder. Extra files like `renderer.ts`, `prompt.ts`, `styles.ts`, or `dom.ts` are encouraged. Core extension files should only change when the experiment needs a genuinely reusable platform capability, such as a new browser API helper or host permission.
+For anything more complex than a tiny one-file tweak, ask the agent to keep the implementation self-contained inside that folder. Extra files like `dom.ts`, `renderer.ts`, `styles.ts`, `copy.ts`, or `prompt.ts` are encouraged. Core extension files should only change when the experiment needs a genuinely reusable platform capability, such as a new browser API helper or host permission.
 
 Fresh public forks include only examples in `experiments/examples/**`. Your own folders like `experiments/andrew/**` are local by default and ignored by git, so private experiments are not accidentally published.
 
@@ -382,11 +383,12 @@ https://ya.ru/
 experiments/<author>/<folder>/
   manifest.json
   experiment.ts
+  analysis.md
   description.md
   presets/
 ```
 
-Если эксперимент сложнее маленькой правки в одном файле, попроси агента держать реализацию внутри этой папки. Дополнительные файлы вроде `renderer.ts`, `prompt.ts`, `styles.ts` или `dom.ts` это нормально и даже желательно. Core-файлы расширения стоит менять только когда эксперименту правда нужна переиспользуемая платформенная возможность: новый browser API helper, host permission или другой общий boundary.
+Если эксперимент сложнее маленькой правки в одном файле, попроси агента держать реализацию внутри этой папки. Дополнительные файлы вроде `dom.ts`, `renderer.ts`, `styles.ts`, `copy.ts` или `prompt.ts` это нормально и даже желательно. Core-файлы расширения стоит менять только когда эксперименту правда нужна переиспользуемая платформенная возможность: новый browser API helper, host permission или другой общий boundary.
 
 В публичном GitHub лежат только примеры в `experiments/examples/**`. Твои личные папки вроде `experiments/andrew/**` по умолчанию локальные и игнорируются git, чтобы случайно не запушить приватные эксперименты.
 

@@ -152,6 +152,10 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
 }
 
+function namespaceFromFolder(folder: string): string {
+  return `crust-${folder.toLowerCase().replace(/[^a-z0-9-]+/g, '-')}`;
+}
+
 function manifestDescriptionFor(args: CreateExperimentArgs): string {
   const description =
     args.template === 'hummer'
@@ -198,10 +202,15 @@ export function createExperiment(root: string, args: CreateExperimentArgs): stri
   });
 
   if (args.template === 'hummer') {
+    const namespace = namespaceFromFolder(args.folder);
     writeFileSync(resolve(dir, 'experiment.ts'), hummerExperimentSource(), 'utf8');
     writeFileSync(resolve(dir, 'dom.ts'), hummerDomSource(), 'utf8');
-    writeFileSync(resolve(dir, 'renderer.ts'), hummerRendererSource(args.displayName), 'utf8');
-    writeFileSync(resolve(dir, 'styles.ts'), hummerStylesSource(), 'utf8');
+    writeFileSync(
+      resolve(dir, 'renderer.ts'),
+      hummerRendererSource(args.displayName, namespace),
+      'utf8',
+    );
+    writeFileSync(resolve(dir, 'styles.ts'), hummerStylesSource(namespace), 'utf8');
     writeFileSync(resolve(dir, 'copy.ts'), hummerCopySource(), 'utf8');
   } else {
     writeFileSync(resolve(dir, 'experiment.ts'), minimalExperimentSource(args.displayName), 'utf8');
@@ -299,15 +308,16 @@ function hummerExperimentSource(): string {
   return `import type { ApplyFn } from '@platform/experiment-sdk';
 import { findMountTarget } from './dom';
 import { renderPrototype } from './renderer';
-import { styles } from './styles';
+import { styleId, styles } from './styles';
 import { normalizeVariant } from './copy';
 
-export const apply: ApplyFn = ({ helpers, tweaks, currentURL }) => {
+export const apply: ApplyFn = async ({ helpers, tweaks, currentURL }) => {
   const variant = normalizeVariant(tweaks.variant);
   const showAnnotations = Boolean(tweaks.show_annotations ?? false);
+  await helpers.waitFor('body', { timeoutMs: 5000 });
   const mount = findMountTarget(document, currentURL);
 
-  helpers.injectStyle(styles, { id: 'crust-hummer-styles' });
+  helpers.injectStyle(styles, { id: styleId });
   helpers.injectNode(renderPrototype({ variant, showAnnotations, mount }), mount.parent, {
     position: mount.position,
   });
@@ -345,10 +355,7 @@ export function findMountTarget(doc: Document, currentURL: string): MountTarget 
   const body = doc.body;
   if (body) return { parent: body, position: 'afterbegin', label: 'document body' };
 
-  const fallback = doc.documentElement;
-  if (fallback) return { parent: fallback, position: 'beforeend', label: 'document root' };
-
-  throw new Error(\`No mount target found for \${currentURL}\`);
+  throw new Error(\`No body mount target found for \${currentURL}\`);
 }
 
 function firstVisible(doc: Document, selectors: string[]): Element | null {
@@ -369,10 +376,13 @@ function isUsableTarget(element: Element): boolean {
 `;
 }
 
-function hummerRendererSource(displayName: string): string {
+function hummerRendererSource(displayName: string, namespace: string): string {
   const safeName = JSON.stringify(displayName);
+  const safeNamespace = JSON.stringify(namespace);
   return `import type { MountTarget } from './dom';
 import { BRANCH_COPY, type HummerVariant } from './copy';
+
+const classPrefix = ${safeNamespace};
 
 export type RenderPrototypeArgs = {
   variant: HummerVariant;
@@ -383,27 +393,27 @@ export type RenderPrototypeArgs = {
 export function renderPrototype(args: RenderPrototypeArgs): HTMLElement {
   const copy = BRANCH_COPY[args.variant];
   const panel = document.createElement('aside');
-  panel.className = 'crust-hummer-prototype';
+  panel.className = \`\${classPrefix} \${classPrefix}__prototype\`;
   panel.dataset.variant = args.variant;
   panel.setAttribute('aria-label', ${safeName});
 
   const eyebrow = document.createElement('p');
-  eyebrow.className = 'crust-hummer-eyebrow';
+  eyebrow.className = \`\${classPrefix}__eyebrow\`;
   eyebrow.textContent = copy.eyebrow;
   panel.append(eyebrow);
 
   const title = document.createElement('h2');
-  title.className = 'crust-hummer-title';
+  title.className = \`\${classPrefix}__title\`;
   title.textContent = copy.title;
   panel.append(title);
 
   const body = document.createElement('p');
-  body.className = 'crust-hummer-body';
+  body.className = \`\${classPrefix}__body\`;
   body.textContent = copy.body;
   panel.append(body);
 
   const list = document.createElement('ul');
-  list.className = 'crust-hummer-points';
+  list.className = \`\${classPrefix}__points\`;
   for (const point of copy.points) {
     const item = document.createElement('li');
     item.textContent = point;
@@ -412,14 +422,14 @@ export function renderPrototype(args: RenderPrototypeArgs): HTMLElement {
   panel.append(list);
 
   const action = document.createElement('button');
-  action.className = 'crust-hummer-action';
+  action.className = \`\${classPrefix}__action\`;
   action.type = 'button';
   action.textContent = copy.cta;
   panel.append(action);
 
   if (args.showAnnotations) {
     const note = document.createElement('p');
-    note.className = 'crust-hummer-annotation';
+    note.className = \`\${classPrefix}__annotation\`;
     note.textContent = \`Mounted in \${args.mount.label}. Replace this placeholder with the recommended branch after page evidence is captured.\`;
     panel.append(note);
   }
@@ -429,9 +439,11 @@ export function renderPrototype(args: RenderPrototypeArgs): HTMLElement {
 `;
 }
 
-function hummerStylesSource(): string {
-  return `export const styles = \`
-  .crust-hummer-prototype {
+function hummerStylesSource(namespace: string): string {
+  return `export const styleId = '${namespace}-styles';
+
+export const styles = \`
+  .${namespace} {
     box-sizing: border-box;
     width: min(100%, 720px);
     margin: 16px 0;
@@ -444,34 +456,34 @@ function hummerStylesSource(): string {
     font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
-  .crust-hummer-eyebrow,
-  .crust-hummer-body,
-  .crust-hummer-annotation {
+  .${namespace}__eyebrow,
+  .${namespace}__body,
+  .${namespace}__annotation {
     margin: 0;
   }
 
-  .crust-hummer-eyebrow {
+  .${namespace}__eyebrow {
     color: #2563eb;
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
   }
 
-  .crust-hummer-title {
+  .${namespace}__title {
     margin: 6px 0;
     color: inherit;
     font-size: 20px;
     line-height: 1.2;
   }
 
-  .crust-hummer-points {
+  .${namespace}__points {
     display: grid;
     gap: 6px;
     margin: 12px 0;
     padding-left: 18px;
   }
 
-  .crust-hummer-action {
+  .${namespace}__action {
     min-height: 36px;
     padding: 0 14px;
     border: 0;
@@ -483,7 +495,7 @@ function hummerStylesSource(): string {
     cursor: pointer;
   }
 
-  .crust-hummer-annotation {
+  .${namespace}__annotation {
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px dashed rgba(17, 24, 39, 0.24);
@@ -538,6 +550,10 @@ export function normalizeVariant(value: unknown): HummerVariant {
 }
 
 function analysisSource(args: CreateExperimentArgs): string {
+  const runtimeAssumption =
+    args.template === 'hummer'
+      ? '- The generated runtime waits up to 5000 ms for `body` before mounting and falls back to `body` if no stronger semantic anchor is available.'
+      : '';
   return `# ${args.displayName} Analysis
 
 Generated ${args.template} starter analysis for ${args.author}/${args.folder}.
@@ -564,6 +580,7 @@ TBD: summarize the current hierarchy, user intent fit, friction, trust gaps, CTA
 
 - This file was generated as a starter.
 - Target page evidence still needs to be captured and documented.
+${runtimeAssumption}
 
 ## Constraints
 
@@ -609,13 +626,21 @@ TBD: list DOM anchors, rendering approach, tweaks, cleanup behavior, responsive 
 
 function descriptionSource(args: CreateExperimentArgs): string {
   const scope = args.matches.map((match) => `- \`${match}\``).join('\n');
+  const starterLabel =
+    args.template === 'hummer'
+      ? 'Generated Hummer-ready starter'
+      : 'Generated minimal Crust starter';
+  const runtimeNote =
+    args.template === 'hummer'
+      ? 'The Hummer scaffold waits for `document.body` before target detection so it can run safely from early content-script timing. If no semantic target is found, it mounts at the start of `body`.'
+      : '';
   return `---
 generated: true
 ---
 
 # ${args.displayName}
 
-Generated Hummer-ready starter for ${args.author}/${args.folder}.
+${starterLabel} for ${args.author}/${args.folder}.
 
 ## Scope
 
@@ -633,6 +658,8 @@ ${scope}
 3. Open ${args.targetUrl}.
 4. Open the Crust popup and enable this experiment.
 5. Try the presets in \`presets/\` or adjust tweaks manually.
+
+${runtimeNote}
 
 This file was generated as a starter. Replace the placeholder experiment with the actual design solution before sharing.
 `;

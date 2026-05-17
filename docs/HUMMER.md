@@ -120,6 +120,7 @@ experiments/<author>/<folder>/
   dom.ts
   renderer.ts
   styles.ts
+  copy.ts
   analysis.md
   description.md
   presets/
@@ -128,7 +129,7 @@ experiments/<author>/<folder>/
     exploratory.json
 ```
 
-Use `dom.ts` for target finding, `renderer.ts` for DOM creation/mutation, `styles.ts` for CSS, `analysis.md` for design reasoning and decision records, and `description.md` for usage/testing notes.
+Use `dom.ts` for target finding, `renderer.ts` for DOM creation/mutation, `styles.ts` for CSS, `copy.ts` for branch copy/config, `analysis.md` for design reasoning and decision records, and `description.md` for usage/testing notes.
 
 Create a starter with:
 

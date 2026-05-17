@@ -107,6 +107,7 @@ experiments/<author>/<folder>/
   dom.ts
   renderer.ts
   styles.ts
+  copy.ts
   analysis.md
   description.md
   presets/
@@ -115,7 +116,7 @@ experiments/<author>/<folder>/
     exploratory.json
 ```
 
-Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `experiment.ts` for wiring, `analysis.md` for design reasoning, and `description.md` for testing notes.
+Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `copy.ts` for branch copy/config, `experiment.ts` for wiring, `analysis.md` for design reasoning, and `description.md` for testing notes.
 
 ## Implementation Rules
 

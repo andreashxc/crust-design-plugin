@@ -177,7 +177,36 @@ describe('createExperiment', () => {
     expect(manifest.world).toBe('isolated');
     expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain('findMountTarget');
     expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain('renderPrototype');
+    expect(readFileSync(resolve(dir, 'experiment.ts'), 'utf8')).toContain(
+      "await helpers.waitFor('body'",
+    );
+    expect(readFileSync(resolve(dir, 'dom.ts'), 'utf8')).not.toContain('documentElement');
     expect(readFileSync(resolve(dir, 'renderer.ts'), 'utf8')).not.toContain('innerHTML');
+  });
+
+  it('namespaces generated Hummer classes and style id by folder', () => {
+    const args = parseCreateExperimentArgs([
+      'andrew',
+      'pricing_hero',
+      'Pricing Hero',
+      '--url',
+      'https://example.com/pricing',
+      '--template',
+      'hummer',
+    ]);
+
+    const dir = createExperiment(tmpRoot, args);
+    const experiment = readFileSync(resolve(dir, 'experiment.ts'), 'utf8');
+    const renderer = readFileSync(resolve(dir, 'renderer.ts'), 'utf8');
+    const styles = readFileSync(resolve(dir, 'styles.ts'), 'utf8');
+
+    expect(experiment).toContain('styleId');
+    expect(renderer).toContain('const classPrefix = "crust-pricing-hero"');
+    expect(renderer).toContain(['$', '{classPrefix}__title'].join(''));
+    expect(renderer).toContain(['$', '{classPrefix}__action'].join(''));
+    expect(styles).toContain("export const styleId = 'crust-pricing-hero-styles'");
+    expect(styles).toContain('.crust-pricing-hero__title');
+    expect(styles).toContain('.crust-pricing-hero__action');
   });
 
   it('writes Hummer analysis sections', () => {
@@ -210,6 +239,36 @@ describe('createExperiment', () => {
     ]) {
       expect(analysis).toContain(`## ${section}`);
     }
+  });
+
+  it('describes minimal and Hummer templates accurately', () => {
+    const minimalArgs = parseCreateExperimentArgs([
+      'andrew',
+      'minimal-card',
+      'Minimal Card',
+      '--url',
+      'https://example.com/minimal',
+    ]);
+    const hummerArgs = parseCreateExperimentArgs([
+      'andrew',
+      'hummer-card',
+      'Hummer Card',
+      '--url',
+      'https://example.com/hummer',
+      '--template',
+      'hummer',
+    ]);
+
+    const minimalDir = createExperiment(tmpRoot, minimalArgs);
+    const hummerDir = createExperiment(tmpRoot, hummerArgs);
+    const minimalDescription = readFileSync(resolve(minimalDir, 'description.md'), 'utf8');
+    const hummerDescription = readFileSync(resolve(hummerDir, 'description.md'), 'utf8');
+
+    expect(minimalDescription).toContain('Generated minimal Crust starter');
+    expect(minimalDescription).not.toContain('Generated Hummer-ready starter');
+    expect(minimalDescription).not.toContain('waits for `document.body`');
+    expect(hummerDescription).toContain('Generated Hummer-ready starter');
+    expect(hummerDescription).toContain('waits for `document.body`');
   });
 
   it('writes Hummer presets that validate against manifest tweaks', () => {
@@ -271,5 +330,16 @@ describe('createExperiment', () => {
     });
 
     expect(result.registry[0]?.chunkPath).toMatch(/^chunks\/experiments-andrew__pricing-hero-/);
+  });
+
+  it('documents copy.ts in Hummer scaffold shapes', () => {
+    for (const path of [
+      'docs/HUMMER.md',
+      'docs/EXPERIMENT_AUTHORING.md',
+      '.codex/skills/crust-hummer/SKILL.md',
+    ]) {
+      const doc = readFileSync(resolve(process.cwd(), path), 'utf8');
+      expect(doc).toContain('copy.ts');
+    }
   });
 });

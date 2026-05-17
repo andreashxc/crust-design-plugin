@@ -98,6 +98,7 @@ experiments/<author>/<folder>/
   dom.ts
   renderer.ts
   styles.ts
+  copy.ts
   analysis.md
   description.md
   presets/
@@ -106,7 +107,7 @@ experiments/<author>/<folder>/
     exploratory.json
 ```
 
-Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `analysis.md` for diagnosis and branch rationale, and `description.md` for usage/testing notes.
+Use `dom.ts` for target-finding helpers, `renderer.ts` for DOM creation/mutation logic, `styles.ts` for CSS string exports, `copy.ts` for branch copy/config, `analysis.md` for diagnosis and branch rationale, and `description.md` for usage/testing notes.
 
 Hummer authoring workflow:
 
